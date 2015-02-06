@@ -1,0 +1,5 @@
+.label code=$810
+.label screendata=$2000
+.label copy_screendata=$2400
+.label msx_irq=$88b {
+}
