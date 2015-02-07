@@ -36,7 +36,7 @@ code:
 		sta $d015
 
 		:wait_frame()
-		
+
 		:d011($3b)
 		:d012($f9)
 		:set_irq(msx_irq)
@@ -56,18 +56,18 @@ msx_irq:
 		:close_irq()
 		rti
 
-.pc = $900 "logo_swinger"
-.import source "top_sprite_routine.asm"
-
-.pc = $2000
-screendata:
-.import binary "data/screen.raw"
-
 .pc = * "functions"
 .import source "functions.asm"
 
-.pc = $2a00
+.pc = $900 "logo_swinger"
+.import source "top_sprite_routine.asm"
+
+.pc = $2600 "screendata"
+screendata:
+.import binary "data/screen.raw"
+
+.pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
 
-.pc = $d800
+.pc = $d800 "colour ram"
 .import binary "data/d800.raw"
