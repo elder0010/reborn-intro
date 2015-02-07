@@ -7,5 +7,6 @@
 .const top_bg_colour = LIGHT_GRAY
 .const bitmap_bg_colour = ORANGE
 .const bottom_bg_colour = BLACK
-
 .const screen = $0400
+
+.const bottom_sprites = $3a00

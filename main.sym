@@ -1,11 +1,19 @@
 .label code=$810
+.label d025_colours=$37fd
+.label next_bottom_sprites=$3756
+.label sprite_line_pt=$37b1
+.label d026_colours=$37f8
+.label sprx=$37a4
 .label top_irq=$88b {
 }
 .label bitmap_split_irq=$8ad {
 }
 .label screendata=$2600
-.label copy_screendata=$947
-.label lower_split_irq=$8e4 {
+.label copy_screendata=$952
+.label bottom_sprites_y=$37e0
+.label bottom_sprites_pt=$37c8
+.label lower_split_irq=$8ea {
 }
-.label msx_irq=$90b {
+.label msx_irq=$911 {
 }
+.label reposition_sprites_x=$37a0

@@ -80,6 +80,9 @@ bitmap_split_irq:
 		lda #bottom_bg_colour
 		sta $d020
 
+		jsr reposition_sprites_x
+		jsr next_bottom_sprites
+
 		:close_irq()
 		rti
 
@@ -93,6 +96,7 @@ lower_split_irq:
 		:set_irq(msx_irq)
 		:d012($f9)
 		:d011($1b)
+
 
 		:close_irq()
 		rti
@@ -116,6 +120,9 @@ msx_irq:
 		:d012($00)
 		:d011($1b)
 
+		lda #$ff
+		sta $d015
+
 		inc $d020
 		jsr music.play
 		dec $d020
@@ -125,6 +132,9 @@ msx_irq:
 
 .pc = * "functions"
 .import source "functions.asm"
+
+.pc = $3700 "bottom sprite plexer"
+.import source "bottom_sprite_plexer.asm"
 
 
 .pc = $a00 "logo_swinger"
@@ -137,7 +147,8 @@ screendata:
 .pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
 
-
+.pc = bottom_sprites "bottom sprites"
+.import binary "data/bottom_sprites.raw"
 
 .pc = $d800 "colour ram"
 .import binary "data/d800.raw"
