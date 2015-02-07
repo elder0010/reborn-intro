@@ -1,5 +1,11 @@
 .label code=$810
+.label top_irq=$88b {
+}
+.label bitmap_split_irq=$8ad {
+}
 .label screendata=$2600
-.label copy_screendata=$8a2
-.label msx_irq=$88b {
+.label copy_screendata=$947
+.label lower_split_irq=$8e4 {
+}
+.label msx_irq=$90b {
 }

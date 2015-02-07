@@ -19,7 +19,7 @@ code:
 		lda #border_colour
 		sta $d020
 
-		lda #screen_colour
+		lda #bottom_bg_colour
 		sta $d021
 
 		:bank_0()
@@ -45,9 +45,76 @@ code:
 
 		jmp *
 
+top_irq:
+		:open_irq()
+		asl $d019
+
+		lda #top_bg_colour
+		sta $d021
+
+		:set_irq(bitmap_split_irq)
+		:d012($7f)
+
+		:close_irq()
+		rti
+
+bitmap_split_irq:
+		:open_irq()
+		asl $d019
+
+		:set_irq(lower_split_irq)
+		:d012($c2)
+
+		ldx #bitmap_bg_colour
+		nop
+		:d011($3b)
+
+		bit $24
+
+		stx $d020
+		stx $d021
+
+		ldy #$f0
+		:wait()
+
+		lda #bottom_bg_colour
+		sta $d020
+
+		:close_irq()
+		rti
+
+lower_split_irq:
+		:open_irq()
+		asl $d019
+
+		lda #bottom_bg_colour
+		sta $d021
+
+		:set_irq(msx_irq)
+		:d012($f9)
+		:d011($1b)
+
+		:close_irq()
+		rti
+
 msx_irq:
 		:open_irq()
 		asl $d019
+
+		lda #$33
+		sta $d011
+
+		lda #$fc
+!:
+		cmp $d012
+		bne !-
+
+		lda #$3b
+		sta $d011
+
+		:set_irq(top_irq)
+		:d012($00)
+		:d011($1b)
 
 		inc $d020
 		jsr music.play
@@ -59,7 +126,8 @@ msx_irq:
 .pc = * "functions"
 .import source "functions.asm"
 
-.pc = $900 "logo_swinger"
+
+.pc = $a00 "logo_swinger"
 .import source "top_sprite_routine.asm"
 
 .pc = $2600 "screendata"
@@ -68,6 +136,8 @@ screendata:
 
 .pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
+
+
 
 .pc = $d800 "colour ram"
 .import binary "data/d800.raw"
