@@ -24,20 +24,21 @@ code:
 
 		:bank_0()
 
-		lda #$d8
+		lda #$c8
 		sta $d016
 
-		lda #$18
+		lda #$1a
 		sta $d018
 
 		jsr copy_screendata
+		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_0data o rompe i dati
 
 		lda #0
 		sta $d015
 
 		:wait_frame()
 
-		:d011($3b)
+		:d011($1b)
 		:d012($f9)
 		:set_irq(msx_irq)
 
@@ -80,8 +81,26 @@ bitmap_split_irq:
 		lda #bottom_bg_colour
 		sta $d020
 
+		lda #0
+		sta plex_ct
+
+		inc $d020
+
 		jsr reposition_sprites_x
 		jsr next_bottom_sprites
+		jsr recolour_sprites
+
+		dec $d020
+
+
+		lda d025_colours
+		sta $d025
+
+		lda d026_colours
+		sta $d026
+
+
+		inc plex_ct
 
 		:close_irq()
 		rti
@@ -90,22 +109,52 @@ lower_split_irq:
 		:open_irq()
 		asl $d019
 
+lda #2
+sta $d020
+
+		:d016($c8)
+
 		lda #bottom_bg_colour
 		sta $d021
+
+		ldx plex_ct
+		cpx #1
+		beq !+
+
+		lda plex_d012_table,x
+		sta $d012
+
+		jsr next_bottom_sprites
+		inc plex_ct
+
+		jmp anotherplex
+!:
 
 		:set_irq(msx_irq)
 		:d012($f9)
 		:d011($1b)
 
+anotherplex:
+
+lda #0
+sta $d020
 
 		:close_irq()
 		rti
+
+
+.align 4
+plex_d012_table:
+.const base_plex = $e2
+.for(var x=0;x<4;x++){
+	.byte base_plex + [x*20]
+}
 
 msx_irq:
 		:open_irq()
 		asl $d019
 
-		lda #$33
+		lda #$13
 		sta $d011
 
 		lda #$fc
@@ -113,19 +162,20 @@ msx_irq:
 		cmp $d012
 		bne !-
 
-		lda #$3b
-		sta $d011
-
-		:set_irq(top_irq)
-		:d012($00)
-		:d011($1b)
-
 		lda #$ff
 		sta $d015
 
-		inc $d020
+		:set_irq(top_irq)
+
+		lda #$1b
+		sta $d011
+
+		:d012($00)
+
+		:d016($d8)
+	//	inc $d020
 		jsr music.play
-		dec $d020
+	//	dec $d020
 
 		:close_irq()
 		rti
@@ -140,7 +190,7 @@ msx_irq:
 .pc = $a00 "logo_swinger"
 .import source "top_sprite_routine.asm"
 
-.pc = $2600 "screendata"
+.pc = $2600 "screen data"
 screendata:
 .import binary "data/screen.raw"
 
@@ -149,6 +199,7 @@ screendata:
 
 .pc = bottom_sprites "bottom sprites"
 .import binary "data/bottom_sprites.raw"
+
 
 .pc = $d800 "colour ram"
 .import binary "data/d800.raw"

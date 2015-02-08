@@ -2,14 +2,14 @@
 //Common macros
 //--------------------------------------
 
-.macro clear_screen(screen,blank_char){
+.macro clear_screen_0(screen_0,blank_char){
 		ldx #0
 		lda #blank_char
 !:
-		sta screen,x
-		sta screen+$100,x
-		sta screen+$200,x
-		sta screen+$300,x
+		sta screen_0,x
+		sta screen_0+$100,x
+		sta screen_0+$200,x
+		sta screen_0+$300,x
 		dex
 		bne !-
 }
@@ -192,7 +192,7 @@ nmi:
 }
 
 //---------------------------
-//Calcola $d018 dati screen e chars
-.macro get_d018_charset(screen,chrs){
-	.byte [[[screen & $3fff] / $0400] << 4] + [[[chrs & $3fff] / $0800] << 1]
+//Calcola $d018 dati screen_0 e chars
+.macro get_d018_charset(screen_0,chrs){
+	.byte [[[screen_0 & $3fff] / $0400] << 4] + [[[chrs & $3fff] / $0800] << 1]
 }
