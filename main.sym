@@ -1,5 +1,12 @@
+.label irq_setsprite=$910
+.label irq_switch=$9f7
 .label code=$810
+.label irq_stable1=$9a3
+.label waitrtn=$a20
+.label test=$888
+.label irq_stable2=$9c5
 .label screendata=$2600
-.label copy_screendata=$8a2
-.label msx_irq=$88b {
+.label copy_screendata=$8b0
+.label msx_irq=$896 {
 }
+.label set_mdlirq=$900

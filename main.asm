@@ -43,7 +43,13 @@ code:
 
 		cli
 
-		jmp *
+	test:				// Main with misc jittering
+		nop
+		bit $02
+		bit.a $0002
+		inc $02
+		inc.a $0002		
+		jmp test
 
 msx_irq:
 		:open_irq()
@@ -53,6 +59,7 @@ msx_irq:
 		jsr music.play
 		dec $d020
 
+		jsr set_mdlirq	// Freshness
 		:close_irq()
 		rti
 
