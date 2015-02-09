@@ -1,12 +1,13 @@
-.label irq_setsprite=$910
-.label irq_switch=$9f7
-.label code=$810
-.label irq_stable1=$9a3
-.label waitrtn=$a20
-.label test=$888
-.label irq_stable2=$9c5
+.label irq_setsprite=$91b
+.label irq_switch=$ee4
+.label test=$88b
+.label irq_stable2=$9d6
 .label screendata=$2600
-.label copy_screendata=$8b0
-.label msx_irq=$896 {
+.label msx_irq=$899 {
 }
-.label set_mdlirq=$900
+.label set_mdlirq=$90b
+.label code=$810
+.label initscroll=$900
+.label irq_stable1=$9b4
+.label waitrtn=$f0d
+.label copy_screendata=$8b3

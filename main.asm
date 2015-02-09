@@ -31,7 +31,8 @@ code:
 		sta $d018
 
 		jsr copy_screendata
-
+		
+		jsr	initscroll	// Freshness
 		lda #0
 		sta $d015
 

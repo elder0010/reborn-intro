@@ -19,6 +19,22 @@
 .const	switchmode	=	$c0	
 .const	savex		=	$c1
 .const	savey		=	$c2
+.const	hix			=	$c3
+.const	lox			=	$c4
+
+// Colors
+// ******
+.const	d800scr		=	BROWN
+
+
+initscroll:
+	lda #d800scr
+	ldx #39
+!:
+	sta $d800,x
+	dex
+	bpl !-
+	rts
 
 set_mdlirq:
 	lda #rst_setsprite-2
@@ -41,51 +57,56 @@ irq_setsprite:
 	sta $ffff	
 	pha
 	lda #$33+8
+	sta $d001
 	sta $d003
 	sta $d005
 	sta $d007
 	sta $d009
 	sta $d00b
 	sta $d00d
-	sta $d00f
-	lda #$fe
+	lda #$7f
 	sta $d015
 	sta $d017
 	sta $d01d
 	lda #$00
 	sta $d01c
 	lda #$01	
+	sta $d027
 	sta $d028
 	sta $d029
 	sta $d02a
 	sta $d02b
 	sta $d02c
-	sta $d02d
-	sta $d02e		
-	lda #$08
-	sta $d002
-	lda #$38
-	sta $d004
-	lda #$68
-	sta $d006
-	lda #$98
-	sta $d008
-	lda #$c8
-	sta $d00a
-	lda #$f8
+	sta $d02d		
+	lda #$e0
+	ora lox
+	sta $d000
+	lda #$58
+	ora lox
 	sta $d00c
-	lda #$28
-	sta $d00e
-	lda #$80
+	
+	lda #$38
+	sta $d002
+	lda #$68
+	sta $d004
+	lda #$98
+	sta $d006
+	lda #$c8
+	sta $d008
+	lda #$f8
+	sta $d00a
+
+	lda #$41
 	sta $d010
 	lda #$00
+	sta $07f8
+	sta $07fe	
+	lda #$ff
 	sta $07f9
 	sta $07fa
 	sta $07fb
 	sta $07fc
-	sta $07fd
-	sta $07fe
-	sta $07ff	
+	sta $07fd	
 	pla
 	cli
 	rti
@@ -111,27 +132,61 @@ irq_stable2:
 	sta $fffe				// 4
 	lda #>irq_switch		// 2
 	sta $ffff				// 4
-	pla						// 4
-	pla						// 4
-	pla						// 4
 	stx savex				// 3
-	ldx #$06				// 2 Row counter
+	pla						// 4
+	lda.a lox				// 4
+	ora #$c8				// 2
+	tax						// 2
+	nop						// 2
 	lda $d012				// 4
 	cmp $d012				// 4 63/00
 	beq !+				
-!:						// 3
-	sty.a savey			// 4	
-	lda #$d0			// 2
-	sta $d016			// 4
+!:						// 3	
+	sty savey			// 3
+	ldy #$1c
+
+	.for (var i=0;i<40;i++) {
+		sty $d011			// 4		
+		stx $d016			// 4	
+		.fill 12,NOP			// 16
+		ldy #$18+[[i+6]&6]	// 2		
+		lda #$12+[[i&2]*4]
+		sta $d018		
+		lda #$01+[i&1]		// 2
+		lsr $d016			// 6
+	}
+	lda #$18
+	sta $d018
 	lda #$d8
 	sta $d016
-	.fill 
-	
+	lda #$1b
+	sta $d011
+	dec lox
+	bpl !+
+	inc hix
+	lda lox
+	and #$07
+	sta lox	
+!:
+	lda hix
+	ldy #$01
+	ldx #39
+!:
+	sec
+	sbc #$01
+	sta $0400,x
+	dex
+	bpl !-
+	 
+	ldx savex
+	ldy savey
+	pla
+	pla
 	pla					
 	rti
 	
 	
-irq_switch:
+irq_switch:	
 	pha
 	jsr waitrtn
 	lda switchmode
