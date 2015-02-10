@@ -2,8 +2,8 @@
 
 // Switching rasters
 // *****************
-.const	rst_setsprite	=	$33			// Set logo sprites
-.const	rst_stable		=	$33+8		// Stable irq
+.const	rst_setsprite	=	$33-8		// Set logo sprites
+.const	rst_stable		=	$33			// Stable irq
 .const	rst_mdlswitch	=	$33+8*8		// Middle block (bitmap)
 .const	rst_tnbswitch	=	$33+9*16	// Top&Bottom block (char)
 .const	rst_msx			=	$f9			// Sid player
@@ -43,7 +43,7 @@ initscroll:
 	lda #$ff
 	ldx #$3f
 !:
-	sta $4000,x
+	sta $4080,x
 	dex
 	bne !-
 	lda #bgcolor
@@ -71,7 +71,7 @@ irq_setsprite:
 	lda #>irq_stable1
 	sta $ffff	
 	pha
-	lda #$33+8
+	lda #rst_stable
 	sta $d001
 	sta $d003
 	sta $d005
@@ -119,19 +119,21 @@ irq_setsprite:
 
 	lda #$41
 	sta $d010
-	lda #$01
+	lda #$06
 	sta $47f8
-	lda #$02
+	lda #$07
 	sta $47fe	
 	lda #$ff
 	sta $47f9
 	sta $47fa
 	sta $47fb
-	lda #$00
+	lda #$02
 	sta $47fc
 	sta $47fd	
 	lda $d021
 	sta $d022	
+	lda #$1b
+	sta $d011	
 	pla
 	cli
 	rti
@@ -168,15 +170,15 @@ irq_stable2:
 	beq !+				
 !:						// 3		
 	nop					// 2
-	nop					// 2
+	lda #bgcolor		// 2
 	sty $d011			// 4		
 	stx $d016			// 4	
 	ldy #20	
 	logoloop:		
+		nop
+		sta $d02d			// 4	
 		lda scrollcolor		// 3
-		sta $d027			// 4
-		lda #bgcolor		// 2
-		sta $d02d			// 4
+		sta $d027			// 4		
 		lda loporttable,y	// 4
 		sta mod_io+1		// 4		
 		lda d018table,y		// 4
@@ -199,14 +201,46 @@ irq_stable2:
 		stx $d016			// 4		
 		dey					// 2
 		bpl logoloop		// 3
-	lda #$18
-	sta $d018
-	lda #$93
-	sta $dd00
-	lda #$d8
-	sta $d016
-	lda #$1b
-	sta $d011
+		
+		lda #$18
+		sta $d018
+		lda #$93
+		sta $dd00
+		lda #$d8
+		sta $d016
+
+	ldy #$00		
+	!:
+		.fill 6,NOP				
+		clc
+		tya
+		adc #$07
+		and #$07		
+		ora #$18		
+		sta $d011		
+		.fill 7,NOP
+		bit $fe
+		iny
+		cpy #$0c
+		bne !-
+		
+		bit $fe
+		clc
+		tya
+		adc #$07
+		and #$07		
+		ora #$18		
+		sta $d011
+		.fill 7,NOP
+		tya
+		clc
+		adc #$06
+		and #$07		
+		ora #$38
+		sta $d011				
+		
+
+	cli
 	dex
 	cpx #$c8
 	bcs !+
@@ -239,21 +273,11 @@ irq_stable2:
 	
 irq_switch:	
 	pha
-	jsr waitrtn
-	lda switchmode
-	sta vic_d011	
-	eor #[mdlvalue^tnbvalue]
-	sta switchmode
-	cmp #mdlvalue
-	bne !+	
 	lda #<msx_irq
 	sta $fffe
 	lda #>msx_irq
 	sta $ffff
 	lda #$f9
-	bne !++2
-!:
-	lda #rst_tnbswitch-1
 	sta $d012
 	lsr $d019
 	pla
@@ -270,6 +294,7 @@ waitrtn:
 .print "D011 table: "+toHexString(*)
 d011table:
 .fill 21,[[[[20-i]*2]+6]&6]+[[i&1]*$40]+$18
+
 .align $0020
 .print "D018 table: "+toHexString(*)
 d018table:
@@ -278,16 +303,31 @@ d018table:
 .align $0020
 .print "Low port table: "+toHexString(*)
 loporttable:
-.byte $3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f
-.byte $03,$05,$07
+.byte $3f,$3f,$3f,$3f
+.byte $09,$0b				// Block plex
+.byte $03,$05,$07			// Second plex
+.byte $3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f
+.byte $03,$05,$07			// First plex
+
 .align $0020
 .print "High port table: "+toHexString(*)
 hiporttable:
-.byte $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
+.byte $d0,$d0,$d0,$d0
+.byte $d0,$d0
+.byte $d0,$d0,$d0
+.byte $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
+.byte $d0,$d0,$d0
+
 .align $0020
 .print "I/O value table: "+toHexString(*)
 iovaltable:
-.byte $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
+.byte $d0,$d0,$d0,$d0
+.byte rst_stable+42
+.byte rst_stable+42
+.byte rst_stable+42
+.byte rst_stable+42
+.byte rst_stable+42
+.byte $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
 .byte rst_stable+21
 .byte rst_stable+21
 .byte rst_stable+21
