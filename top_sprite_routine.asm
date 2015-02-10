@@ -21,10 +21,12 @@
 .const	savey		=	$c2
 .const	hix			=	$c3
 .const	lox			=	$c4
+.const	scrollcolor	=	$c5
 
 // Colors
 // ******
-.const	d800scr		=	BROWN
+.const	d800scr		=	WHITE
+.const	bgcolor		=	LIGHT_GRAY
 
 
 initscroll:
@@ -34,6 +36,18 @@ initscroll:
 	sta $d800,x
 	dex
 	bpl !-
+	sta scrollcolor
+	lda #$00
+	sta $79ff
+	sta $7fff
+	lda #$ff
+	ldx #$3f
+!:
+	sta $4000,x
+	dex
+	bne !-
+	lda #bgcolor
+	sta $d021
 	rts
 
 set_mdlirq:
@@ -48,6 +62,7 @@ set_mdlirq:
 // TO DO: Manage horizontal movement
 // *********************************
 irq_setsprite:
+	inc $d020
 	lsr $d019
 	lda #rst_stable-2
 	sta $d012
@@ -64,32 +79,38 @@ irq_setsprite:
 	sta $d009
 	sta $d00b
 	sta $d00d
+	lda #$3e
+	sta $d01b	
 	lda #$7f
 	sta $d015
+	lda #$71
 	sta $d017
 	sta $d01d
-	lda #$00
+	lda #$0e
 	sta $d01c
-	lda #$01	
-	sta $d027
+	lda #BLUE
+	sta $d026
+	lda #ORANGE
+	sta $d025
+	lda #PURPLE	
 	sta $d028
 	sta $d029
-	sta $d02a
-	sta $d02b
-	sta $d02c
-	sta $d02d		
-	lda #$e0
-	ora lox
+	sta $d02a	
+	lda #DARK_GREY
+	sta $d02b	
+	sta $d02c	
+	lda lox	
+	and #$07
+	ora #$e0	
 	sta $d000
-	lda #$58
-	ora lox
-	sta $d00c
-	
+	and #$07
+	ora #$58	
+	sta $d00c	
 	lda #$38
 	sta $d002
-	lda #$68
+	lda #$50
 	sta $d004
-	lda #$98
+	lda #$78
 	sta $d006
 	lda #$c8
 	sta $d008
@@ -98,15 +119,19 @@ irq_setsprite:
 
 	lda #$41
 	sta $d010
-	lda #$00
-	sta $07f8
-	sta $07fe	
+	lda #$01
+	sta $47f8
+	lda #$02
+	sta $47fe	
 	lda #$ff
-	sta $07f9
-	sta $07fa
-	sta $07fb
-	sta $07fc
-	sta $07fd	
+	sta $47f9
+	sta $47fa
+	sta $47fb
+	lda #$00
+	sta $47fc
+	sta $47fd	
+	lda $d021
+	sta $d022	
 	pla
 	cli
 	rti
@@ -133,47 +158,71 @@ irq_stable2:
 	lda #>irq_switch		// 2
 	sta $ffff				// 4
 	stx savex				// 3
-	pla						// 4
-	lda.a lox				// 4
-	ora #$c8				// 2
-	tax						// 2
-	nop						// 2
-	lda $d012				// 4
+	sty.a savey				// 4	
+	ldx.a lox				// 4
+	lda #$92				// 2
+	sta $dd00				// 4
+	ldy #$1c				// 2
+	lda #rst_stable-1		// 2
 	cmp $d012				// 4 63/00
 	beq !+				
-!:						// 3	
-	sty savey			// 3
-	ldy #$1c
-
-	.for (var i=0;i<40;i++) {
-		sty $d011			// 4		
-		stx $d016			// 4	
-		.fill 12,NOP			// 16
-		ldy #$18+[[i+6]&6]	// 2		
-		lda #$12+[[i&2]*4]
-		sta $d018		
-		lda #$01+[i&1]		// 2
+!:						// 3		
+	nop					// 2
+	nop					// 2
+	sty $d011			// 4		
+	stx $d016			// 4	
+	ldy #20	
+	logoloop:		
+		lda scrollcolor		// 3
+		sta $d027			// 4
+		lda #bgcolor		// 2
+		sta $d02d			// 4
+		lda loporttable,y	// 4
+		sta mod_io+1		// 4		
+		lda d018table,y		// 4
+		sta $d018			// 4
+		lda d011table,y		// 4
 		lsr $d016			// 6
-	}
+		sta $d011			// 4		
+		stx $d016			// 4
+		lda hiporttable,y	// 4
+		sta mod_io+2		// 4		
+		lda iovaltable,y	// 4
+	mod_io:
+		sta $d000			// 4
+		lda.a scrollcolor	// 4
+		sta $d02d			// 4
+		lda #bgcolor		// 2
+		sta $d027			// 4
+		.fill 2,NOP			// 4
+		lsr $d016			// 6
+		stx $d016			// 4		
+		dey					// 2
+		bpl logoloop		// 3
 	lda #$18
 	sta $d018
+	lda #$93
+	sta $dd00
 	lda #$d8
 	sta $d016
 	lda #$1b
 	sta $d011
-	dec lox
-	bpl !+
+	dex
+	cpx #$c8
+	bcs !+
 	inc hix
-	lda lox
-	and #$07
-	sta lox	
+	ldx #$cf
+	
 !:
+	stx lox	
 	lda hix
 	ldy #$01
 	ldx #39
+	clc
 !:
-	sec
-	sbc #$01
+	sbc #$80
+	anc #$3f
+	ora #$40
 	sta $0400,x
 	dex
 	bpl !-
@@ -182,7 +231,9 @@ irq_stable2:
 	ldy savey
 	pla
 	pla
-	pla					
+	pla
+	pla		
+	dec $d020	
 	rti
 	
 	
@@ -213,6 +264,36 @@ waitrtn:
 	jsr *+3
 	jsr *+3
 	rts
+	
+	
+.align $0020
+.print "D011 table: "+toHexString(*)
+d011table:
+.fill 21,[[[[20-i]*2]+6]&6]+[[i&1]*$40]+$18
+.align $0020
+.print "D018 table: "+toHexString(*)
+d018table:
+.fill 21,$10+[i&$f]
+
+.align $0020
+.print "Low port table: "+toHexString(*)
+loporttable:
+.byte $3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f
+.byte $03,$05,$07
+.align $0020
+.print "High port table: "+toHexString(*)
+hiporttable:
+.byte $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
+.align $0020
+.print "I/O value table: "+toHexString(*)
+iovaltable:
+.byte $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
+.byte rst_stable+21
+.byte rst_stable+21
+.byte rst_stable+21
+
+
+	
 /*
 .pc=$2000
 .var image = LoadPicture("data\top_chars.png")

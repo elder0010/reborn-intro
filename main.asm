@@ -77,5 +77,8 @@ screendata:
 .pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
 
+.pc = $4000
+.fill $4000,256*random()
+
 .pc = $d800 "colour ram"
 .import binary "data/d800.raw"
