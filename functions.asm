@@ -33,7 +33,6 @@ prepare_chars_under_sprites:
         lda #0
         .const bb = 17
 !:
-
         sta screen_0+[[bb+1]*$28],x
         sta screen_0+[[bb+2]*$28],x
         sta screen_0+[[bb+3]*$28],x
