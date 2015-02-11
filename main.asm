@@ -54,8 +54,9 @@ code:
 
 msx_irq:
 		:open_irq()
+		lda #LIGHT_GRAY
+		sta $d021
 		asl $d019
-
 		inc $d020
 		jsr music.play
 		dec $d020

@@ -2,10 +2,9 @@
 
 // Switching rasters
 // *****************
-.const	rst_setsprite	=	$33-8		// Set logo sprites
-.const	rst_stable		=	$33			// Stable irq
-.const	rst_mdlswitch	=	$33+8*8		// Middle block (bitmap)
-.const	rst_tnbswitch	=	$33+9*16	// Top&Bottom block (char)
+.const	rst_setsprite	=	$33			// Set logo sprites
+.const	rst_stable		=	$33+8		// Stable irq
+.const	rst_mdlswitch	=	$c2			// Middle block (bitmap)
 .const	rst_msx			=	$f9			// Sid player
 
 // Mode switch
@@ -41,9 +40,10 @@ initscroll:
 	sta $79ff
 	sta $7fff
 	lda #$ff
-	ldx #$3f
+	ldx #$3e
 !:
-	sta $4080,x
+	sta $7fc0,x
+	sta $3fc0
 	dex
 	bne !-
 	lda #bgcolor
@@ -61,8 +61,7 @@ set_mdlirq:
 
 // TO DO: Manage horizontal movement
 // *********************************
-irq_setsprite:
-	inc $d020
+irq_setsprite:	
 	lsr $d019
 	lda #rst_stable-2
 	sta $d012
@@ -127,9 +126,11 @@ irq_setsprite:
 	sta $47f9
 	sta $47fa
 	sta $47fb
-	lda #$02
+	lda #$ff
 	sta $47fc
 	sta $47fd	
+	sta $07fc
+	sta $07fd		
 	lda $d021
 	sta $d022	
 	lda #$1b
@@ -201,56 +202,67 @@ irq_stable2:
 		stx $d016			// 4		
 		dey					// 2
 		bpl logoloop		// 3
-		
-		lda #$18
-		sta $d018
+				
 		lda #$93
 		sta $dd00
+		lda #$18
+		sta $d018
 		lda #$d8
-		sta $d016
-
-	ldy #$00		
-	!:
-		.fill 6,NOP				
-		clc
-		tya
-		adc #$07
-		and #$07		
-		ora #$18		
-		sta $d011		
-		.fill 7,NOP
-		bit $fe
-		iny
-		cpy #$0c
-		bne !-
+		sta $d016		
+		lda #$00
+		sta $d01b
 		
+		ldy #10
+	!:
+		.fill 6,NOP
+		lda realign,y
+		sta $d011		
+		.fill 11,NOP
 		bit $fe
-		clc
-		tya
-		adc #$07
+		dey		
+		bpl !-
+		
+
+		
+		bit $fe				
 		and #$07		
-		ora #$18		
+		lda #$1f
 		sta $d011
 		.fill 7,NOP
-		tya
+		nop
 		clc
 		adc #$06
 		and #$07		
-		ora #$38
+		lda #$39
 		sta $d011				
 		
-
 	cli
 	dex
 	cpx #$c8
 	bcs !+
 	inc hix
 	ldx #$cf
-	
 !:
 	stx lox	
+
+	ldx savex
+	ldy savey
+	lda #BROWN
+	sta $d021
+	pla
+	pla
+	pla
+	pla		
+	
+	rti
+	
+	
+irq_switch:	
+	pha
+	lda #BLACK
+	sta $d021	
+	stx savex
 	lda hix
-	ldy #$01
 	ldx #39
 	clc
 !:
@@ -259,20 +271,8 @@ irq_stable2:
 	ora #$40
 	sta $0400,x
 	dex
-	bpl !-
-	 
+	bpl !-	
 	ldx savex
-	ldy savey
-	pla
-	pla
-	pla
-	pla		
-	dec $d020	
-	rti
-	
-	
-irq_switch:	
-	pha
 	lda #<msx_irq
 	sta $fffe
 	lda #>msx_irq
@@ -331,6 +331,12 @@ iovaltable:
 .byte rst_stable+21
 .byte rst_stable+21
 .byte rst_stable+21
+
+.align $0020
+.print "Realign: "+toHexString(*)
+realign:
+.fill 11,$18+[[[10-i]+7]&7]
+
 
 
 	
