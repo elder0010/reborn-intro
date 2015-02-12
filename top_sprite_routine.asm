@@ -2,7 +2,7 @@
 
 // Switching rasters
 // *****************
-.const	rst_setsprite	=	$28			// Set logo sprites
+.const	rst_setsprite	=	$2e			// Set logo sprites
 .const	rst_stable		=	$30+8		// Stable irq
 .const	rst_mdlswitch	=	$c2			// Middle block (bitmap)
 .const	rst_msx			=	$f9			// Sid player
@@ -27,6 +27,7 @@
 .const	d800scr		=	WHITE
 .const	bgcolor		=	LIGHT_GRAY
 
+.const	sprbs		=	$3700/$40	// Sprite base (first bank)
 
 initscroll:
 	lda #d800scr
@@ -37,6 +38,7 @@ initscroll:
 	bpl !-
 	sta scrollcolor
 	lda #$00
+	sta $3fff
 	sta $79ff
 	sta $7fff
 	lda #$ff
@@ -48,19 +50,74 @@ initscroll:
 	bne !-
 	lda #bgcolor
 	sta $d021
+	lda #$ff
+	sta $d015
 	rts
 
 set_mdlirq:
-	lda #rst_setsprite-2
+	lda #$30
 	sta $d012
+	lda #$98
+	sta $d011
+	lda #<irq_sprite1
+	sta $fffe
+	lda #>irq_sprite1
+	sta $ffff			
+	rts
+
+	
+// *********************	
+// Top sprite management
+// *********************
+
+irq_sprite1:
+	lsr $d019
+	inc $d020
+	pha	
+	stx savex
+	ldx #$09
+!:
+	lda sprite1tbl,x
+	sta $d000,x
+	lda sprite1tbl+$a,x
+	sta $d00a,x	
+	lda sprite1clr,x
+	sta $d025,x
+	lda sprite1def-2,x
+	sta $07f6,x	
+	dex
+	bpl !-
+	lda #$60
+	sta $d017
+	sta $d01d
+	lda #$ff
+	sta $d01c
 	lda #<irq_setsprite
 	sta $fffe
 	lda #>irq_setsprite
 	sta $ffff			
-	rts
+	ldx savex
+	dec $d020
+	lda #LIGHT_GREY
+	sta $d021	
+	pla
+	rti
+	
+sprite1tbl:
+.byte	$00,$09,$78,$09,$38,$1e,$68,$1e,$80,$1e
+.byte	$d8,$17,$08,$17,$00,$0f
+.byte	$c0,$18,[rst_setsprite-2],$00
+sprite1clr:
+.byte	$f4,$fa									// Multicolor colors
+.byte	$fb,$f1,$fe,$fe,$fe,$fb,$fb,$f9			// Sprite colors
+sprite1def:
+.byte   $ff,sprbs,sprbs+1,sprbs+2,sprbs+3,sprblock/$40,sprblock/$40,$00
 
-// TO DO: Manage horizontal movement
-// *********************************
+
+// *********************
+// Second sprite manager
+// *********************
+	
 irq_setsprite:	
 	lsr $d019
 	lda #rst_stable-2
@@ -70,54 +127,26 @@ irq_setsprite:
 	lda #>irq_stable1
 	sta $ffff	
 	pha
-	lda #rst_stable
-	sta $d001
+
+	lda #$32
 	sta $d003
+	sta $d00f
+	lda #$33
 	sta $d005
 	sta $d007
 	sta $d009
+	lda #$41
 	sta $d00b
 	sta $d00d
+	lda #$e0
+	sta $d002
+	
+	
 	lda #$3e
 	sta $d01b	
-	lda #$7f
+	lda #$ff
 	sta $d015
-	lda #$71
-	sta $d017
-	sta $d01d
-	lda #$0e
-	sta $d01c
-	lda #BLUE
-	sta $d026
-	lda #ORANGE
-	sta $d025
-	lda #PURPLE	
-	sta $d028
-	sta $d029
-	sta $d02a	
-	lda #DARK_GREY
-	sta $d02b	
-	sta $d02c	
-	lda lox	
-	and #$07
-	ora #$e0	
-	sta $d000
-	and #$07
-	ora #$58	
-	sta $d00c	
-	lda #$38
-	sta $d002
-	lda #$50
-	sta $d004
-	lda #$78
-	sta $d006
-	lda #$c8
-	sta $d008
-	lda #$f8
-	sta $d00a
 
-	lda #$41
-	sta $d010
 	lda #$06
 	sta $47f8
 	lda #$07
@@ -129,12 +158,9 @@ irq_setsprite:
 	lda #$ff
 	sta $47fc
 	sta $47fd	
-	sta $07fc
-	sta $07fd		
+
 	lda $d021
 	sta $d022	
-	lda #$18
-	sta $d011	
 	pla
 	cli
 	rti
@@ -151,30 +177,23 @@ irq_stable1:
 	.fill 16,NOP		// 32
 
 irq_stable2:
-	lsr $d019				// 6+9+0/1
-	lda #mdlvalue			// 2
-	sta switchmode			// 3
-	lda #rst_mdlswitch-1	// 2
-	sta $d012				// 4
-	lda #<irq_switch		// 2
-	sta $fffe				// 4
-	lda #>irq_switch		// 2
-	sta $ffff				// 4
 	stx savex				// 3
-	sty.a savey				// 4	
-	ldx.a lox				// 4
+	sty savey				// 3
+	lsr $d019				// 6+9+0/1
+	lda #$dd
+	sta $d01c
+	.fill 6,NOP
+	ldx.a lox				// 4	
+	stx $d016				// 4	
 	lda #$92				// 2
-	sta $dd00				// 4
-	ldy #$19				// 2
-	lda #rst_stable-1		// 2
-	cmp $d012				// 4 63/00
+	sta $dd00				// 4		
+	lda	d011table+19		// 4
+	ldy #rst_stable-1		// 2
+	cpy $d012				// 4 63/00
 	beq !+				
 !:						// 3		
-	nop					// 2
-	lda #bgcolor		// 2
-	sty $d011			// 4		
-	stx $d016			// 4	
 	ldy #19				// 2
+	jmp startfpp		// 3
 	logoloop:		
 		nop
 		sta $d02d			// 4	
@@ -186,13 +205,14 @@ irq_stable2:
 		sta $d018			// 4
 		lda d011table,y		// 4
 		lsr $d016			// 6
+	startfpp:
 		sta $d011			// 4		
 		stx $d016			// 4
 		lda hiporttable,y	// 4
 		sta mod_io+2		// 4		
 		lda iovaltable,y	// 4
 	mod_io:
-		sta $d000			// 4
+		sta $fff0			// 4
 		lda.a scrollcolor	// 4
 		sta $d02d			// 4
 		lda #bgcolor		// 2
@@ -212,16 +232,19 @@ irq_stable2:
 	lda #$1e
 	sta $d011
 	sta $d020
-	.fill 13,NOP
+	lda #$ff
+	sta $d01c
+	.fill 10,NOP
 		
-	lda #$19
+	lda #$18
 	sta $d011
 		
-	ldy #$44
+	ldy #$43
 !:
 	dey	
 	bne !-
-	bit $fe
+	nop
+	nop	
 
 	
 	ldy #00
@@ -232,7 +255,7 @@ irq_stable2:
 		.fill 14,NOP		
 		bit $fe
 		iny
-		cpy #11
+		cpy #12
 		bcc !-
 		
 	lda #$38+[[10+2]&7]	
@@ -249,13 +272,18 @@ irq_stable2:
 
 	ldx savex
 	ldy savey
-	lda #BROWN
+	lda #ORANGE
 	sta $d021
+	lda #rst_mdlswitch-1	// 2
+	sta $d012				// 4
+	lda #<irq_switch		// 2
+	sta $fffe				// 4
+	lda #>irq_switch		// 2
+	sta $ffff				// 4	
 	pla
 	pla
 	pla
-	pla		
-	
+	pla			
 	rti
 	
 	
@@ -295,7 +323,7 @@ waitrtn:
 .align $0020
 .print "D011 table: "+toHexString(*)
 d011table:
-.fill 20,[[[[19-i]*2]+10]&6]+[[i&1]*$40]+$18+1
+.fill 20,[[[[19-i]*2]+10]&6]+[[i&1]*$40]+$18
 
 .align $0020
 .print "D018 table: "+toHexString(*)
@@ -305,12 +333,12 @@ d018table:
 .align $0020
 .print "Low port table: "+toHexString(*)
 loporttable:
-.byte $3f,$3f,$3f
+.byte $3f,$3f
 .byte $09,$0b				// Block plex
 .byte $03,$05,$07			// Second plex
 .byte $3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f
 .byte $03,$05,$07			// First plex
-
+.byte $3f
 .align $0020
 .print "High port table: "+toHexString(*)
 hiporttable:
@@ -323,7 +351,7 @@ hiporttable:
 .align $0020
 .print "I/O value table: "+toHexString(*)
 iovaltable:
-.byte $d0,$d0,$d0
+.byte $d0,$d0
 .byte rst_stable+42
 .byte rst_stable+42
 .byte rst_stable+42
@@ -333,39 +361,13 @@ iovaltable:
 .byte rst_stable+21
 .byte rst_stable+21
 .byte rst_stable+21
+.byte $d0
 
 .align $0020
 .print "Realign: "+toHexString(*)
 realign:
-.fill 12,$18+[[i+2]&7]
+.fill 12,$18+[[i+1]&7]
 
-
-
-	
-/*
-.pc=$2000
-.var image = LoadPicture("data\top_chars.png")
-
-.var cy
-.var cx
-.for (var row=0;row<12;row++){
- .for (var col=0;col<12;col++){
-  .for (var y=0;y<21;y++)
-   .for (var x=0;x<3;x++)
-    {	
-	 .if (mod(row,2)==0)
-	     .if (y<3)  .eval cy=mod(156+ceil([row*39+y]/2)-1,156)
-		     else   .eval cy=[row*39]/2+y-2
-	 else
-		 .if (y>17) .eval cy=[[row-1]*39]/2+28+[y/2]
-			 else   .eval cy=[[row-1]*39]/2+19+y
-	 .eval cx=col*3+x
-	 .byte image.getMulticolorByte(cx,cy)
-	 
-	}
-  .byte $00
- }
- .fill $01f8,0
- .fill 8,[row]*$10+i
-}
-*/
+.align $0040
+sprblock:
+.fill $40,$aa

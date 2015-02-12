@@ -54,9 +54,11 @@ code:
 
 msx_irq:
 		:open_irq()
-		lda #LIGHT_GRAY
+		lda #BLACK
 		sta $d021
 		asl $d019
+		lda #$10
+		sta $d011
 		inc $d020
 		jsr music.play
 		dec $d020
@@ -78,7 +80,10 @@ screendata:
 .pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
 
-.pc = $4000
+.pc = $3700
+.import binary "sprites.prg"	// Fresh
+
+//.pc = $4000
 .fill $4000,256*random()
 
 .pc = $d800 "colour ram"
