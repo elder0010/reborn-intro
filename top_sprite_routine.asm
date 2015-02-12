@@ -2,8 +2,8 @@
 
 // Switching rasters
 // *****************
-.const	rst_setsprite	=	$33			// Set logo sprites
-.const	rst_stable		=	$33+8		// Stable irq
+.const	rst_setsprite	=	$28			// Set logo sprites
+.const	rst_stable		=	$30+8		// Stable irq
 .const	rst_mdlswitch	=	$c2			// Middle block (bitmap)
 .const	rst_msx			=	$f9			// Sid player
 
@@ -133,7 +133,7 @@ irq_setsprite:
 	sta $07fd		
 	lda $d021
 	sta $d022	
-	lda #$1b
+	lda #$18
 	sta $d011	
 	pla
 	cli
@@ -165,7 +165,7 @@ irq_stable2:
 	ldx.a lox				// 4
 	lda #$92				// 2
 	sta $dd00				// 4
-	ldy #$1c				// 2
+	ldy #$19				// 2
 	lda #rst_stable-1		// 2
 	cmp $d012				// 4 63/00
 	beq !+				
@@ -174,7 +174,7 @@ irq_stable2:
 	lda #bgcolor		// 2
 	sty $d011			// 4		
 	stx $d016			// 4	
-	ldy #20	
+	ldy #19				// 2
 	logoloop:		
 		nop
 		sta $d02d			// 4	
@@ -202,40 +202,42 @@ irq_stable2:
 		stx $d016			// 4		
 		dey					// 2
 		bpl logoloop		// 3
-				
-		lda #$93
-		sta $dd00
-		lda #$18
-		sta $d018
-		lda #$d8
-		sta $d016		
-		lda #$00
-		sta $d01b
 		
-		ldy #10
-	!:
-		.fill 6,NOP
+	lda #$93
+	sta $dd00
+	lda #$18
+	sta $d018
+	lda #$d8
+	sta $d016		
+	lda #$1e
+	sta $d011
+	sta $d020
+	.fill 13,NOP
+		
+	lda #$19
+	sta $d011
+		
+	ldy #$44
+!:
+	dey	
+	bne !-
+	bit $fe
+
+	
+	ldy #00
+	!:	
 		lda realign,y
 		sta $d011		
-		.fill 11,NOP
+		sta $d020
+		.fill 14,NOP		
 		bit $fe
-		dey		
-		bpl !-
+		iny
+		cpy #11
+		bcc !-
 		
-
-		
-		bit $fe				
-		and #$07		
-		lda #$1f
-		sta $d011
-		.fill 7,NOP
-		nop
-		clc
-		adc #$06
-		and #$07		
-		lda #$39
-		sta $d011				
-		
+	lda #$38+[[10+2]&7]	
+	sta $d011
+	
 	cli
 	dex
 	cpx #$c8
@@ -293,17 +295,17 @@ waitrtn:
 .align $0020
 .print "D011 table: "+toHexString(*)
 d011table:
-.fill 21,[[[[20-i]*2]+6]&6]+[[i&1]*$40]+$18
+.fill 20,[[[[19-i]*2]+10]&6]+[[i&1]*$40]+$18+1
 
 .align $0020
 .print "D018 table: "+toHexString(*)
 d018table:
-.fill 21,$10+[i&$f]
+.fill 20,$10+[i&$f]
 
 .align $0020
 .print "Low port table: "+toHexString(*)
 loporttable:
-.byte $3f,$3f,$3f,$3f
+.byte $3f,$3f,$3f
 .byte $09,$0b				// Block plex
 .byte $03,$05,$07			// Second plex
 .byte $3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f
@@ -312,7 +314,7 @@ loporttable:
 .align $0020
 .print "High port table: "+toHexString(*)
 hiporttable:
-.byte $d0,$d0,$d0,$d0
+.byte $d0,$d0,$d0
 .byte $d0,$d0
 .byte $d0,$d0,$d0
 .byte $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
@@ -321,7 +323,7 @@ hiporttable:
 .align $0020
 .print "I/O value table: "+toHexString(*)
 iovaltable:
-.byte $d0,$d0,$d0,$d0
+.byte $d0,$d0,$d0
 .byte rst_stable+42
 .byte rst_stable+42
 .byte rst_stable+42
@@ -335,7 +337,7 @@ iovaltable:
 .align $0020
 .print "Realign: "+toHexString(*)
 realign:
-.fill 11,$18+[[[10-i]+7]&7]
+.fill 12,$18+[[i+2]&7]
 
 
 

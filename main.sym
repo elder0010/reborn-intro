@@ -1,5 +1,5 @@
 .label irq_setsprite=$937
-.label irq_switch=$af7
+.label irq_switch=$aff
 .label d018table=$b60
 .label test=$88b
 .label loporttable=$b80
@@ -17,5 +17,5 @@
 .label irq_stable1=$9f4
 .label realign=$be0
 .label iovaltable=$bc0
-.label waitrtn=$b26
+.label waitrtn=$b2e
 .label copy_screendata=$8b8
