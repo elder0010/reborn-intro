@@ -29,6 +29,7 @@ code:
 
 		jsr copy_screendata
 		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_0data o rompe i dati
+		jsr prepare_cover_sprites
 
 		lda #0
 		sta $d015
@@ -37,7 +38,7 @@ code:
 
 		:d011($1b)
 		:d012($f9)
-		:set_irq(msx_irq)
+		:set_irq(lower_border_irq)
 
 		cli
 
@@ -73,6 +74,19 @@ top_irq:
 		bne !-
 }
 
+.macro point_next_sprites_lower_border(base,screen){
+		ldx #0
+		lda #base //lda #[bottom_sprites/$40]+7
+!:
+		sta screen+$03f9,x //sta screen_1+$03f9,x
+		clc
+		adc #1
+
+		inx
+		cpx #5
+		bne !-
+}
+
 bitmap_split_irq:
 		:open_irq()
 		asl $d019
@@ -97,6 +111,7 @@ bitmap_split_irq:
 
 		lda #0
 		sta plex_ct
+		sta $d01d
 
 		lda #screen_0_d018
 		sta $d018
@@ -185,46 +200,156 @@ plex_1_irq:
 
 		asl $d019
 
-		inc plex_ct
-		jsr next_bottom_sprites
+		//Sprite grigi
+		lda #[bottom_sprites/$40]+21
+		sta screen_1+$03f8
+		sta screen_1+$03f9
+		sta screen_1+$03fa
 
+		//Continuo del disegno
+		lda #[lower_border_sprites/$40]
+		sta screen_1+$03fb
+		lda #[lower_border_sprites/$40]+1
+		sta screen_1+$03fc
+		lda #[lower_border_sprites/$40]+2
+		sta screen_1+$03fd
 
-		:set_irq(msx_irq)
-		:d012($f9)
+		lda #$fa
+		sta $d001
+		sta $d003
+		sta $d005
+		sta $d007
+		sta $d009
+		sta $d00b
+
+		:set_irq(lower_border_irq)
+		:d012($f8)
 
 		:close_irq()
 		rti
 
-msx_irq:
+lower_border_irq:
 		:open_irq()
-		asl $d019
+
+		inc $d020
 
 		lda #$13
 		sta $d011
+
+		asl $d019
+
+		ldy #10
+		:wait()
+
+		lda #$18
+		sta $d000
+
+		lda #$c0
+		sta $d010
+
+//-------------------------
+//Sprites grigi
+		lda #$18+48
+		sta $d002
+
+		lda #$18+[48*2]
+		sta $d004
+//-------------------------
+
+//-------------------------
+//Sprites colorati
+		lda #$b0
+		sta $d006
+
+		lda #$b0+24
+		sta $d008
+
+		lda #$b0+24*2
+		sta $d00a
+//-------------------------
+
+		lda #DARK_GRAY
+		sta $d027
+		sta $d028
+		sta $d029
+
+		lda #$f8
+		sta $d01c
+
+		lda #BLUE
+		sta $d025
+
+		lda #PURPLE
+		sta $d026
+
+		lda #$7
+		sta $d01d
+
+		lda #screen_1_d018
+		sta $d018
+
+		dec $d020
 
 		lda #$fc
 !:
 		cmp $d012
 		bne !-
 
+		//Sprite grigi
+		lda #[bottom_sprites/$40]+21
+		sta screen_0+$03f8
+		sta screen_0+$03f9
+		sta screen_0+$03fa
 
-		lda #$ff
-		sta $d015
+		//Continuo del disegno
+		lda #[lower_border_sprites/$40]+21
+		sta screen_0+$03fb
+
+		lda #[lower_border_sprites/$40]+3
+		sta screen_0+$03fc
+		lda #[lower_border_sprites/$40]+4
+		sta screen_0+$03fd
+		lda #[lower_border_sprites/$40]+5
+		sta screen_0+$03fe
+
+		lda #$0f
+		sta $d001
+		sta $d003
+		sta $d005
+		sta $d007
+		sta $d009
+		sta $d00b
+
+		:set_irq(msx_irq)
+
+		:d011($9b)
+		:d012($0f)
+		:d016($d8)
+
+
+		:close_irq()
+		rti
+
+
+msx_irq:
+		:open_irq()
+
+		asl $d019
+
+		lda #screen_0_d018
+		sta $d018
 
 		:set_irq(top_irq)
 
-		lda #$1b
-		sta $d011
-
-
+		:d011($3b)
 		:d012($00)
+		lda #$ff
+		sta $d015
 
-		:d016($d8)
-	//	inc $d020
+		inc $d020
 		jsr music.play
 
-	//	dec $d020
-
+		dec $d020
 		:close_irq()
 		rti
 
@@ -245,6 +370,9 @@ screendata:
 .pc = bottom_sprites "bottom sprites"
 .import binary "data/sprit.raw"
 
+.pc = $0900 "lower border sprites"
+lower_border_sprites:
+.import binary "data/lower_border_sprites.raw"
 
 .pc = $d800 "colour ram"
 .import binary "data/d800.raw"

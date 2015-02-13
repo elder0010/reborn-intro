@@ -54,3 +54,13 @@ prepare_chars_under_sprites:
         bne !-
 
         rts
+
+prepare_cover_sprites:
+
+        lda #$ff
+        ldx #$40
+!:
+        sta [bottom_sprites+$40*21],x
+        dex
+        bpl !-
+        rts
