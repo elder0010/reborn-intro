@@ -114,11 +114,12 @@ bitmap_split_irq:
 		sta $d01d
 
 
-
 		jsr next_bottom_sprites
 		jsr recolour_sprites
 
 		:point_next_sprites([bottom_sprites/$40],screen_0)
+
+		:point_next_sprites([bottom_sprites/$40]+7,screen_1)
 
 		inc plex_ct
 
@@ -145,8 +146,6 @@ bitmap_split_irq:
 		lda d026_colours
 		sta $d026
 
-
-
 		:close_irq()
 		rti
 
@@ -154,6 +153,7 @@ bitmap_split_irq:
 .const base_plex = $cf
 .const offset_plex = $10
 
+.align $20
 lower_split_irq:
 		:open_irq()
 
@@ -169,32 +169,39 @@ lower_split_irq:
 		asl $d019
 
 		:set_irq(plex_0_irq)
-		:d012(base_plex)
+		:d012($cf)
 
 		:close_irq()
 		rti
 
+.align $20
+//Seconda riga di sprites (sotto ai menti)
 plex_0_irq:
 		:open_irq()
 		asl $d019
 
-		jsr next_bottom_sprites
-		inc plex_ct
+//		inc $d020
+
+		ldy #2
+		:wait()
+		nop
 
 		lda #screen_1_d018
 		sta $d018
 
-		:point_next_sprites([bottom_sprites/$40]+7,screen_1)
+		jsr next_bottom_sprites
+		inc plex_ct
 
 		:set_irq(plex_1_irq)
 		:d012(base_plex+offset_plex*1+3)
 
 		jsr next_bottom_sprites
+	//	dec $d020
 
 		:close_irq()
 		rti
 
-
+.align $20
 plex_1_irq:
 		:open_irq()
 
@@ -227,44 +234,50 @@ plex_1_irq:
 		sta $d009
 		sta $d00b
 
+
+		//Sprite grigio 0
+		lda #$18
+		sta $d000
+
+
+		//lda #$38
+		//sta $d015
+
 		:set_irq(lower_border_irq)
 		:d012($f8)
 
 		:close_irq()
 		rti
 
+.align $20
 lower_border_irq:
 		:open_irq()
+
 
 		inc $d020
 
 		lda #$13
 		sta $d011
 
-		asl $d019
-
-		ldy #10
-		:wait()
-
-		lda #$18
-		sta $d000
-
 		lda #$c0
 		sta $d010
 
-		lda #0
-		sta $d021
-//-------------------------
-//Sprites grigi
+		//-------------------------
+		//Sprites grigi 1-2
 		lda #$18+48
 		sta $d002
 
 		lda #$18+[48*2]
 		sta $d004
-//-------------------------
+		//-------------------------
 
-//-------------------------
-//Sprites colorati
+		lda #0
+		sta $d021
+
+
+		/*
+		//-------------------------
+		//Sprites colorati
 		lda #$b0
 		sta $d006
 
@@ -273,7 +286,8 @@ lower_border_irq:
 
 		lda #$b0+24*2
 		sta $d00a
-//-------------------------
+		//-------------------------
+		*/
 
 		lda #DARK_GRAY
 		sta $d027
@@ -282,6 +296,7 @@ lower_border_irq:
 
 		lda #$f8
 		sta $d01c
+
 
 		lda #BLUE
 		sta $d025
@@ -292,15 +307,9 @@ lower_border_irq:
 		lda #$7
 		sta $d01d
 
+
 		lda #screen_1_d018
 		sta $d018
-
-		dec $d020
-
-		lda #$fc
-!:
-		cmp $d012
-		bne !-
 
 		//Sprite grigi
 		lda #[bottom_sprites/$40]+21
@@ -319,6 +328,9 @@ lower_border_irq:
 		lda #[lower_border_sprites/$40]+5
 		sta screen_0+$03fe
 
+		dec $d020
+
+
 		lda #$0f
 		sta $d001
 		sta $d003
@@ -327,19 +339,32 @@ lower_border_irq:
 		sta $d009
 		sta $d00b
 
+
+
+		lda #$04
+!:
+		cmp $d012
+
+		bcc !-
+		asl $d019
+
 		:set_irq(msx_irq)
 
 		:d011($9b)
-		:d012($0f)
+		:d012($0f) //Questo fa saltare ntsc (abbassare a $06 e mettere un wait nel msx irq)
 		:d016($d8)
 
 		:close_irq()
 		rti
 
+.align $20
 msx_irq:
 		:open_irq()
 
 		asl $d019
+
+		//ldy #$1 //$50 PAL ->
+		//:wait()
 
 		lda #screen_0_d018
 		sta $d018
