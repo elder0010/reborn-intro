@@ -2,8 +2,10 @@
 
 // Switching rasters
 // *****************
-.const	rst_setsprite	=	$2e			// Set logo sprites
-.const	rst_stable		=	$30+8		// Stable irq
+.const	rst_sprite1		=	$130		// Top sprites
+.const	rst_sprite2		=	$2f			// More sprites
+.const	rst_sprite3		=	$34			// More sprites
+.const	rst_stable		=	$36			// Stable irq
 .const	rst_mdlswitch	=	$c2			// Middle block (bitmap)
 .const	rst_msx			=	$f9			// Sid player
 
@@ -29,6 +31,21 @@
 
 .const	sprbs		=	$3700/$40	// Sprite base (first bank)
 
+CopyData:
+	ldx #$00
+!:
+	lda $8000,x
+	sta $d800,x
+	lda $8100,x
+	sta $d900,x
+	lda $8200,x
+	sta $da00,x
+	lda $8300,x
+	sta $db00,x
+	dex
+	bne !-
+	rts
+
 initscroll:
 	lda #d800scr
 	ldx #39
@@ -41,23 +58,24 @@ initscroll:
 	sta $3fff
 	sta $79ff
 	sta $7fff
-	lda #$ff
+	lda #$aa
 	ldx #$3e
-!:
-	sta $7fc0,x
-	sta $3fc0
+!:	
+	sta $4000+sprblock,x
 	dex
-	bne !-
+	bpl !-
 	lda #bgcolor
 	sta $d021
+	sta $d022
+	sta $d023
 	lda #$ff
-	sta $d015
+	sta $d015	
 	rts
 
 set_mdlirq:
-	lda #$30
+	lda #<rst_sprite1
 	sta $d012
-	lda #$98
+	lda #$18|[[>rst_sprite1]*$80]
 	sta $d011
 	lda #<irq_sprite1
 	sta $fffe
@@ -90,11 +108,13 @@ irq_sprite1:
 	lda #$60
 	sta $d017
 	sta $d01d
+	lda #$7f
+	sta $d015
 	lda #$ff
 	sta $d01c
-	lda #<irq_setsprite
+	lda #<irq_sprite2
 	sta $fffe
-	lda #>irq_setsprite
+	lda #>irq_sprite2
 	sta $ffff			
 	ldx savex
 	dec $d020
@@ -106,7 +126,7 @@ irq_sprite1:
 sprite1tbl:
 .byte	$00,$09,$78,$09,$38,$1e,$68,$1e,$80,$1e
 .byte	$d8,$17,$08,$17,$00,$0f
-.byte	$c0,$18,[rst_setsprite-2],$00
+.byte	$c0,$18,rst_sprite2,$00
 sprite1clr:
 .byte	$f4,$fa									// Multicolor colors
 .byte	$fb,$f1,$fe,$fe,$fe,$fb,$fb,$f9			// Sprite colors
@@ -117,86 +137,111 @@ sprite1def:
 // *********************
 // Second sprite manager
 // *********************
-	
-irq_setsprite:	
+irq_sprite2:
 	lsr $d019
-	lda #rst_stable-2
+	pha	
+	lda #rst_sprite3
+	sta $d012
+	lda #<irq_sprite3
+	sta $fffe
+	lda #>irq_sprite3
+	sta $ffff
+	// Update coordinates
+	lda #$36
+	sta $d001
+	sta $d003		
+	lda #$33
+	sta $d005
+	sta $d007
+	sta $d009		
+	lda #$41
+	sta $d00b
+	sta $d00d
+	lda #$7c
+	sta $d01b
+	// Update definitons
+	lda #sprblock/$40
+	sta $47fd
+	sta $47fe
+	lda #$63
+	sta $d01d
+	sta $d017
+	lda #$c3
+	sta $d010	
+	// Line 48	
+	lda #sprbs+6
+	sta $07fc	
+	lda lox
+	and #$07
+	ora #$e0
+	sta $d000
+	eor #[$50^$e0]
+	sta $d002	
+	pla
+	cli
+	rti
+	
+	
+// *********************
+// Second sprite manager
+// *********************
+irq_sprite3:	
+	pha
+	// Line 52
+	lda #$e1
+	sta $07fb
+	lda #$e0
+	sta $07fa	
+	lda #$92
+	sta $dd00
+	lda #$c8
+	sta $d016
+	lda #$fc
+	sta $d01c
+	lda #rst_stable
 	sta $d012
 	lda #<irq_stable1
 	sta $fffe
 	lda #>irq_stable1
 	sta $ffff	
-	pha
-
-	lda #$32
-	sta $d003
-	sta $d00f
-	lda #$33
-	sta $d005
-	sta $d007
-	sta $d009
-	lda #$41
-	sta $d00b
-	sta $d00d
-	lda #$e0
-	sta $d002
-	
-	
-	lda #$3e
-	sta $d01b	
-	lda #$ff
-	sta $d015
-
-	lda #$06
-	sta $47f8
-	lda #$07
-	sta $47fe	
-	lda #$ff
-	sta $47f9
-	sta $47fa
-	sta $47fb
-	lda #$ff
-	sta $47fc
-	sta $47fd	
-
-	lda $d021
-	sta $d022	
+	lsr $d019	
 	pla
-	cli
 	rti
-	
+		
+		
+		
+		
 irq_stable1:
 	pha					// 3+9+0/7
-	lsr $d019			// 6
-	inc $d012			// 6
-	lda #<irq_stable2	// 2
-	sta $fffe			// 4
-	lda #>irq_stable2	// 2
-	sta $ffff			// 4
-	cli					// 2
-	.fill 16,NOP		// 32
-
-irq_stable2:
-	stx savex				// 3
-	sty savey				// 3
-	lsr $d019				// 6+9+0/1
-	lda #$dd
-	sta $d01c
-	.fill 6,NOP
-	ldx.a lox				// 4	
-	stx $d016				// 4	
-	lda #$92				// 2
-	sta $dd00				// 4		
-	lda	d011table+19		// 4
-	ldy #rst_stable-1		// 2
-	cpy $d012				// 4 63/00
-	beq !+				
-!:						// 3		
-	ldy #19				// 2
-	jmp startfpp		// 3
+	sec					// 2
+	lda #$31			// 2
+	sbc $dc04			// 4
+	sta *+4
+	bpl *
+	.fill $06,LDA_IMM	
+	.byte BIT_ZP
+	nop	
+	stx savex
+	lda #$19
+	ldx.a lox			
+	lsr $d016			
+	
+	sta $d011			// 4		
+	stx $d016			// 4		
+	sty.a savey			// 4		
+	ldy #18
+	lda.a scrollcolor	// 4
+	sta $d028			// 4
+	lda #bgcolor		// 2
+	sta $d027			// 4		
+	.fill 7,NOP			// 16
+	lsr $d016			// 6
+	stx $d016			// 4		
+	bit $ea				// 3		
+	nop
 	logoloop:		
 		nop
-		sta $d02d			// 4	
+		sta $d028			// 4	
 		lda scrollcolor		// 3
 		sta $d027			// 4		
 		lda loporttable,y	// 4
@@ -204,8 +249,7 @@ irq_stable2:
 		lda d018table,y		// 4
 		sta $d018			// 4
 		lda d011table,y		// 4
-		lsr $d016			// 6
-	startfpp:
+		lsr $d016			// 6	
 		sta $d011			// 4		
 		stx $d016			// 4
 		lda hiporttable,y	// 4
@@ -214,7 +258,7 @@ irq_stable2:
 	mod_io:
 		sta $fff0			// 4
 		lda.a scrollcolor	// 4
-		sta $d02d			// 4
+		sta $d028			// 4
 		lda #bgcolor		// 2
 		sta $d027			// 4
 		.fill 2,NOP			// 4
@@ -222,45 +266,50 @@ irq_stable2:
 		stx $d016			// 4		
 		dey					// 2
 		bpl logoloop		// 3
-		
+				
+	!:
 	lda #$93
 	sta $dd00
+	nop
+	lda #$1e
+	sta $d011	
 	lda #$18
 	sta $d018
 	lda #$d8
 	sta $d016		
-	lda #$1e
-	sta $d011
-	sta $d020
+	
+	nop
+	nop
 	lda #$ff
 	sta $d01c
-	.fill 10,NOP
-		
-	lda #$18
-	sta $d011
-		
-	ldy #$43
+	
+	lda #$33+63
+	sta $d005
+	sta $d007
+	sta $d009
+	lda #$41+42
+	sta $d00d
+	
+	nop	
+	ldy #$3b
 !:
 	dey	
 	bne !-
-	nop
-	nop	
-
+	
 	
 	ldy #00
 	!:	
 		lda realign,y
 		sta $d011		
-		sta $d020
-		.fill 14,NOP		
+		.fill 16,NOP
 		bit $fe
 		iny
-		cpy #12
+		cpy #13
 		bcc !-
 		
-	lda #$38+[[10+2]&7]	
+	lda #$38+[[12+7]&7]	
 	sta $d011
-	
+	lsr $d019
 	cli
 	dex
 	cpx #$c8
@@ -281,9 +330,6 @@ irq_stable2:
 	lda #>irq_switch		// 2
 	sta $ffff				// 4	
 	pla
-	pla
-	pla
-	pla			
 	rti
 	
 	
@@ -323,7 +369,7 @@ waitrtn:
 .align $0020
 .print "D011 table: "+toHexString(*)
 d011table:
-.fill 20,[[[[19-i]*2]+10]&6]+[[i&1]*$40]+$18
+.fill 20,[[[[19-i]*2]+8]&6]+[[i&1]*$40]+$18+1
 
 .align $0020
 .print "D018 table: "+toHexString(*)
@@ -334,39 +380,39 @@ d018table:
 .print "Low port table: "+toHexString(*)
 loporttable:
 .byte $3f,$3f
-.byte $09,$0b				// Block plex
-.byte $03,$05,$07			// Second plex
+.byte $05,$07,$09				// Block plex
+.byte $3f,$3f			// Second plex
 .byte $3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f,$3f
-.byte $03,$05,$07			// First plex
+.byte $05,$07,$09			// First plex
 .byte $3f
 .align $0020
 .print "High port table: "+toHexString(*)
 hiporttable:
-.byte $d0,$d0,$d0
 .byte $d0,$d0
 .byte $d0,$d0,$d0
+.byte $d0,$d0
 .byte $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
 .byte $d0,$d0,$d0
+.byte $d0
 
 .align $0020
 .print "I/O value table: "+toHexString(*)
 iovaltable:
 .byte $d0,$d0
-.byte rst_stable+42
-.byte rst_stable+42
-.byte rst_stable+42
-.byte rst_stable+42
-.byte rst_stable+42
+.byte $33+42
+.byte $33+42
+.byte $33+42
+.byte $d0,$d0
 .byte $d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0,$d0
-.byte rst_stable+21
-.byte rst_stable+21
-.byte rst_stable+21
+.byte $33+21
+.byte $33+21
+.byte $33+21
 .byte $d0
 
 .align $0020
 .print "Realign: "+toHexString(*)
 realign:
-.fill 12,$18+[[i+1]&7]
+.fill 13,$18+[[i+7]&7]
 
 .align $0040
 sprblock:

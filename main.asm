@@ -31,13 +31,22 @@ code:
 		sta $d018
 
 		jsr copy_screendata
-		
-		jsr	initscroll	// Freshness
+
 		lda #0
 		sta $d015
 
 		:wait_frame()
-
+		
+		// <FRESHNESS>
+		.const	videomode	=	$80	
+		.const	CIAtype		=	$81
+		jsr CopyData	// Test purpose
+		jsr DetectCIA
+		jsr DetectVIC
+		jsr start_timer
+		jsr	initscroll
+		// </FRESHNESS>
+				
 		:d011($3b)
 		:d012($f9)
 		:set_irq(msx_irq)
@@ -71,7 +80,11 @@ msx_irq:
 .import source "functions.asm"
 
 .pc = $900 "logo_swinger"
+//<FRESHNESS>
 .import source "top_sprite_routine.asm"
+.import source "timer.asm"
+.import source "detect.asm"
+//</FRESHNESS>
 
 .pc = $2600 "screendata"
 screendata:
@@ -86,5 +99,5 @@ screendata:
 //.pc = $4000
 .fill $4000,256*random()
 
-.pc = $d800 "colour ram"
+.pc = $8000 "colour ram"
 .import binary "data/d800.raw"
