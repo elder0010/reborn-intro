@@ -6,7 +6,7 @@
 
 .const top_bg_colour = LIGHT_GRAY
 .const bitmap_bg_colour = ORANGE
-.const bottom_bg_colour = BLACK
+.const bottom_bg_colour = DARK_GRAY
 .const screen_0 = $0400
 .const screen_1 = $0800
 .const screen_0_d018 = $1a

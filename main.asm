@@ -106,15 +106,14 @@ bitmap_split_irq:
 		ldy #$f0
 		:wait()
 
-		lda #bottom_bg_colour
+		lda #border_colour
 		sta $d020
 
 		lda #0
 		sta plex_ct
 		sta $d01d
 
-		lda #screen_0_d018
-		sta $d018
+
 
 		jsr next_bottom_sprites
 		jsr recolour_sprites
@@ -146,6 +145,8 @@ bitmap_split_irq:
 		lda d026_colours
 		sta $d026
 
+
+
 		:close_irq()
 		rti
 
@@ -155,13 +156,17 @@ bitmap_split_irq:
 
 lower_split_irq:
 		:open_irq()
-		asl $d019
 
-		:d016($c8)
+		ldy #2
+		:wait()
+
 		:d011($1b)
+		:d016($c8)
 
 		lda #bottom_bg_colour
 		sta $d021
+
+		asl $d019
 
 		:set_irq(plex_0_irq)
 		:d012(base_plex)
@@ -247,6 +252,8 @@ lower_border_irq:
 		lda #$c0
 		sta $d010
 
+		lda #0
+		sta $d021
 //-------------------------
 //Sprites grigi
 		lda #$18+48
@@ -326,10 +333,8 @@ lower_border_irq:
 		:d012($0f)
 		:d016($d8)
 
-
 		:close_irq()
 		rti
-
 
 msx_irq:
 		:open_irq()
@@ -358,7 +363,6 @@ msx_irq:
 
 .pc = $3700 "bottom sprite plexer"
 .import source "bottom_sprite_plexer.asm"
-
 
 .pc = $2600 "screen data"
 screendata:

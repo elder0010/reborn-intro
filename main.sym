@@ -4,24 +4,24 @@
 .label screendata=$2600
 .label lower_border_sprites=$900
 .label bottom_sprites_y=$372c
-.label msx_irq=$229f {
+.label msx_irq=$22a4 {
 }
 .label code=$2000
 .label next_bottom_sprites=$3700
 .label d026_colours=$373c
 .label bottom_sprites_pt_offset=$3727
-.label prepare_cover_sprites=$2332
-.label prepare_chars_under_sprites=$22f2
+.label prepare_cover_sprites=$2334
+.label prepare_chars_under_sprites=$22f4
 .label top_irq=$207c {
 }
 .label bitmap_split_irq=$20a3 {
 }
 .label lower_border_irq=$21e7 {
 }
-.label copy_screendata=$22d4
+.label copy_screendata=$22d6
 .label plex_1_irq=$2188 {
 }
-.label lower_split_irq=$2123 {
+.label lower_split_irq=$211e {
 }
 .label plex_0_irq=$214f {
 }
