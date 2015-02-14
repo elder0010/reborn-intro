@@ -212,19 +212,20 @@ plex_1_irq:
 
 		asl $d019
 
+
 		//Sprite grigi
 		lda #[bottom_sprites/$40]+21
-		sta screen_1+$03f8
-		sta screen_1+$03f9
-		sta screen_1+$03fa
+		sta screen_1+$03f8 //0
+		sta screen_1+$03fc //4
+		sta screen_1+$03fd //5
 
 		//Continuo del disegno
 		lda #[lower_border_sprites/$40]
-		sta screen_1+$03fb
+		sta screen_1+$03f9
 		lda #[lower_border_sprites/$40]+1
-		sta screen_1+$03fc
+		sta screen_1+$03fa
 		lda #[lower_border_sprites/$40]+2
-		sta screen_1+$03fd
+		sta screen_1+$03fb
 
 		lda #$fa
 		sta $d001
@@ -235,13 +236,17 @@ plex_1_irq:
 		sta $d00b
 
 
-		//Sprite grigio 0
+		//Sprite grigio 0 - posso spostarlo ora
 		lda #$18
 		sta $d000
 
 
 		//lda #$38
 		//sta $d015
+
+		lda #0
+		sta $d015
+
 
 		:set_irq(lower_border_irq)
 		:d012($f8)
@@ -253,50 +258,44 @@ plex_1_irq:
 lower_border_irq:
 		:open_irq()
 
-
 		inc $d020
 
 		lda #$13
 		sta $d011
 
+		lda #0
+		sta $d021
+
+	//	lda $d012
+
+	/*
+		//ldy #17
+		//:wait()
+
 		lda #$c0
 		sta $d010
+
+		lda #screen_1_d018
+		sta $d018
 
 		//-------------------------
 		//Sprites grigi 1-2
 		lda #$18+48
-		sta $d002
-
-		lda #$18+[48*2]
-		sta $d004
-		//-------------------------
-
-		lda #0
-		sta $d021
-
-
-		/*
-		//-------------------------
-		//Sprites colorati
-		lda #$b0
-		sta $d006
-
-		lda #$b0+24
 		sta $d008
 
-		lda #$b0+24*2
+		lda #$18+[48*2]
 		sta $d00a
 		//-------------------------
-		*/
+
+
 
 		lda #DARK_GRAY
 		sta $d027
-		sta $d028
-		sta $d029
+		sta $d02b
+		sta $d02c
 
-		lda #$f8
+		lda #$ce
 		sta $d01c
-
 
 		lda #BLUE
 		sta $d025
@@ -304,12 +303,9 @@ lower_border_irq:
 		lda #PURPLE
 		sta $d026
 
-		lda #$7
+		lda #$31
 		sta $d01d
 
-
-		lda #screen_1_d018
-		sta $d018
 
 		//Sprite grigi
 		lda #[bottom_sprites/$40]+21
@@ -328,7 +324,6 @@ lower_border_irq:
 		lda #[lower_border_sprites/$40]+5
 		sta screen_0+$03fe
 
-		dec $d020
 
 
 		lda #$0f
@@ -339,13 +334,13 @@ lower_border_irq:
 		sta $d009
 		sta $d00b
 
+		*/
 
-
-		lda #$04
 !:
-		cmp $d012
-
+		lda $d012
+		cmp #$fc
 		bcc !-
+		dec $d020
 		asl $d019
 
 		:set_irq(msx_irq)
