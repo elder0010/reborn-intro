@@ -28,7 +28,7 @@ code:
 		sta $d016
 
 		jsr copy_screendata
-		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_0data o rompe i dati
+		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
 		jsr prepare_cover_sprites
 
 		lda #0
@@ -53,6 +53,9 @@ top_irq:
 
 		lda #screen_0_d018
 		sta $d018
+
+		lda #0
+		sta $d017
 
 		:set_irq(bitmap_split_irq)
 		:d012($7f)
@@ -113,7 +116,6 @@ bitmap_split_irq:
 		sta plex_ct
 		sta $d01d
 
-
 		jsr next_bottom_sprites
 		jsr recolour_sprites
 
@@ -140,10 +142,10 @@ bitmap_split_irq:
 		lda #$ff
 		sta $d01c
 
-		lda d025_colours
+		lda #$f0
 		sta $d025
 
-		lda d026_colours
+		lda #ORANGE
 		sta $d026
 
 		:close_irq()
@@ -163,7 +165,7 @@ lower_split_irq:
 		:d011($1b)
 		:d016($c8)
 
-		lda #bottom_bg_colour
+		lda #0
 		sta $d021
 
 		asl $d019
@@ -185,6 +187,7 @@ plex_0_irq:
 		ldy #2
 		:wait()
 		nop
+		nop
 
 		lda #screen_1_d018
 		sta $d018
@@ -193,7 +196,7 @@ plex_0_irq:
 		inc plex_ct
 
 		:set_irq(plex_1_irq)
-		:d012(base_plex+offset_plex*1+3)
+		:d012(base_plex+offset_plex*1+2)
 
 		jsr next_bottom_sprites
 	//	dec $d020
@@ -205,19 +208,20 @@ plex_0_irq:
 plex_1_irq:
 		:open_irq()
 
+		ldy #2
+		:wait()
+
 		:point_next_sprites([bottom_sprites/$40]+14,screen_0)
 
 		lda #screen_0_d018
 		sta $d018
 
-		asl $d019
-
-
-		//Sprite grigi
+		//Spritoni grigi
 		lda #[bottom_sprites/$40]+21
-		sta screen_1+$03f8 //0
-		sta screen_1+$03fc //4
-		sta screen_1+$03fd //5
+		sta screen_1+$03f8
+		sta screen_1+$03fe
+		sta screen_1+$03ff
+
 
 		//Continuo del disegno
 		lda #[lower_border_sprites/$40]
@@ -232,24 +236,15 @@ plex_1_irq:
 		sta $d003
 		sta $d005
 		sta $d007
-		sta $d009
-		sta $d00b
-
-
-		//Sprite grigio 0 - posso spostarlo ora
-		lda #$18
-		sta $d000
-
-
-		//lda #$38
-		//sta $d015
-
-		lda #0
-		sta $d015
-
+		sta $d00d
+		sta $d00f
 
 		:set_irq(lower_border_irq)
-		:d012($f8)
+		:d012($f9)
+		asl $d019
+
+	//	lda #$ff
+	//	sta $d015
 
 		:close_irq()
 		rti
@@ -258,44 +253,40 @@ plex_1_irq:
 lower_border_irq:
 		:open_irq()
 
-		inc $d020
-
-		lda #$13
-		sta $d011
-
-		lda #0
-		sta $d021
-
-	//	lda $d012
-
-	/*
-		//ldy #17
-		//:wait()
-
-		lda #$c0
-		sta $d010
-
-		lda #screen_1_d018
-		sta $d018
-
-		//-------------------------
-		//Sprites grigi 1-2
-		lda #$18+48
-		sta $d008
-
-		lda #$18+[48*2]
-		sta $d00a
-		//-------------------------
-
+		lda #LIGHT_GRAY
+		sta $d020
 
 
 		lda #DARK_GRAY
 		sta $d027
-		sta $d02b
-		sta $d02c
+		sta $d02d
+		sta $d02e
 
-		lda #$ce
-		sta $d01c
+		lda #0
+		sta $d025
+		sta $d010
+
+		lda #$18
+		sta $d000
+
+		lda #$13
+		sta $d011
+
+		//-------------------------
+		//Sprites grigi 1-2
+		lda #$18+48
+		sta $d00c
+
+		lda #$18+[48*2]
+		sta $d00e
+		//-------------------------
+
+		lda #screen_1_d018
+		sta $d018
+
+		lda #$c1
+		sta $d017
+		sta $d01d
 
 		lda #BLUE
 		sta $d025
@@ -303,44 +294,23 @@ lower_border_irq:
 		lda #PURPLE
 		sta $d026
 
-		lda #$31
-		sta $d01d
-
-
-		//Sprite grigi
-		lda #[bottom_sprites/$40]+21
-		sta screen_0+$03f8
-		sta screen_0+$03f9
-		sta screen_0+$03fa
-
 		//Continuo del disegno
-		lda #[lower_border_sprites/$40]+21
+		lda #[lower_border_sprites/$40]+3
+		sta screen_0+$03fa
+		lda #[lower_border_sprites/$40]+4
 		sta screen_0+$03fb
 
-		lda #[lower_border_sprites/$40]+3
-		sta screen_0+$03fc
-		lda #[lower_border_sprites/$40]+4
-		sta screen_0+$03fd
-		lda #[lower_border_sprites/$40]+5
+		//Spritoni grigi
+		lda #[bottom_sprites/$40]+21
+
+		sta screen_0+$03f8
 		sta screen_0+$03fe
-
-
+		sta screen_0+$03ff
 
 		lda #$0f
-		sta $d001
-		sta $d003
 		sta $d005
 		sta $d007
-		sta $d009
-		sta $d00b
 
-		*/
-
-!:
-		lda $d012
-		cmp #$fc
-		bcc !-
-		dec $d020
 		asl $d019
 
 		:set_irq(msx_irq)
@@ -368,21 +338,23 @@ msx_irq:
 
 		:d011($3b)
 		:d012($00)
+
 		lda #$ff
 		sta $d015
 
-		inc $d020
+		lda #$24
+		sta $d001
+
+		sta $d00d
+		sta $d00f
+
 		jsr music.play
 
-		dec $d020
 		:close_irq()
 		rti
 
 .pc = * "functions"
 .import source "functions.asm"
-
-.pc = $3700 "bottom sprite plexer"
-.import source "bottom_sprite_plexer.asm"
 
 .pc = $2600 "screen data"
 screendata:
