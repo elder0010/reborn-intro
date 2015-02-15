@@ -4,14 +4,21 @@
 
 :BasicUpstart2(code)
 
-.pc = $2000 "code"
+.pc = $2000 "charset"
+.import binary "data/charset.raw"
+.fill 8,$ff
+.fill 7,$ff
+.byte 0
+
+.pc = $2116 "code"
 code:
 		sei
 		.if(PLAY_MUSIC){
 			lda #0
+			sta $d015
 			jsr music.init
 		}
-		:d011(0)
+
 		:kernal_off()
 		:turn_off_cia_turn_on_raster_irq()
 		:kill_nmi()
@@ -24,17 +31,9 @@ code:
 
 		:bank_0()
 
-		lda #$c8
-		sta $d016
-
 		jsr copy_screendata
 		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
 		jsr prepare_cover_sprites
-
-		lda #0
-		sta $d015
-
-		:wait_frame()
 
 		:d011($1b)
 		:d012($f9)
@@ -50,9 +49,6 @@ top_irq:
 
 		lda #top_bg_colour
 		sta $d021
-
-		lda #screen_0_d018
-		sta $d018
 
 		lda #0
 		sta $d017
@@ -159,13 +155,13 @@ bitmap_split_irq:
 lower_split_irq:
 		:open_irq()
 
-		ldy #2
-		:wait()
+		.fill $2,NOP
+		bit $24
 
 		:d011($1b)
 		:d016($c8)
 
-		lda #0
+		lda #DARK_GRAY
 		sta $d021
 
 		asl $d019
@@ -182,8 +178,6 @@ plex_0_irq:
 		:open_irq()
 		asl $d019
 
-//		inc $d020
-
 		ldy #2
 		:wait()
 		nop
@@ -199,7 +193,6 @@ plex_0_irq:
 		:d012(base_plex+offset_plex*1+2)
 
 		jsr next_bottom_sprites
-	//	dec $d020
 
 		:close_irq()
 		rti
@@ -222,7 +215,6 @@ plex_1_irq:
 		sta screen_1+$03fe
 		sta screen_1+$03ff
 
-
 		//Continuo del disegno
 		lda #[lower_border_sprites/$40]
 		sta screen_1+$03f9
@@ -243,9 +235,6 @@ plex_1_irq:
 		:d012($f9)
 		asl $d019
 
-	//	lda #$ff
-	//	sta $d015
-
 		:close_irq()
 		rti
 
@@ -256,18 +245,17 @@ lower_border_irq:
 		lda #LIGHT_GRAY
 		sta $d020
 
-
 		lda #DARK_GRAY
 		sta $d027
 		sta $d02d
 		sta $d02e
 
-		lda #0
-		sta $d025
-		sta $d010
-
 		lda #$18
 		sta $d000
+
+		ldx #0
+		stx $d025
+		stx $d010
 
 		lda #$13
 		sta $d011
@@ -275,6 +263,9 @@ lower_border_irq:
 		//-------------------------
 		//Sprites grigi 1-2
 		lda #$18+48
+
+		stx $d021
+
 		sta $d00c
 
 		lda #$18+[48*2]
@@ -342,9 +333,8 @@ msx_irq:
 		lda #$ff
 		sta $d015
 
-		lda #$24
+		lda #$23
 		sta $d001
-
 		sta $d00d
 		sta $d00f
 
@@ -356,7 +346,7 @@ msx_irq:
 .pc = * "functions"
 .import source "functions.asm"
 
-.pc = $2600 "screen data"
+.pc = $5600 "screen data"
 screendata:
 .import binary "data/screen.raw"
 
@@ -366,7 +356,7 @@ screendata:
 .pc = bottom_sprites "bottom sprites"
 .import binary "data/sprit.raw"
 
-.pc = $0900 "lower border sprites"
+.pc = $0ec0 "lower border sprites"
 lower_border_sprites:
 .import binary "data/lower_border_sprites.raw"
 
