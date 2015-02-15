@@ -30,20 +30,22 @@ code:
 		lda #$18
 		sta $d018
 
-		jsr copy_screendata
+		jsr copy_screendata		
 
 		lda #0
 		sta $d015
 
+		jsr CopyData	// Freshness
+		
 		:wait_frame()
 		
 		// <FRESHNESS>
 		.const	videomode	=	$80	
-		.const	CIAtype		=	$81
-		jsr CopyData	// Test purpose
+		.const	CIAtype		=	$81		
 		jsr DetectCIA
 		jsr DetectVIC
 		jsr start_timer
+		jsr preparesbsprite		
 		jsr	initscroll
 		// </FRESHNESS>
 				
@@ -79,11 +81,18 @@ msx_irq:
 .pc = * "functions"
 .import source "functions.asm"
 
-.pc = $900 "logo_swinger"
+.pc = * "logo_swinger"
 //<FRESHNESS>
 .import source "top_sprite_routine.asm"
 .import source "timer.asm"
 .import source "detect.asm"
+
+.pc = $2000 "Top sprites"
+b0sprite:
+.import binary "sprites.prg"	// Fresh
+logo:
+.fill $200,floor(i/$20)
+
 //</FRESHNESS>
 
 .pc = $2600 "screendata"
@@ -93,11 +102,13 @@ screendata:
 .pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
 
-.pc = $3700
-.import binary "sprites.prg"	// Fresh
+.pc = * "colour ram"
+.align $0100
+colorbase:
+.import binary "data/d800_comp.raw"
+.import source "altro.asm"
 
-//.pc = $4000
-.fill $4000,256*random()
 
-.pc = $8000 "colour ram"
-.import binary "data/d800.raw"
+.pc = $4000
+//.fill $4000,[floor(2*random())*$03]+[floor(2*random())*$0c]+[floor(2*random())*$30]+[floor(2*random())*$c0]
+.fill $4000,0
