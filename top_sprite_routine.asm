@@ -37,6 +37,7 @@
 // ********
 .const	b1sprite	=	$4400		// Bank 1 sprite base
 .const	logoswap	=	$fc00		// Swap zone
+.const	sprblock	=	$37c0		// Filled block sprite
 
 // Sprite def.
 // ***********
@@ -45,18 +46,16 @@
 
 
 
-	
+.align $0100	
 // FPP Precalc'd tables	
 // ********************
-.align $0100	// -> D011: skip badlines and alternate EBCM/Char mode (gfx*2)
-// Block sprite
-sprblock:
-.fill $40,$aa
 
+// D011: skip badlines and alternate EBCM/Char mode (gfx*2)
 .print "D011 table: "+toHexString(*)
 d011table:
-.fill 20,[[[19-i]*2]&6]+[[[i^1]&1]*$40]+$18+1
+.fill 19,[[[19-i]*2]&6]+[[[i^1]&1]*$40]+$18+1
 
+// D018: create d018 list for next use
 .var	d018values=List()
 .for(var i=0;i<38;i++)	
 	.eval	d018values.add([[$2e-floor(i/2)]&$f]+[16*[floor([i+5]/21)*2+1]])
@@ -74,15 +73,17 @@ d018table2:
 
 // Plexer
 // ******
-// Value modified on each FPP line (used for multiplexing)
+// Value modified on each FPP line (used for multiplexing sprites)
+
+// D0xx ports
 .print "Plex on FPP tables [$80]: "+toHexString(*)
 plexport:
-.byte	$3f,$3f,$3f,$3f,$3f,$3f,$3f,$09,$07,$05
-.byte	$3f,$3f,$3f,$3f,$3f,$3f,$09,$07,$05,$3f
+.byte	$3f,$3f,$3f,$3f,$3f,$3f,$3f,$09,$07,$05,$3f,$3f,$3f,$3f,$3f,$3f,$09,$07,$05
 
+// Values to be assigned
 plexvalue:
-.byte	$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42
-.byte	$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+00
+.byte	$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21
+
 
 // More crunching needed to realign the bitmap
 // *******************************************
@@ -91,20 +92,35 @@ realign:
 .fill 13,$18+[[i+7]&7]
 
 convlogo:
-.fill	15,[3*[i&1]]+[6*[i&2]]+[12*[i&4]]+[24*[i&8]]
+.fill	16,[3*[i&1]]+[6*[i&2]]+[12*[i&4]]+[24*[i&8]]
 
 masks:
-.byte	$00,$00,$03,$03,$07,$07,$0f,$0f
+.byte	$00,$03,$07,$0f
 
+// Sprite definitions
+// ******************
+// To be copied on second bank
 spritedef:
-.byte	sprblock/$40,sprblock/$40,b1sprbs+0,b1sprbs+1,b1sprbs+2,$1e,$1d,$00
-.byte	sprblock/$40,sprblock/$40,b1sprbs+3,b1sprbs+4,b1sprbs+5,$1e,$1d,$00
-.byte	sprblock/$40,sprblock/$40,b1sprbs+6,b1sprbs+8,b1sprbs+9,$1e,$1d,$00
-.byte	sprblock/$40,sprblock/$40,b0sprbs+6+4,b0sprbs+8+4,b0sprbs+9+4,$1e,$1d,$00
+.byte	sprblock/$40,sprblock/$40,b1sprbs+0,b1sprbs+1,b1sprbs+2,$1e,$1d
+.byte	sprblock/$40,sprblock/$40,b1sprbs+3,b1sprbs+4,b1sprbs+5,$1e,$1d
+.byte	sprblock/$40,sprblock/$40,b1sprbs+6,b1sprbs+8,b1sprbs+9,$1e,$1d
+.byte	sprblock/$40,sprblock/$40,b0sprbs+6+4,b0sprbs+8+4,b0sprbs+9+4,$1e,$1d
+
+// VIC configuration at raster 0
+sprite1tbl:	// Sprite + $d011 and $d012
+.byte	$d8,$17,$08,$17,$38,$1e,$68,$1e,$80,$1e
+.byte	$00,$09,$78,$09,$00,$00
+.byte	$02,$18,rst_sprite2,$00
+sprite1clr:	// Sprite colors
+.byte	$f4,$fa									// Multicolor colors
+.byte	$fb,$fb,$fe,$fe,$fe,$fb,$f1,$f9			// Sprite colors
+sprite1def:	// Sprite definitions
+.byte   sprblock/$40,sprblock/$40,b0sprbs+1,b0sprbs+2,b0sprbs+3,b0sprbs,b0sprbs
 
 
-
-
+// Scroll initialization
+// *********************
+// Call this before anything else
 initscroll:
 	lda #d800scr
 	ldx #39
@@ -121,16 +137,18 @@ initscroll:
 	ldx #$3e
 !:	
 	sta $4000+sprblock,x
+	sta sprblock,x
 	dex
 	bpl !-
-	lda #bgcolor
-	sta $d021
-	sta $d022
-	sta $d023
-	lda #$ff
-	sta $d015	
+	lda #bgcolor	// Reset
+	sta $d021		// - Standard background
+	sta $d022		// - Fst EBCM background
 	rts
 
+	
+// Effect handler
+// **************
+// Call this inside an IRQ to create effect on next frame
 set_mdlirq:
 	lda #<rst_sprite1
 	sta $d012
@@ -143,10 +161,8 @@ set_mdlirq:
 	rts
 
 	
-// *********************	
 // Top sprite management
 // *********************
-
 irq_sprite1:
 	lsr $d019
 	pha	
@@ -167,8 +183,7 @@ irq_sprite1:
 	sta $d017
 	sta $d01d
 	lda #$7f
-	sta $d015
-	lda #$ff
+	sta $d015	
 	sta $d01c
 	lda #<irq_sprite2
 	sta $fffe
@@ -182,16 +197,6 @@ irq_sprite1:
 	sta $d016	
 	pla
 	rti
-	
-sprite1tbl:
-.byte	$d8,$17,$08,$17,$38,$1e,$68,$1e,$80,$1e
-.byte	$00,$09,$78,$09,$00,$00
-.byte	$02,$18,rst_sprite2,$00
-sprite1clr:
-.byte	$f4,$fa									// Multicolor colors
-.byte	$fb,$fb,$fe,$fe,$fe,$fb,$f1,$f9			// Sprite colors
-sprite1def:
-.byte   sprblock/$40,sprblock/$40,b0sprbs+1,b0sprbs+2,b0sprbs+3,b0sprbs,b0sprbs,$00
 
 
 // *********************
@@ -399,7 +404,7 @@ irq_stable1:
 
 	inc $d020
 	txa
-	and #$07
+	alr #$07
 	tax
 	lda masks,x	
 	sta lftmask+1
@@ -580,15 +585,15 @@ d82sta:
 	sta b1sprite+$200,x		
 	dex
 	bne !-
-	ldx #$07
+	ldx #$06
 !:
 	lda spritedef+$00,x
 	sta $47f8,x
-	lda spritedef+$08,x
+	lda spritedef+$07,x
 	sta $4ff8,x
-	lda spritedef+$10,x
+	lda spritedef+$0e,x
 	sta $57f8,x	
-	lda spritedef+$18,x
+	lda spritedef+$15,x
 	sta $03f8,x
 	dex
 	bpl !-
