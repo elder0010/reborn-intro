@@ -17,3 +17,8 @@
 .const bottom_fake_charset = $2000 //solo 8 bytes per layer di colori sotto le facce
 
 .const plex_ct = $40
+
+.const reset_a = $10
+.const reset_x = $11
+.const reset_y = $12
+.const stabilizer_irq_line = $70

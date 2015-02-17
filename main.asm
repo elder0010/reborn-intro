@@ -53,12 +53,13 @@ top_irq:
 		lda #0
 		sta $d017
 
-		:set_irq(bitmap_split_irq)
-		:d012($7f)
+		:set_irq(stabilizer_irq_pal)
+		:d012(stabilizer_irq_line)
 
 		:close_irq()
 		rti
 
+.import source "sideborder_pal.asm"
 
 .macro point_next_sprites(base,screen){
 		ldx #0
@@ -86,8 +87,14 @@ top_irq:
 		bne !-
 }
 
+
+/*
 bitmap_split_irq:
 		:open_irq()
+*/
+
+
+bitmap_split_irq:
 		asl $d019
 
 		:set_irq(lower_split_irq)
@@ -144,7 +151,11 @@ bitmap_split_irq:
 		lda #ORANGE
 		sta $d026
 
-		:close_irq()
+	//	:close_irq()
+		lda reset_a
+		ldx reset_x
+		ldy reset_y
+
 		rti
 
 
@@ -349,6 +360,9 @@ msx_irq:
 .pc = $5600 "screen data"
 screendata:
 .import binary "data/screen.raw"
+
+.pc = $2800 "sidborder sprites"
+.import binary "data/sideborder_sprites.raw"
 
 .pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
