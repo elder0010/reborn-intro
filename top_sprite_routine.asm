@@ -38,6 +38,8 @@
 .const	b1sprite	=	$4400		// Bank 1 sprite base
 .const	logoswap	=	$fc00		// Swap zone
 .const	sprblock	=	$37c0		// Filled block sprite
+.const	sbleft		=	$4780		// Sideborder sprite left
+.const	sbright		=	$4740		// Sideborder sprite right
 
 // Sprite def.
 // ***********
@@ -78,11 +80,11 @@ d018table2:
 // D0xx ports
 .print "Plex on FPP tables [$80]: "+toHexString(*)
 plexport:
-.byte	$3f,$3f,$3f,$3f,$3f,$3f,$3f,$09,$07,$05,$3f,$3f,$3f,$3f,$3f,$3f,$09,$07,$05
+.byte	$3f,$3f,$3f,$0b,$0d,$3f,$3f,$09,$07,$05,$3f,$3f,$3f,$3f,$3f,$3f,$09,$07,$05
 
 // Values to be assigned
 plexvalue:
-.byte	$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21
+.byte	$33,$33,$33,$36+42,$36+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21
 
 
 // More crunching needed to realign the bitmap
@@ -113,9 +115,9 @@ sprite1tbl:	// Sprite + $d011 and $d012
 .byte	$02,$18,rst_sprite2,$00
 sprite1clr:	// Sprite colors
 .byte	$f4,$fa									// Multicolor colors
-.byte	$fb,$fb,$fe,$fe,$fe,$fb,$f1,$f9			// Sprite colors
+.byte	$fb,$fb,$fe,$fe,$fe,$fb,$f1,GREY		// Sprite colors
 sprite1def:	// Sprite definitions
-.byte   sprblock/$40,sprblock/$40,b0sprbs+1,b0sprbs+2,b0sprbs+3,b0sprbs,b0sprbs
+.byte   sprblock/$40,sprblock/$40,b0sprbs+1,b0sprbs+2,b0sprbs+3,b0sprbs,b0sprbs,b0sprbs+14
 
 
 // Scroll initialization
@@ -182,7 +184,7 @@ irq_sprite1:
 	lda #$03
 	sta $d017
 	sta $d01d
-	lda #$7f
+	lda #$ff
 	sta $d015	
 	sta $d01c
 	lda #<irq_sprite2
@@ -225,7 +227,7 @@ irq_sprite2:
 	lda #$67
 	sta $d01b
 	// Update definitons
-	lda #$63
+	lda #$e3
 	sta $d01d
 	sta $d017
 	lda #$62
@@ -239,6 +241,10 @@ irq_sprite2:
 	sta $d00c		
 	lda #b0sprbs+6
 	sta $07fc		
+	lda #$38
+	sta $d00e
+	lda #$36+42
+	sta $d00f
 	pla
 	cli
 	rti
@@ -266,6 +272,16 @@ irq_sprite3:
 	sta $dd00		
 	lda scrollcolor
 	sta $d02c
+	lda #b0sprbs+10
+	sta $07fa
+	lda #b0sprbs+12
+	sta $07fb
+	lda #b0sprbs+13	
+	sta $07fc
+	lda #b0sprbs+11
+	sta $07fd
+	lda #b0sprbs+15	
+	sta $07fe	
 	lsr $d019	
 	pla
 	rti
@@ -291,13 +307,13 @@ irq_stable1:
 	sta $d011			// 4		
 	stx $d016			// 4			
 
-	sty.a savey			// 4		
+	sty savey			// 4		
 	ldy #18
-	lda.a scrollcolor	// 4
+	lda scrollcolor		// 4
 	sta $d02d			// 4
 	lda #bgcolor		// 2
 	sta $d02c			// 4		
-	.fill 7,NOP			// 16
+	.fill 8,NOP			// 16
 	lsr $d016			// 6
 	stx $d016			// 4		
 	bit $ea				// 3		
@@ -331,42 +347,44 @@ irq_stable1:
 		dey					// 2
 		bpl logoloop_pos	// 3
 
-	lda #$1f
+	lda #$5f	// 
 	sta $d018
-	nop
+	ldy #$93
+	
+	// DMA delay
+	// *********
 	lda #$1e
-	sta $d011	
-	lda #$93
-	sta $dd00
+	sta $d011		
+	sty $dd00
+	sta $d018
+	lda #$03
+	sta $d017	
+	lda #$c3
+	sta $d01d
+	lda #$50
+	sta $d00a
+	lda #$68
+	sta $d00c
 	lda #$d8
 	sta $d016		
-	lda #$ff
-	sta $d01c	
+	lda #$3f
+	sta $d01c
+	lda #$02
+	sta $d010
 	lda #$33+63
 	sta $d005
 	sta $d007
 	sta $d009	
-	lda #$41+42
-	sta $d00d
-	lda #$50
-	sta $d00c
-	
-	lda #b0sprbs+4+6
-	sta $07fa
-	lda #b0sprbs+4+8
-	sta $07fb
-	lda #b0sprbs+4+9
-	sta $07fc
-	lda #b0sprbs+4+7
-	sta $07fd
-	.fill 6,NOP	
-	
-	ldy #$31
+	lda #LIGHT_BLUE
+	sta $d02c
+	lda #ORANGE
+	sta $d02d	
+	.fill 1,NOP
+	ldy #$2b
 !:
 	dey	
 	bne !-		
 	ldy #$18	
-	nop
 	lda #$93
 	sta $dd00	
 	nop
@@ -374,12 +392,20 @@ irq_stable1:
 	!:	
 		lda realign,y
 		sta $d011		
-		.fill 16,NOP
+		.fill 13,NOP
 		bit $fe
 		iny
+		cpy #6
+		bcc !-		
+		bit $fe
+	!:
+		nop
+		lda realign,y
+		sta $d011		
+		.fill 15,NOP		 		
+		iny
 		cpy #13
-		bcc !-
-		
+		bcc !-				
 	lda #$38+[[12+7]&7]	
 	sta $d011	
 	lsr $d019
@@ -402,70 +428,64 @@ irq_stable1:
 !:
 	stx lox		
 
-	inc $d020
+	
+	// Sideborder sprite copy
+	// **********************
 	txa
-	alr #$07
+	alr #$06
 	tax
 	lda masks,x	
-	sta lftmask+1
-	ldy #>[logo+[12*32]]
+	sta lftmask+1	
 	lda hix
-	lsr
-	and #$1f
-	sta fstbyte1+1
+	adc #$13
+	alr #$3f	
+	ldy #>[logoswap+[12*32]]	
 	bcc !+
-	ldy #>[logoswap+[12*32]]
+	ldy #>[logo+[12*32]]
 !:
 	sty ptr+1	
-	ldy #<[logo+[12*32]]
+	ldy #<[logoswap+[12*32]]
 	sty ptr	
+	ldx #$1f
 	clc
-	adc #$01
-	and #$1f
-	sta secbyte1+1
-	clc
-	adc #$01
-	and #$1f
-	sta trdbyte1+1		
-	clc
-	adc #$14
-	and #$1f
-	sta fstbyte2+1
-	clc
-	adc #$01
-	and #$1f
-	sta secbyte2+1
-	clc
-	adc #$01
-	and #$1f
-	sta trdbyte2+1	
+	sax fstbyte1+1
+	adc #$01	
+	sax secbyte1+1	
+	adc #$01	
+	sax trdbyte1+1			
+	adc #$15	
+	sax fstbyte2+1	
+	adc #$01	
+	sax secbyte2+1	
+	adc #$01	
+	sax trdbyte2+1	
 	ldx #57
 fstbyte1:
 	ldy #$00
 	lda (ptr),y
 lftmask:
 	and #$00
-	sta $4780,x
+	sta sbleft,x
 secbyte1:	
 	ldy #$00
 	lda (ptr),y
-	sta $4781,x
+	sta sbleft+1,x
 trdbyte1:	
 	ldy #$00
 	lda (ptr),y
-	sta $4782,x
+	sta sbleft+2,x
 fstbyte2:
 	ldy #$00
 	lda (ptr),y
-	sta $4740,x
+	sta sbright,x
 secbyte2:	
 	ldy #$00
 	lda (ptr),y
-	sta $4741,x
+	sta sbright+1,x
 trdbyte2:	
 	ldy #$00
 	lda (ptr),y
-	sta $4742,x	
+	sta sbright+2,x	
 	dex
 	dex
 	dex
@@ -477,25 +497,10 @@ trdbyte2:
 	rol
 	eor ptr+1	
 	sta ptr+1
-	cpx #$00
+	cpx #-3
 	bne fstbyte1
-	dec $d020
-	
-	ldx savex
-	ldy savey	
-	pla
-	rti
-	
-	
-	
-		
-	
-	
-irq_switch:	
-	pha
-	lda #BLACK
-	sta $d021	
-	stx savex
+	// Charscreen copy
+	// ***************
 	lda hix
 	ldx #39
 	clc
@@ -505,8 +510,20 @@ irq_switch:
 	ora #$40
 	sta $0400,x
 	dex
-	bpl !-	
+	bpl !-			
+	
 	ldx savex
+	ldy savey	
+	pla
+	rti
+	
+	
+	
+		
+irq_switch:	
+	pha
+	lda #BLACK
+	sta $d021
 	lda #<msx_irq
 	sta $fffe
 	lda #>msx_irq
@@ -600,3 +617,102 @@ d82sta:
 	rts
 
 	
+
+// Build FPP logo
+// **************
+preparesbsprite:
+	lda #$07
+	sta ptr
+	lda #$40
+	sta ptr+1
+	ldy #$00
+	clc
+rowloop:
+	ldx #$00	
+halfloop:	
+	lda logo
+	pha		
+	lsr
+	lsr
+	lsr
+	lsr
+	tax
+	lda convlogo,x
+	sta (ptr),y
+	tya
+	clc
+	adc #$08
+	tay
+	pla
+	and #$0f
+	tax
+	lda convlogo,x
+	sta (ptr),y
+	tya
+	clc
+	adc #$08
+	tay	
+	inc halfloop+1
+	bcc halfloop
+	lax halfloop+1
+	and #$3f	
+	beq !+
+	clc
+	lda ptr+1
+	adc #$01
+	sta ptr+1
+	bne halfloop
+!:	
+	cpx #$00
+	bne !+
+	inc halfloop+2
+!:
+	clc
+	lda ptr+1
+	adc #$05
+	sta ptr+1
+	cmp #$80
+	bcc rowloop
+	ldx #$1f
+swapsrc1:
+	lda logo,x
+	and #$0f
+	asl
+	asl
+	asl
+	asl
+	sta temp
+	inx
+	txa
+	and #$1f
+	tax	
+swapsrc2:	
+	lda logo,x
+	lsr
+	lsr
+	lsr
+	lsr	
+	ora temp
+swapdst:
+	sta logoswap,x
+	cpx #$1f
+	bcc swapsrc1
+	lda swapsrc1+1
+	adc #$1f
+	sta swapsrc1+1
+	sta swapsrc2+1
+	sta swapdst+1
+	php
+	lda swapsrc1+2
+	adc #$00
+	sta swapsrc1+2
+	sta swapsrc2+2
+	plp
+	lda swapdst+2
+	adc #$00
+	sta swapdst+2	
+	cmp #[[>logoswap]+2]
+	bne swapsrc1
+	rts
+	
+

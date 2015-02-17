@@ -2,6 +2,7 @@
 // **********
 // White Flame (aka David Holz)
 DetectCIA:	
+	tsx
 	lda #<continue
 	sta $fffa
 	lda #>continue
@@ -21,9 +22,7 @@ DetectCIA:
 	jmp *
 continue:
 	lda $dd0d
-	pla
-	pla
-	pla
+	txs
 	rts
 	
 // Detect video mode (PAL/NTSC)	

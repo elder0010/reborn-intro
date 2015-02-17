@@ -91,7 +91,7 @@ msx_irq:
 b0sprite:
 .import binary "sprites.prg"	// Fresh
 logo:
-.fill $200,floor(i/$20)
+.fill $200,floor(i/$20)+floor(i/24)
 
 //</FRESHNESS>
 
@@ -106,9 +106,8 @@ screendata:
 .align $0100
 colorbase:
 .import binary "data/d800_comp.raw"
-.import source "altro.asm"
 
 
 .pc = $4000
-//.fill $4000,[floor(2*random())*$03]+[floor(2*random())*$0c]+[floor(2*random())*$30]+[floor(2*random())*$c0]
-.fill $4000,0
+.fill $4000,[floor(2*random())*$03]+[floor(2*random())*$0c]+[floor(2*random())*$30]+[floor(2*random())*$c0]
+//.fill $4000,0

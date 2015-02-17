@@ -11,7 +11,6 @@
 .const	 ntsc_line	=	65
 
 
-
 // Prepare routine for PAL/NTSC
 // ****************************	
 start_timer:	
@@ -51,13 +50,14 @@ start_timer:
 	
 // Double raster stabilizer routine
 // ********************************	
-.align $0040	// LSB of the
 irq_timer1:	
 	lsr $d019			// 6+9+0/7
 	pha					// 3
 	inc $d012			// 6
 	lda #<irq_timer2	// 2
 	sta $fffe			// 4
+	lda #>irq_timer2	// 2
+	sta $ffff			// 4
 	lda #$00			// 2 Stop timer B
 	sta $dc0e			// 4
 irq_t1_mode:
@@ -66,7 +66,7 @@ irq_t1_mode:
 	lda #$00			// 2
 	sta $dc05			// 4
 	cli					// 2 - 50/57	
-	.fill 9,NOP	
+	.fill 6,NOP	
 irq_timer2:
 	pla					// 4+9+0/1
 	pla					// 4
@@ -81,9 +81,10 @@ irq_t2_mode:
 	nop					// 2
 	nop					// 2	
 	lda $d012			// 4
-	cmp $d012			// 4
-	beq !+				
+	cmp $d012			// 4	
+	beq !+	
 !:
+	.if	([>[*-1]]!=[>[!-]]) .error "Page crossed on timer module!"
 	lda #$91
 	sta $dc0e		
 	pla
