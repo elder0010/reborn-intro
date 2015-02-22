@@ -53,6 +53,9 @@ top_irq:
 		lda #0
 		sta $d017
 
+		jsr position_sideborder_sprites
+
+		:d011($1b)
 		:set_irq(stabilizer_irq_pal)
 		:d012(stabilizer_irq_line)
 
@@ -88,68 +91,27 @@ top_irq:
 }
 
 
-/*
+
 bitmap_split_irq:
-		:open_irq()
+
+/*
+		sta reset_a
+		stx reset_x
+		sty reset_y
+
+		asl $d019
 */
 
-
-bitmap_split_irq:
 		asl $d019
-
 		:set_irq(lower_split_irq)
 		:d012($c2)
 
-		ldx #bitmap_bg_colour
-		nop
-		:d011($3b)
-
-		bit $24
-
-		stx $d020
-		stx $d021
 
 		ldy #$f0
 		:wait()
 
-		lda #border_colour
-		sta $d020
-
-		lda #0
-		sta plex_ct
-		sta $d01d
-
-		jsr next_bottom_sprites
-		jsr recolour_sprites
-
-		:point_next_sprites([bottom_sprites/$40],screen_0)
-
-		:point_next_sprites([bottom_sprites/$40]+7,screen_1)
-
-		inc plex_ct
-
-		lda #$b0
-		ldx #0
-!:
-		sta $d002,x
-		clc
-		adc #24
-		inx
-		inx
-		cpx #14
-		bne !-
-
-		lda #$e0
-		sta $d010
-
-		lda #$ff
-		sta $d01c
-
-		lda #$f0
-		sta $d025
-
-		lda #ORANGE
-		sta $d026
+		//Prima linea di sprites sotto le facce
+		jsr position_first_sprites_line
 
 	//	:close_irq()
 		lda reset_a
@@ -362,6 +324,7 @@ screendata:
 .import binary "data/screen.raw"
 
 .pc = $2800 "sidborder sprites"
+sideborder_sprites:
 .import binary "data/sideborder_sprites.raw"
 
 .pc = $2a00 "pixels"

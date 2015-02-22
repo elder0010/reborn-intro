@@ -18,9 +18,11 @@ copy_screendata:
 
         rts
 
+
 prepare_chars_under_sprites:
 
 /*
+
         ldx #8
         lda #$ff
 !:
@@ -113,3 +115,118 @@ bottom_sprites_y:
 .for(var y=0;y<3;y++){
     .byte base_y+[y*21]
 }
+
+position_sideborder_sprites:
+
+        lda #[sideborder_sprites/$40]
+        sta screen_0+$03f8
+
+        lda #[sideborder_sprites/$40]+1
+        sta screen_0+$03f9
+
+        lda #[sideborder_sprites/$40]+2
+        sta screen_0+$03fa
+
+        lda #[sideborder_sprites/$40]+3
+        sta screen_0+$03fb
+
+        lda #[sideborder_sprites/$40]+4
+        sta screen_0+$03fc
+
+        lda #[sideborder_sprites/$40]+5
+        sta screen_0+$03fd
+
+        lda #[sideborder_sprites/$40]+6
+        sta screen_0+$03fe
+
+        lda #[sideborder_sprites/$40]+7
+        sta screen_0+$03ff
+
+
+
+        lda #0
+        sta $d010
+
+        lda #$50
+        sta $d000
+
+        lda #$50+24
+        sta $d002
+
+        lda #$50+24*2
+        sta $d004
+
+        lda #$50+24*3
+        sta $d006
+
+        lda #$50+24*4
+        sta $d008
+
+        lda #$50+24*5
+        sta $d00a
+
+        lda #$50+24*6
+        sta $d00c
+
+        lda #$50+24*7
+        sta $d00e
+
+
+.const base_y_sideborder = $76
+
+        lda #base_y_sideborder
+        sta $d001
+        sta $d003
+        sta $d005
+        sta $d007
+
+        lda #base_y_sideborder+21
+        sta $d009
+        sta $d00b
+        sta $d00d
+        sta $d00f
+
+
+
+        lda #0
+        sta $d01d
+
+        rts
+
+position_first_sprites_line:
+        lda #0
+        sta plex_ct
+        sta $d01d
+
+        jsr next_bottom_sprites
+        jsr recolour_sprites
+
+        :point_next_sprites([bottom_sprites/$40],screen_0)
+
+        :point_next_sprites([bottom_sprites/$40]+7,screen_1)
+
+        inc plex_ct
+
+        lda #$b0
+        ldx #0
+        !:
+        sta $d002,x
+        clc
+        adc #24
+        inx
+        inx
+        cpx #14
+        bne !-
+
+        lda #$e0
+        sta $d010
+
+        lda #$ff
+        sta $d01c
+
+        lda #$f0
+        sta $d025
+
+        lda #ORANGE
+        sta $d026
+        rts

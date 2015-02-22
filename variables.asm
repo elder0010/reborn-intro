@@ -21,4 +21,4 @@
 .const reset_a = $10
 .const reset_x = $11
 .const reset_y = $12
-.const stabilizer_irq_line = $70
+.const stabilizer_irq_line = $73
