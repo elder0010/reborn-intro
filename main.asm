@@ -53,6 +53,7 @@ top_irq:
 		lda #0
 		sta $d017
 
+	
 		jsr position_sideborder_sprites
 
 		:d011($1b)
@@ -328,7 +329,7 @@ sideborder_sprites:
 .import binary "data/sideborder_sprites.raw"
 
 .pc = $2a00 "pixels"
-.import binary "data/pixels.raw"
+//.import binary "data/pixels.raw"
 
 .pc = bottom_sprites "bottom sprites"
 .import binary "data/sprit.raw"

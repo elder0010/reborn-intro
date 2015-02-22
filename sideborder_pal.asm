@@ -10,6 +10,9 @@ stabilizer_irq_pal:
         lda #<stabilized_irq
         sta $fffe
 
+        lda #>stabilized_irq
+        sta $ffff
+
         inc $d012
         inc $d012
 
@@ -18,13 +21,13 @@ stabilizer_irq_pal:
 
         cli
 
-        .for(var n=0;n<32;n++){
+        .for(var n=0;n<16;n++){
             nop
         }
 
         brk
 
-
+.align $80
 stabilized_irq:
         txs
         ldx #$8
@@ -40,13 +43,71 @@ stabilized_irq:
         beq !+
 !:
         lda #bitmap_bg_colour
-        ldy #5
+        ldy #7
         :wait()
 
-        sta $d020
-        sta $d021
+        bit $24
 
-        
+        sta $d020
+        sta $0400
+
+.macro decinc_brd(debug){
+    .if(debug){
+        dec $d021
+        inc $d021
+    }else{
+        dec $d016
+        inc $d016
+    }
+}
+//Sideborder loop
+
+        ldy #7
+        :wait()
+
+        bit $24
+        bit $24
+        bit $24
+
+        nop
+
+        lda #$d7
+        ldx #$d8
+
+        :decinc_brd(false)
+//------------------------------
+        ldy #7
+        :wait()
+
+        nop
+        nop
+        nop
+
+        :decinc_brd(false)
+//------------------------------
+        ldy #7
+        :wait()
+
+        nop
+        nop
+        nop
+
+        :decinc_brd(false)
+//------------------------------
+        ldy #7
+        :wait()
+
+        nop
+        nop
+        nop
+
+        :decinc_brd(false)
+//------------------------------
+
+        //BADLINE
+        sta $d021
+        stx $d021
+
 
 
 //End of sideborder code
