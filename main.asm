@@ -53,7 +53,9 @@ top_irq:
 		lda #0
 		sta $d017
 
-	
+		lda #$fe
+		sta $d015
+		
 		jsr position_sideborder_sprites
 
 		:d011($1b)

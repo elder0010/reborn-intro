@@ -118,37 +118,29 @@ bottom_sprites_y:
 
 position_sideborder_sprites:
 
-        lda #[sideborder_sprites/$40]
-        sta screen_0+$03f8
-
-        lda #[sideborder_sprites/$40]+1
+        lda #[sideborder_sprites/$40]+0
         sta screen_0+$03f9
 
-        lda #[sideborder_sprites/$40]+2
+        lda #[sideborder_sprites/$40]+1
         sta screen_0+$03fa
 
-        lda #[sideborder_sprites/$40]+3
+        lda #[sideborder_sprites/$40]+2
         sta screen_0+$03fb
 
-        lda #[sideborder_sprites/$40]+4
+        lda #[sideborder_sprites/$40]+3
         sta screen_0+$03fc
 
-        lda #[sideborder_sprites/$40]+5
+        lda #[sideborder_sprites/$40]+4
         sta screen_0+$03fd
 
-        lda #[sideborder_sprites/$40]+6
+        lda #[sideborder_sprites/$40]+5
         sta screen_0+$03fe
 
-        lda #[sideborder_sprites/$40]+7
+        lda #[sideborder_sprites/$40]+6
         sta screen_0+$03ff
-
-
 
         lda #0
         sta $d010
-
-        lda #$50
-        sta $d000
 
         lda #$50+24
         sta $d002
@@ -175,18 +167,15 @@ position_sideborder_sprites:
 .const base_y_sideborder = $76
 
         lda #base_y_sideborder
-        sta $d001
         sta $d003
         sta $d005
         sta $d007
+        sta $d009
 
         lda #base_y_sideborder+21
-        sta $d009
         sta $d00b
         sta $d00d
         sta $d00f
-
-
 
         lda #0
         sta $d01d
@@ -223,6 +212,7 @@ position_first_sprites_line:
 
         lda #$ff
         sta $d01c
+        sta $d015
 
         lda #$f0
         sta $d025

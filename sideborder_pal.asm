@@ -1,4 +1,4 @@
-.align $40
+.align $80
 stabilizer_irq_pal:
         sta reset_a
         stx reset_x
@@ -10,10 +10,6 @@ stabilizer_irq_pal:
         lda #<stabilized_irq
         sta $fffe
 
-        lda #>stabilized_irq
-        sta $ffff
-
-        inc $d012
         inc $d012
 
         asl $d019
@@ -43,13 +39,14 @@ stabilized_irq:
         beq !+
 !:
         lda #bitmap_bg_colour
+
         ldy #7
         :wait()
 
         bit $24
 
         sta $d020
-        sta $0400
+
 
 .macro decinc_brd(debug){
     .if(debug){
@@ -62,51 +59,42 @@ stabilized_irq:
 }
 //Sideborder loop
 
-        ldy #7
-        :wait()
-
-        bit $24
-        bit $24
-        bit $24
-
-        nop
-
         lda #$d7
+        :decinc_brd(false)
+//------------------------
+
+        ldy #6
+        :wait()
+
         ldx #$d8
+        nop
+        nop
+        bit $24
 
         :decinc_brd(false)
-//------------------------------
+//------------------------
         ldy #7
         :wait()
 
         nop
         nop
-        nop
 
         :decinc_brd(false)
-//------------------------------
+//------------------------
         ldy #7
         :wait()
 
         nop
         nop
-        nop
 
-        :decinc_brd(false)
-//------------------------------
-        ldy #7
-        :wait()
+        dec $d016
 
-        nop
-        nop
-        nop
+        stx $d016
+        sta $d016-$d8,x
+//------------------------
 
-        :decinc_brd(false)
-//------------------------------
 
-        //BADLINE
-        sta $d021
-        stx $d021
+//------------------------
 
 
 
