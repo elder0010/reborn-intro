@@ -131,8 +131,6 @@ initscroll:
 	dex
 	bpl !-
 	sta scrollcolor
-	lda #$00
-	sta $3fff
 	sta $79ff
 	sta $7fff
 	lda #$aa
