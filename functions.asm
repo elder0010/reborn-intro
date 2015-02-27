@@ -13,6 +13,20 @@ copy_screendata:
         lda screendata+$300,x
         sta screen_0+$300,x
     //    sta screen_1+$300,x
+
+
+        lda colour_ram,x
+        sta $d800,x
+
+        lda colour_ram+$100,x
+        sta $d800+$100,x
+
+        lda colour_ram+$200,x
+        sta $d800+$200,x
+
+        lda colour_ram+$300,x
+        sta $d800+$300,x
+
         dex
         bne !-
 
@@ -139,30 +153,38 @@ position_sideborder_sprites:
         lda #[sideborder_sprites/$40]+6
         sta screen_0+$03ff
 
-        lda #0
+        lda #$ba
         sta $d010
 
-        lda #$50+24
+        .const base_sideborder = $0
+        lda #base_sideborder-32
         sta $d002
-
-        lda #$50+24*2
-        sta $d004
-
-        lda #$50+24*3
-        sta $d006
-
-        lda #$50+24*4
-        sta $d008
-
-        lda #$50+24*5
         sta $d00a
 
-        lda #$50+24*6
+        lda #base_sideborder
+        sta $d004
         sta $d00c
 
-        lda #$50+24*7
+        lda #$58
+        sta $d006
         sta $d00e
 
+        lda #$58+24
+        sta $d008
+
+        lda #BLACK
+        sta $d025
+
+        lda #LIGHT_GRAY
+        sta $d026
+
+        lda #LIGHT_BLUE
+        sta $d028
+        sta $d029
+
+        lda #LIGHT_RED
+        sta $d02a
+        sta $d02b
 
 .const base_y_sideborder = $76
 
@@ -198,7 +220,7 @@ position_first_sprites_line:
 
         lda #$b0
         ldx #0
-        !:
+!:
         sta $d002,x
         clc
         adc #24

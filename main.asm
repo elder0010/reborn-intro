@@ -10,12 +10,13 @@
 .fill 7,$ff
 .byte 0
 
-.pc = $2116 "code"
+.pc = $2110 "code"
 code:
 		sei
 		.if(PLAY_MUSIC){
 			lda #0
 			sta $d015
+			sta $d011
 			jsr music.init
 		}
 
@@ -35,9 +36,9 @@ code:
 		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
 		jsr prepare_cover_sprites
 
-		:d011($1b)
-		:d012($f9)
-		:set_irq(lower_border_irq)
+		:d012($0f)
+		:d011($90)
+		:set_irq(msx_irq)
 
 		cli
 
@@ -53,9 +54,15 @@ top_irq:
 		lda #0
 		sta $d017
 
+		lda #18
+		sta counter
+
+		lda #2
+		sta sprrow
+
 		lda #$fe
 		sta $d015
-		
+
 		jsr position_sideborder_sprites
 
 		:d011($1b)
@@ -274,16 +281,16 @@ lower_border_irq:
 		sta screen_0+$03fe
 		sta screen_0+$03ff
 
-		lda #$0f
-		sta $d005
-		sta $d007
-
 		asl $d019
 
 		:set_irq(msx_irq)
 
 		:d011($9b)
-		:d012($0f) //Questo fa saltare ntsc (abbassare a $06 e mettere un wait nel msx irq)
+		:d012($0f)
+		//lda #$0f
+		sta $d005
+		sta $d007
+
 		:d016($d8)
 
 		:close_irq()
@@ -319,6 +326,7 @@ msx_irq:
 		:close_irq()
 		rti
 
+
 .pc = * "functions"
 .import source "functions.asm"
 
@@ -326,12 +334,12 @@ msx_irq:
 screendata:
 .import binary "data/screen.raw"
 
-.pc = $2800 "sidborder sprites"
+.pc = $2800 "sideborder sprites"
 sideborder_sprites:
 .import binary "data/sideborder_sprites.raw"
 
 .pc = $2a00 "pixels"
-//.import binary "data/pixels.raw"
+.import binary "data/pixels.raw"
 
 .pc = bottom_sprites "bottom sprites"
 .import binary "data/sprit.raw"
@@ -340,5 +348,6 @@ sideborder_sprites:
 lower_border_sprites:
 .import binary "data/lower_border_sprites.raw"
 
-.pc = $d800 "colour ram"
-.import binary "data/d800.raw"
+.pc = $8000 "colour ram"
+colour_ram:
+.import c64 "data/colors"

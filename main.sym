@@ -1,27 +1,31 @@
-.label recolour_sprites=$2561
+.label recolour_sprites=$2539
+.label badline=$2269
 .label screendata=$5600
+.label exit=$227b
 .label lower_border_sprites=$ec0
-.label bottom_sprites_y=$256c
+.label bottom_sprites_y=$2544
 .label stabilizer_irq_pal=$2200
-.label msx_irq=$24c0 {
+.label msx_irq=$2480 {
 }
 .label sideborder_sprites=$2800
-.label code=$2116
-.label position_first_sprites_line=$25d9
-.label next_bottom_sprites=$2546
-.label position_sideborder_sprites=$256f
-.label prepare_cover_sprites=$253b
-.label prepare_chars_under_sprites=$2512
-.label stabilized_irq=$2280
-.label top_irq=$217c {
+.label code=$2110
+.label position_first_sprites_line=$25c5
+.label next_bottom_sprites=$251e
+.label position_sideborder_sprites=$2547
+.label colour_ram=$8000
+.label prepare_cover_sprites=$2513
+.label start=$224b
+.label prepare_chars_under_sprites=$24ea
+.label stabilized_irq=$2225
+.label top_irq=$2179 {
 }
-.label bitmap_split_irq=$22e1
-.label lower_border_irq=$2420 {
+.label bitmap_split_irq=$22a3
+.label lower_border_irq=$23e0 {
 }
-.label copy_screendata=$24fa
-.label plex_1_irq=$23a0 {
+.label copy_screendata=$24ba
+.label plex_1_irq=$2360 {
 }
-.label lower_split_irq=$2320 {
+.label lower_split_irq=$22e0 {
 }
-.label plex_0_irq=$2360 {
+.label plex_0_irq=$2320 {
 }

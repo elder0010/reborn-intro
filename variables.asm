@@ -22,3 +22,5 @@
 .const reset_x = $11
 .const reset_y = $12
 .const stabilizer_irq_line = $74
+.const counter = $13
+.const sprrow = $14
