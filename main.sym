@@ -1,7 +1,7 @@
 .label recolour_sprites=$2539
-.label badline=$2269
+.label badline=$226a
 .label screendata=$5600
-.label exit=$227b
+.label exit=$227c
 .label lower_border_sprites=$ec0
 .label bottom_sprites_y=$2544
 .label stabilizer_irq_pal=$2200
@@ -9,17 +9,18 @@
 }
 .label sideborder_sprites=$2800
 .label code=$2110
-.label position_first_sprites_line=$25c5
+.label start_np=$224f
+.label position_first_sprites_line=$25d0
 .label next_bottom_sprites=$251e
 .label position_sideborder_sprites=$2547
 .label colour_ram=$8000
 .label prepare_cover_sprites=$2513
-.label start=$224b
+.label start=$224a
 .label prepare_chars_under_sprites=$24ea
 .label stabilized_irq=$2225
 .label top_irq=$2179 {
 }
-.label bitmap_split_irq=$22a3
+.label bitmap_split_irq=$22a4
 .label lower_border_irq=$23e0 {
 }
 .label copy_screendata=$24ba

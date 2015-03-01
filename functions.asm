@@ -178,9 +178,14 @@ position_sideborder_sprites:
         lda #LIGHT_GRAY
         sta $d026
 
+        lda #LIGHT_RED
+        sta $d02e
+
         lda #LIGHT_BLUE
         sta $d028
         sta $d029
+        sta $d02c
+        sta $d02d
 
         lda #LIGHT_RED
         sta $d02a
@@ -213,7 +218,6 @@ position_first_sprites_line:
         jsr recolour_sprites
 
         :point_next_sprites([bottom_sprites/$40],screen_0)
-
         :point_next_sprites([bottom_sprites/$40]+7,screen_1)
 
         inc plex_ct

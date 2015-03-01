@@ -23,7 +23,6 @@ stabilizer_irq_pal:
 
         brk
 
-
 .pc = * "stabilized irq pal"
 stabilized_irq:
         txs
@@ -39,13 +38,13 @@ stabilized_irq:
         cmp $d012
         beq !+
 !:
-        lda #bitmap_bg_colour
 
         ldy #7
         :wait()
         bit $24
-        sta $d021 //qui bisogna cambiare il colore per forza (in realtà dev'essere sia $d020 che $d021 ma ora lasciamo cosi altrimenti è difficile debuggare)
-
+        bit $24
+        nop
+        nop
 
 .macro decinc_brd(debug){
     .if(debug){
@@ -65,7 +64,12 @@ stabilized_irq:
         bne start	// 3
 
        start:
-		  .fill 4,NOP	// 14
+		  lda #bitmap_bg_colour
+          sta $d021
+       start_np:
+          nop
+
+          //.fill 4,NOP	// 14
           cmp (0,x)
 
           ldx #$d8
@@ -104,7 +108,6 @@ badline: // Qua gestiamo la badline normale (non plexante)
         //ora siamo qua e dobbiamo tornare a loopare le nonbad
 
 
-
         // Ok, fermiamoci qua per vedere se la bad va
         // mancano un paio di linee normali?? si! ma questi non sono 8, si ma adesso siamo allineati alla bad
         // adesso diventa più semplice ok
@@ -118,31 +121,19 @@ exit:
         sta $d016
         stx $d016 			// "Chiudo" bordo bad
         sta $d016-$d8,x		// Apro bordo bad <- QUI SEI IN BADLINE? Ok mo te lo preparo
-        ldy #[sideborder_sprites/$40]+4
+        ldy #[sideborder_sprites/$40]+7
         sty screen_0+$03fc
         stx $d016  			// "Chiudo" bordo bad
 
         ldy #$07			// Qua sono 6 cicli in ritardo rispetto all'equivalente linea bad sopra
-        bne start+3			// Abbiamo delle "nop" dopo start, se ne salto 2 => -4 cicli
+        bne start_np		// Abbiamo delle "nop" dopo start, se ne salto 2 => -4 cicli
         					// se noti nel caso precedente avevamo una nop => 2 <=> 6-4 (minghia...)
-
 
         // te faccio vede . daje
         //BAD Line ciclo 13 in poi: xxx01234567890123456789012345678901234567890 (x)->Bordo [x00112]->6 cicli liberi [233]-> 3 cicli pre sprite 4 [444556677] -> sprites
 
 !:
-
-
         lda #border_colour
         sta $d020
 
-
-
         jmp bitmap_split_irq
-/*
-
-        lda reset_a
-        ldx reset_x
-        ldy reset_y
-        rti
-    */
