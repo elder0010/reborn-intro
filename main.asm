@@ -40,10 +40,6 @@ code:
 		:wait_frame()
 		
 		// <FRESHNESS>
-		.const	videomode	=	$80	
-		.const	CIAtype		=	$81		
-		jsr DetectCIA
-		jsr DetectVIC
 		jsr start_timer
 		jsr preparesbsprite		
 		jsr	initscroll
@@ -85,7 +81,6 @@ msx_irq:
 //<FRESHNESS>
 .import source "top_sprite_routine.asm"
 .import source "timer.asm"
-.import source "detect.asm"
 
 .pc = $2000 "Top sprites"
 b0sprite:

@@ -14,25 +14,13 @@
 // Prepare routine for PAL/NTSC
 // ****************************	
 start_timer:	
-	php
-	lda videomode
-	lsr
-	lda #ntsc_line-1
-	bcc !+	
-	ldx #CMP_IZPX
-	.byte BIT_ABS
-!:
-	ldx #NOP
-	eor #[ntsc_line-1]^[pal_line-1]
-	sta irq_t1_mode+1
-	stx irq_t2_mode	
+	php	
 	sei	
 	lda #$7f
 	sta $dc0d
-	bit $dc0d
-	lda #$08
+	bit $dc0d	
+	lda #$01
 	sta $d012
-	lda #$00
 	sta done	
 	lda #<irq_timer1
 	sta $fffe
@@ -42,7 +30,7 @@ start_timer:
 	cli
 !:
 	lda done
-	beq !-	
+	bne !-	
 	plp
 	rts
 
@@ -60,33 +48,27 @@ irq_timer1:
 	sta $ffff			// 4
 	lda #$00			// 2 Stop timer B
 	sta $dc0e			// 4
-irq_t1_mode:
-	lda #$00			// 2 Set timer B to PAL/NTSC line lenght
+	lda #[pal_line-1]	// 2 Set timer B to PAL line length
 	sta $dc04			// 4
-	lda #$00			// 2
-	sta $dc05			// 4
-	cli					// 2 - 50/57	
-	.fill 6,NOP	
-irq_timer2:
+	ldy #$00			// 2
+	sty $dc05			// 4
+	cli					// 2 - 56/63
+irq_timer2:	
+	.fill 5,NOP			// 10
+	cmp ($0,x)			// 6
+	cmp ($0,x)			// 6
+	lsr $d019			// 6	
+	sty.a done			// 4
 	pla					// 4+9+0/1
 	pla					// 4
-	pla					// 4
-	lsr $d019			// 6
-	lda #$01			// 2
-	sta.a done			// 4
-	cmp ($0,x)			// 6
-	cmp ($0,x)			// 6
-	cmp ($0,x)			// 6	
-irq_t2_mode:		
-	nop					// 2
-	nop					// 2	
-	lda $d012			// 4
-	cmp $d012			// 4	
+	pla					// 4	
+	lda #$91			// 2	
+	ldx $d012			// 4
+	cpx $d012			// 4	
 	beq !+	
 !:
-	.if	([>[*-1]]!=[>[!-]]) .error "Page crossed on timer module!"
-	lda #$91
-	sta $dc0e		
+	.if	([>[*-1]]!=[>[!-]]) .error "Page crossed on timer module!"	
+	sta $dc0e,y
 	pla
 	rti	
 

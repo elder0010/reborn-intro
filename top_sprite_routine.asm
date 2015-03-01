@@ -7,7 +7,6 @@
 .const	rst_sprite2		=	$2f			// More sprites
 .const	rst_sprite3		=	$34			// More sprites
 .const	rst_stable		=	$36			// Stable irq
-.const	rst_mdlswitch	=	$c2			// Middle block (bitmap)
 .const	rst_msx			=	$f9			// Sid player
 
 // Mode switch
@@ -22,11 +21,10 @@
 .const	savex		=	$c1
 .const	savey		=	$c2
 .const	hix			=	$c3
-.const	lox			=	$c4
 .const	scrollcolor	=	$c5
 .const	ptr			=	$c6
-.const	bit1		=	$c8
 .const	temp		=	$c9
+.const	dummy		=	$ca
 
 // Colors
 // ******
@@ -71,6 +69,7 @@ d018table1:
 .print "D018 table: "+toHexString(*)
 d018table2:
 .fill 19,d018values.get([18-i]*2+1)
+.byte $1f
 
 
 // Plexer
@@ -123,26 +122,24 @@ sprite1def:	// Sprite definitions
 // Scroll initialization
 // *********************
 // Call this before anything else
-initscroll:
-	lda #d800scr
-	ldx #39
-!:
-	sta $d800,x
-	dex
-	bpl !-
-	sta scrollcolor
-	sta $79ff
-	sta $7fff
-	lda #$aa
-	ldx #$3e
+initscroll:	
+	ldx #$3f
 !:	
-	sta $4000+sprblock,x
-	sta sprblock,x
+	lda #$aa
+	sta $4000+sprblock-1,x
+	sta sprblock-1,x
+	lda #d800scr	
+	sta $d800-1,x
 	dex
-	bpl !-
+	bne !-
+	sta scrollcolor	
+	stx $79ff
+	stx $7fff	
 	lda #bgcolor	// Reset
 	sta $d021		// - Standard background
 	sta $d022		// - Fst EBCM background
+	lda #$c8
+	sta lox+1
 	rts
 
 	
@@ -188,7 +185,7 @@ irq_sprite1:
 	lda #<irq_sprite2
 	sta $fffe
 	lda #>irq_sprite2
-	sta $ffff			
+	sta $ffff
 	ldx savex
 	lda #LIGHT_GREY
 	sta $d021
@@ -231,7 +228,7 @@ irq_sprite2:
 	lda #$62
 	sta $d010	
 	// Line 50	
-	lda lox
+	lda lox+1
 	and #$07
 	ora #$e0
 	sta $d00a
@@ -287,38 +284,26 @@ irq_sprite3:
 		
 		
 .align $0100
-irq_stable1:
-	pha					// 3+9+0/7
-	sec					// 2
-	lda #$33			// 2
-	sbc $dc04			// 4
-	sta *+4
-	bpl *
-	.fill $06,LDA_IMM	
-	.byte BIT_ZP
-	nop
-	nop
-	stx savex
-	lda #$19
-	ldx.a lox	
-	lsr $d016			
+irq_stable1:	
+	pha					// 3+9+0/7		
+	stx savex			// 3
+	sty savey			// 3
+	lda $dc04			// 4
+	eor #$2f			// 2	
+	sta *+4				// 4
+	bpl *	// Min delay: 5 - Max delay: 12
+	.byte	LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,BIT_ZP,NOP		
+lox:
+	ldx #$00			// 2	
+	ldy #19				// 2
+	lda #$19			// 2	
+	lsr $d016			// 2
 	sta $d011			// 4		
-	stx $d016			// 4			
-
-	sty savey			// 4		
-	ldy #18
-	lda scrollcolor		// 4
-	sta $d02d			// 4
-	lda #bgcolor		// 2
-	sta $d02c			// 4		
-	.fill 8,NOP			// 16
-	lsr $d016			// 6
-	stx $d016			// 4		
-	bit $ea				// 3		
+	stx $d016			// 4				
+	bne logo_start		// 3
 		
-		nop			// NTSC Fix
-	logoloop_pos:	// Do FPP and plex sprites
-		nop
+	logoloop_pos:	// Do FPP and plex sprites		
+		nop					// 2
 		sta $d02d			// 4
 		lda scrollcolor		// 3
 		sta $d02c			// 4		
@@ -330,18 +315,20 @@ irq_stable1:
 		lsr $d016			// 6
 		sta $d011			// 4
 		stx $d016			// 4
+		bit dummy			// 3		
+	logo_start:	
+		nop					// 2
 		lda d018table2,y	// 4
 		sta $d018			// 4
 		lda plexvalue,y		// 4
 	ll_mod:
 		sta $d03f			// 4
-		lda.a scrollcolor	// 4
+		lda scrollcolor		// 4
 		sta $d02d			// 4
 		lda #bgcolor		// 2
-		sta $d02c			// 4
-		.fill 2,NOP			// 8
+		sta $d02c			// 4		
 		lsr $d016			// 6
-		stx $d016			// 4
+		stx $d016			// 4		
 		dey					// 2
 		bpl logoloop_pos	// 3
 
@@ -377,7 +364,7 @@ irq_stable1:
 	sta $d02c
 	lda #ORANGE
 	sta $d02d	
-	.fill 1,NOP
+	nop
 	ldy #$2b
 !:
 	dey	
@@ -390,31 +377,29 @@ irq_stable1:
 	!:	
 		lda realign,y
 		sta $d011		
-		.fill 13,NOP
-		bit $fe
+		cmp (0,x)	// 6
+		cmp (0,x)	// 6
+		cmp (0,x)	// 6
+		cmp (0,x)	// 6
 		iny
-		cpy #6
-		bcc !-		
-		bit $fe
-	!:
-		nop
-		lda realign,y
-		sta $d011		
-		.fill 15,NOP		 		
-		iny
+		cpy #06
+		bcc wtskip
+		inc dummy
+	wtskip:		
 		cpy #13
-		bcc !-				
+		bcc !-		
+
 	lda #$38+[[12+7]&7]	
 	sta $d011	
 	lsr $d019
 	cli
 	lda #ORANGE
 	sta $d021
-	lda #rst_mdlswitch-1	// 2
+	lda #rst_msx			// 2
 	sta $d012				// 4
-	lda #<irq_switch		// 2
+	lda #<msx_irq			// 2
 	sta $fffe				// 4
-	lda #>irq_switch		// 2
+	lda #>msx_irq			// 2
 	sta $ffff				// 4
 	lda #$00
 	sta $d020
@@ -424,7 +409,7 @@ irq_stable1:
 	inc hix
 	ldx #$cf
 !:
-	stx lox		
+	stx lox+1
 
 	
 	// Sideborder sprite copy
@@ -514,39 +499,19 @@ trdbyte2:
 	ldy savey	
 	pla
 	rti
-	
-	
-	
 		
-irq_switch:	
-	pha
-	lda #BLACK
-	sta $d021
-	lda #<msx_irq
-	sta $fffe
-	lda #>msx_irq
-	sta $ffff
-	lda #$f9
-	sta $d012
-	lsr $d019
-	pla
-	rti
-	
 
 
 // Prepare $d800
 // *************
 CopyData:
-	lda #$02
-	sta bit1
 	lda #[<colorbase]
 	sta ptr	
 	lda #[>colorbase]
 	sta ptr+1
 	ldx #$00	
-cdloop:
-	ldy #$00
-!:
+	ldy #$00	
+d8loop:
 	lda (ptr),y
 	pha
 	lsr
@@ -561,22 +526,18 @@ d82sta:
 	lda #$00
 	sta (ptr),y
 	iny
+	bne d8skip
+	inc ptr+1
+d8skip:
 	inx	
 	inx
-	bne !-
+	bne d8loop
 	inc d81sta+2
 	inc d82sta+2
-	clc
-	lda ptr
-	adc #$80
-	sta ptr
 	lda ptr+1
-	adc #$00
-	sta ptr+1
 	cmp #[[>colorbase]+2]
-	bne cdloop
+	bne d8loop
 
-	lda #$00
 	ldx #$05
 !:
 	lda #$00
@@ -586,10 +547,10 @@ d82sta:
 	axs #[$100-$8]
 	cpx #$08
 	bcs !-
-	lda #$07
-	axs #[$100-1]
+	inx
 	cpx #$07
 	bne !-
+	
 	ldx #$00
 !:
 	lda b0sprite+$4*$40,x
