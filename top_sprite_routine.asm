@@ -1,4 +1,3 @@
-.import source "misc_macro.asm"
 //Freshness
 
 // Switching rasters

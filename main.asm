@@ -38,10 +38,8 @@ code:
 		jsr initscroll	// Freshness
 		
 		:wait_frame()
-		
-		// <FRESHNESS>
-		jsr start_timer			
-		// </FRESHNESS>
+				
+		jsr start_timer	// Freshness		
 				
 		:d011($3b)
 		:d012($f9)
