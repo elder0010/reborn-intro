@@ -25,6 +25,8 @@
 .const	ptr			=	$c6
 .const	temp		=	$c9
 .const	dummy		=	$ca
+.const	movpos		=	$cb
+.const	tmppos		=	$cc
 
 // Colors
 // ******
@@ -38,6 +40,7 @@
 .const	sprblock	=	$37c0		// Filled block sprite
 .const	sbleft		=	$4780		// Sideborder sprite left
 .const	sbright		=	$4740		// Sideborder sprite right
+.const	logofpp		=	$4007		// FPP starting position (Last line FPP)
 
 // Sprite def.
 // ***********
@@ -85,13 +88,6 @@ plexport:
 plexvalue:
 .byte	$33,$33,$33,$36+42,$36+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21
 
-
-// More crunching needed to realign the bitmap
-// *******************************************
-.print "Realign bitmap table: "+toHexString(*)
-realign:
-.fill 13,$18+[[i+7]&7]
-
 convlogo:
 .fill	16,[3*[i&1]]+[6*[i&2]]+[12*[i&4]]+[24*[i&8]]
 
@@ -119,30 +115,12 @@ sprite1def:	// Sprite definitions
 .byte   sprblock/$40,sprblock/$40,b0sprbs+1,b0sprbs+2,b0sprbs+3,b0sprbs,b0sprbs,b0sprbs+14
 
 
-// Scroll initialization
-// *********************
-// Call this before anything else
-initscroll:	
-	ldx #$3f
-!:	
-	lda #$aa
-	sta $4000+sprblock-1,x
-	sta sprblock-1,x
-	lda #d800scr	
-	sta $d800-1,x
-	dex
-	bne !-
-	sta scrollcolor	
-	stx $79ff
-	stx $7fff	
-	lda #bgcolor	// Reset
-	sta $d021		// - Standard background
-	sta $d022		// - Fst EBCM background
-	lda #$c8
-	sta lox+1
-	rts
+// Logo positions (a quarter)
+// **************************
+movement:
+.fill	64,floor(127*sin(i*PI/128))
 
-	
+
 // Effect handler
 // **************
 // Call this inside an IRQ to create effect on next frame
@@ -165,6 +143,7 @@ irq_sprite1:
 	pha	
 	stx savex
 	ldx #$09
+	stx $d016	// Mono/40 col mode
 !:
 	lda sprite1tbl,x
 	sta $d000,x
@@ -184,14 +163,10 @@ irq_sprite1:
 	sta $d01c
 	lda #<irq_sprite2
 	sta $fffe
-	lda #>irq_sprite2
-	sta $ffff
 	ldx savex
 	lda #LIGHT_GREY
 	sta $d021
-	sta $d020
-	lda #$c8
-	sta $d016	
+	sta $d020	
 	pla
 	rti
 
@@ -206,8 +181,6 @@ irq_sprite2:
 	sta $d012
 	lda #<irq_sprite3
 	sta $fffe
-	lda #>irq_sprite3
-	sta $ffff
 	// Update coordinates
 	lda #$36
 	sta $d00b
@@ -372,22 +345,26 @@ lox:
 	ldy #$18	
 	lda #$93
 	sta $dd00	
-	nop
-	ldy #00
+	lda #[$18+7]
+	ldy #13
 	!:	
-		lda realign,y
+		nop
+		clc
 		sta $d011		
-		cmp (0,x)	// 6
-		cmp (0,x)	// 6
-		cmp (0,x)	// 6
-		cmp (0,x)	// 6
-		iny
-		cpy #06
-		bcc wtskip
+		adc #$01
+		and #$07
+		ora #$18		
+		cmp (0,x)	// w6
+		pha			// w3
+		pla			// w4
+		dey
+		php
+		cpy #08
+		bcs wtskip
 		inc dummy
-	wtskip:		
-		cpy #13
-		bcc !-		
+	wtskip:
+		plp		
+		bne !-		
 
 	lda #$38+[[12+7]&7]	
 	sta $d011	
@@ -401,20 +378,42 @@ lox:
 	sta $fffe				// 4
 	lda #>msx_irq			// 2
 	sta $ffff				// 4
-	lda #$00
-	sta $d020
-	dex
-	cpx #$c8
-	bcs !+
-	inc hix
-	ldx #$cf
-!:
-	stx lox+1
-
 	
-	// Sideborder sprite copy
-	// **********************
+	inc movpos	// Next logo position
+	lda movpos	// Manage 2°/4° sector
+	anc #$3f	// AND + clear carry
+	bit movpos
+	bvc !+
+	eor #$ff
+	adc #$40	// Carry always cleared after this
+!:
+	tax	
+	lda movement,x	
+	bit movpos	// Manage 3°/4° sector
+	bpl !+
+	eor #$ff	
+	adc #$01	
+!:
+	tax
+	anc #$f8	// Carry cleared
+	bpl	!+
+	ora #$03
+	sec
+!:	
+	ror
+	ror
+	ror	
+	eor #$ff
+	adc #$01
+	sta hix		// Save 5 MSb
 	txa
+	and #$07
+	ora #$c8
+	sta lox+1	// Save 3 LSb
+
+		
+	// Sideborder sprite copy
+	// **********************	
 	alr #$06
 	tax
 	lda masks,x	
@@ -500,14 +499,25 @@ trdbyte2:
 	pla
 	rti
 		
+		
+		
+		
+		
+		
+		
+		
+		
 
+// *********************
+// Scroll initialization
+// *********************
 
-// Prepare $d800
-// *************
-CopyData:
-	lda #[<colorbase]
+initscroll:	
+// Prepare D800
+// ************
+	lda #<colorbase
 	sta ptr	
-	lda #[>colorbase]
+	lda #>colorbase
 	sta ptr+1
 	ldx #$00	
 	ldy #$00	
@@ -538,6 +548,8 @@ d8skip:
 	cmp #[[>colorbase]+2]
 	bne d8loop
 
+// Clear line 5/6 of first definition ($D018 <= $xe)
+// *************************************************
 	ldx #$05
 !:
 	lda #$00
@@ -550,7 +562,9 @@ d8skip:
 	inx
 	cpx #$07
 	bne !-
-	
+
+// Copy sprites to bank 1
+// **********************
 	ldx #$00
 !:
 	lda b0sprite+$4*$40,x
@@ -561,6 +575,9 @@ d8skip:
 	sta b1sprite+$200,x		
 	dex
 	bne !-
+	
+// Copy sprite pointers
+// ********************	
 	ldx #$06
 !:
 	lda spritedef+$00,x
@@ -573,19 +590,14 @@ d8skip:
 	sta $03f8,x
 	dex
 	bpl !-
-	rts
-
-	
 
 // Build FPP logo
 // **************
-preparesbsprite:
-	lda #$07
+	lda #<logofpp	// Prepare char definitions
 	sta ptr
-	lda #$40
+	lda #>logofpp
 	sta ptr+1
 	ldy #$00
-	clc
 rowloop:
 	ldx #$00	
 halfloop:	
@@ -595,6 +607,87 @@ halfloop:
 	lsr
 	lsr
 	lsr
+	jsr saveandinc
+	pla
+	anc #$0f
+	jsr saveandinc
+	inc halfloop+1
+	bcc halfloop
+	lax halfloop+1
+	anc #$3f		// Every row has 64 characters
+	beq !+	
+	inc ptr+1		// [ptr&3]==0 -> EBCM . [ptr&3]==1 -> normal char mode
+	bne halfloop
+!:	
+	cpx #$00
+	bne !+
+	inc halfloop+2
+!:	
+	lda ptr+1		// Carry always set (cpx #$00)
+	adc #$04
+	sta ptr+1	
+	bpl rowloop
+	
+// Copy logoswap
+// *************	
+	ldx #$20		// Create swapped nibbles table for sideborder sprites
+	ldy #$10
+swapsrc1:
+	lda logo-1,x	
+	asl
+	asl
+	asl
+	asl
+	sta temp
+	lda #$1f
+	axs #[$100-1]
+swapsrc2:	
+	lda logo-1,x
+	lsr
+	lsr
+	lsr
+	lsr	
+	ora temp
+swapdst:
+	sta logoswap-1,x
+	cpx #$20
+	bcc swapsrc1
+	lda swapsrc1+1
+	adc #$1f
+	sta swapsrc1+1
+	sta swapsrc2+1
+	sta swapdst+1
+	bcc !+
+	inc swapsrc1+2
+	inc swapsrc2+2
+	inc swapdst+2
+!:
+	dey
+	bne swapsrc1
+
+// Prepare first line
+// ******************
+	ldx #$3f
+!:	
+	lda #$aa
+	sta $4000+sprblock-1,x
+	sta sprblock-1,x
+	lda #d800scr	
+	sta $d800-1,x
+	dex
+	bne !-
+	sta scrollcolor	
+	stx $79ff
+	stx $7fff	
+	lda #bgcolor	// Reset
+	sta $d021		// - Standard background
+	sta $d022		// - Fst EBCM background
+	lda #$c8
+	sta lox+1	
+	rts
+	
+// This is just for saving some bytes
+saveandinc:			
 	tax
 	lda convlogo,x
 	sta (ptr),y
@@ -602,76 +695,5 @@ halfloop:
 	clc
 	adc #$08
 	tay
-	pla
-	and #$0f
-	tax
-	lda convlogo,x
-	sta (ptr),y
-	tya
-	clc
-	adc #$08
-	tay	
-	inc halfloop+1
-	bcc halfloop
-	lax halfloop+1
-	and #$3f	
-	beq !+
-	clc
-	lda ptr+1
-	adc #$01
-	sta ptr+1
-	bne halfloop
-!:	
-	cpx #$00
-	bne !+
-	inc halfloop+2
-!:
-	clc
-	lda ptr+1
-	adc #$05
-	sta ptr+1
-	cmp #$80
-	bcc rowloop
-	ldx #$1f
-swapsrc1:
-	lda logo,x
-	and #$0f
-	asl
-	asl
-	asl
-	asl
-	sta temp
-	inx
-	txa
-	and #$1f
-	tax	
-swapsrc2:	
-	lda logo,x
-	lsr
-	lsr
-	lsr
-	lsr	
-	ora temp
-swapdst:
-	sta logoswap,x
-	cpx #$1f
-	bcc swapsrc1
-	lda swapsrc1+1
-	adc #$1f
-	sta swapsrc1+1
-	sta swapsrc2+1
-	sta swapdst+1
-	php
-	lda swapsrc1+2
-	adc #$00
-	sta swapsrc1+2
-	sta swapsrc2+2
-	plp
-	lda swapdst+2
-	adc #$00
-	sta swapdst+2	
-	cmp #[[>logoswap]+2]
-	bne swapsrc1
 	rts
 	
-

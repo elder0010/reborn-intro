@@ -35,14 +35,12 @@ code:
 		lda #0
 		sta $d015
 
-		jsr CopyData	// Freshness
+		jsr initscroll	// Freshness
 		
 		:wait_frame()
 		
 		// <FRESHNESS>
-		jsr start_timer
-		jsr preparesbsprite		
-		jsr	initscroll
+		jsr start_timer			
 		// </FRESHNESS>
 				
 		:d011($3b)
