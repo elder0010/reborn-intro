@@ -2,10 +2,9 @@
 
 // Switching rasters
 // *****************
-.const	rst_sprite1		=	$130		// Top sprites
-.const	rst_sprite2		=	$2f			// More sprites
-.const	rst_sprite3		=	$34			// More sprites
-.const	rst_stable		=	$36			// Stable irq
+.const	rst_sprite1		=	$120		// Top sprites
+.const	rst_sprite2		=	$30			// More sprites
+.const	rst_sprite3		=	$35			// More sprites
 .const	rst_msx			=	$f9			// Sid player
 
 // Mode switch
@@ -26,6 +25,7 @@
 .const	dummy		=	$ca
 .const	movpos		=	$cb
 .const	tmppos		=	$cc
+.const	lox			=	$cd
 
 // Colors
 // ******
@@ -103,13 +103,14 @@ spritedef:
 .byte	sprblock/$40,sprblock/$40,b0sprbs+6+4,b0sprbs+8+4,b0sprbs+9+4,$1e,$1d
 
 // VIC configuration at raster 0
-sprite1tbl:	// Sprite + $d011 and $d012
-.byte	$d8,$17,$08,$17,$38,$1e,$68,$1e,$80,$1e
-.byte	$00,$09,$78,$09,$00,$00
-.byte	$02,$18,rst_sprite2,$00
-sprite1clr:	// Sprite colors
-.byte	$f4,$fa									// Multicolor colors
-.byte	$fb,$fb,$fe,$fe,$fe,$fb,$f1,GREY		// Sprite colors
+sprite1tbl:
+.byte	$d8,$17,$08,$17,$38,$1e,$68,$1e					// Sprites (0-3) coordinates
+.byte	$80,$1e,$00,$09,$78,$09,$38,$60					// Sprites (4-7) coordinates
+.byte	$02,$18,rst_sprite2,$00,$00,$ff					// D010 - D015
+.byte	$c8,$03,$1e,$01,$01,$67,$ff,$03,$00,$00  		// D016 - D01F
+.byte	LIGHT_GREY,LIGHT_GREY,bgcolor,bgcolor,bgcolor	// Border/Background colors
+.byte	$f4,$fa											// Multicolor sprite colors
+.byte	$fb,$fb,$fe,$fe,$fe,0,$f1,GREY					// Sprite colors
 sprite1def:	// Sprite definitions
 .byte   sprblock/$40,sprblock/$40,b0sprbs+1,b0sprbs+2,b0sprbs+3,b0sprbs,b0sprbs,b0sprbs+14
 
@@ -137,35 +138,23 @@ set_mdlirq:
 	
 // Top sprite management
 // *********************
-irq_sprite1:
-	lsr $d019
+irq_sprite1:	
 	pha	
 	stx savex
-	ldx #$09
-	stx $d016	// Mono/40 col mode
-!:
+	ldx #$2f	
+i1loop:
 	lda sprite1tbl,x
 	sta $d000,x
-	lda sprite1tbl+$a,x
-	sta $d00a,x	
-	lda sprite1clr,x
-	sta $d025,x
-	lda sprite1def-2,x
-	sta $07f6,x	
+	cpx #$08
+	bcs !+
+	lda sprite1def,x
+	sta $07f8,x	
+!:
 	dex
-	bpl !-
-	lda #$03
-	sta $d017
-	sta $d01d
-	lda #$ff
-	sta $d015	
-	sta $d01c
+	bpl i1loop
 	lda #<irq_sprite2
 	sta $fffe
 	ldx savex
-	lda #LIGHT_GREY
-	sta $d021
-	sta $d020	
 	pla
 	rti
 
@@ -191,8 +180,6 @@ irq_sprite2:
 	lda #$41
 	sta $d001
 	sta $d003
-	lda #$67
-	sta $d01b
 	// Update definitons
 	lda #$e3
 	sta $d01d
@@ -200,20 +187,23 @@ irq_sprite2:
 	lda #$62
 	sta $d010	
 	// Line 50	
-	lda lox+1
+	lda lox
 	and #$07
 	ora #$e0
 	sta $d00a
 	eor #[$58^$e0]
-	sta $d00c		
+	sta $d00c	
+	nop	
+	cmp (0,x)	
+	lda #b0sprbs+4
+	sta $07fa
+	lda #b0sprbs+5
+	sta $07fb
 	lda #b0sprbs+6
-	sta $07fc		
-	lda #$38
-	sta $d00e
-	lda #$36+42
-	sta $d00f
-	pla
-	cli
+	sta $07fc
+	lda #b0sprbs+11
+	sta $07fd
+	pla	 	
 	rti
 	
 	
@@ -222,58 +212,34 @@ irq_sprite2:
 // *********************
 irq_sprite3:	
 	pha
-	// Line 52
-	lda #b0sprbs+5
-	sta $07fb	
-	lda #b0sprbs+4
-	sta $07fa		
-	lda #$1f
-	sta $d01c
-	lda #rst_stable
-	sta $d012
-	lda #<irq_stable1
-	sta $fffe
-	lda #>irq_stable1
-	sta $ffff	
+	stx savex
+	sty savey		
+	lda $dc04
+	eor #$2f
+	sta *+4
+	bpl *
+	.byte	LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,BIT_ZP,NOP		
+	nop
 	lda #$92
-	sta $dd00		
-	lda scrollcolor
-	sta $d02c
+	ldx scrollcolor
+	sta $dd00	
+	stx $d02c		
 	lda #b0sprbs+10
 	sta $07fa
-	lda #b0sprbs+12
-	sta $07fb
-	lda #b0sprbs+13	
-	sta $07fc
-	lda #b0sprbs+11
-	sta $07fd
+	ldx #b0sprbs+12
+	stx $07fb
+	inx
+	stx $07fc
 	lda #b0sprbs+15	
-	sta $07fe	
-	lsr $d019	
-	pla
-	rti
-		
-		
-		
-.align $0100
-irq_stable1:	
-	pha					// 3+9+0/7		
-	stx savex			// 3
-	sty savey			// 3
-	lda $dc04			// 4
-	eor #$2f			// 2	
-	sta *+4				// 4
-	bpl *	// Min delay: 5 - Max delay: 12
-	.byte	LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,BIT_ZP,NOP		
-lox:
-	ldx #$00			// 2	
+	sta $07fe
+	lda #$1f
+	sta $d01c	
+	ldx.a lox			// 4
 	ldy #19				// 2
 	lda #$19			// 2	
-	lsr $d016			// 2
-	sta $d011			// 4		
-	stx $d016			// 4				
-	bne logo_start		// 3
-		
+	bne logo_start		// 4 Page cross
+	
+.align $0100		
 	logoloop_pos:	// Do FPP and plex sprites		
 		nop					// 2
 		sta $d02d			// 4
@@ -284,12 +250,11 @@ lox:
 		lda d018table1,y	// 4
 		sta $d018			// 4
 		lda d011table,y		// 4
+	logo_start:			
 		lsr $d016			// 6
 		sta $d011			// 4
-		stx $d016			// 4
-		bit dummy			// 3		
-	logo_start:	
-		nop					// 2
+		stx $d016			// 4		
+		inc dummy			// 5
 		lda d018table2,y	// 4
 		sta $d018			// 4
 		lda plexvalue,y		// 4
@@ -408,7 +373,7 @@ lox:
 	txa
 	and #$07
 	ora #$c8
-	sta lox+1	// Save 3 LSb
+	sta lox		// Save 3 LSb
 
 		
 	// Sideborder sprite copy
@@ -522,16 +487,14 @@ initscroll:
 	ldy #$00	
 d8loop:
 	lda (ptr),y
-	pha
+d82sta:	
+	sta $d801,x		
 	lsr
 	lsr
 	lsr
 	lsr
 d81sta:
 	sta $d800,x
-	pla	
-d82sta:	
-	sta $d801,x
 	lda #$00
 	sta (ptr),y
 	iny
@@ -549,7 +512,7 @@ d8skip:
 
 // Clear line 5/6 of first definition ($D018 <= $xe)
 // *************************************************
-	ldx #$05
+	ldx #$06
 !:
 	lda #$00
 	sta $7a00,x
@@ -558,9 +521,6 @@ d8skip:
 	axs #[$100-$8]
 	cpx #$08
 	bcs !-
-	inx
-	cpx #$07
-	bne !-
 
 // Copy sprites to bank 1
 // **********************
@@ -569,7 +529,7 @@ d8skip:
 	lda b0sprite+$4*$40,x
 	sta b1sprite,x
 	lda b0sprite+$8*$40,x
-	sta b1sprite+$100,x	
+	sta b1sprite+$100,x
 	lda b0sprite+$c*$40,x
 	sta b1sprite+$200,x		
 	dex
@@ -676,13 +636,8 @@ swapdst:
 	dex
 	bne !-
 	sta scrollcolor	
-	stx $79ff
-	stx $7fff	
-	lda #bgcolor	// Reset
-	sta $d021		// - Standard background
-	sta $d022		// - Fst EBCM background
 	lda #$c8
-	sta lox+1	
+	sta lox	
 	rts
 	
 // This is just for saving some bytes

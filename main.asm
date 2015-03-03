@@ -35,6 +35,7 @@ code:
 		lda #0
 		sta $d015
 
+		:d011($00)		// Freshness
 		jsr initscroll	// Freshness
 		
 		:wait_frame()
@@ -48,10 +49,6 @@ code:
 		cli
 
 	test:				// Main with misc jittering
-		nop
-		bit $02
-		bit.a $0002
-		inc $02
 		inc.a $0002		
 		jmp test
 
