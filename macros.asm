@@ -159,6 +159,11 @@ nmi:
 	lda #>irq
 	sta $ffff
 }
+
+.macro set_irq_lo(irq){
+	lda #<irq
+	sta $fffe
+}
 //----------------------------
 
 .macro d011(val){

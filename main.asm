@@ -35,6 +35,7 @@ code:
 		jsr copy_screendata
 		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
 		jsr prepare_cover_sprites
+		jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
 
 		:d012($0f)
 		:d011($90)
@@ -101,9 +102,7 @@ top_irq:
 }
 
 
-
 bitmap_split_irq:
-
 /*
 		sta reset_a
 		stx reset_x
@@ -113,9 +112,8 @@ bitmap_split_irq:
 */
 
 		asl $d019
-		:set_irq(lower_split_irq)
+		:set_irq_lo(lower_split_irq)
 		:d012($c2)
-
 
 		ldy #$f0
 		:wait()
@@ -130,7 +128,6 @@ bitmap_split_irq:
 
 		rti
 
-
 .const base_plex = $cf
 .const offset_plex = $10
 
@@ -143,6 +140,12 @@ lower_split_irq:
 
 		:d011($1b)
 		:d016($c8)
+
+		lda #0
+		sta $d021
+
+		ldy #$18
+		:wait()
 
 		lda #DARK_GRAY
 		sta $d021
@@ -302,9 +305,6 @@ msx_irq:
 
 		asl $d019
 
-		//ldy #$1 //$50 PAL ->
-		//:wait()
-
 		lda #screen_0_d018
 		sta $d018
 
@@ -343,6 +343,9 @@ sideborder_sprites:
 
 .pc = bottom_sprites "bottom sprites"
 .import binary "data/sprit.raw"
+
+.pc = $3800 "text"
+.import source "data/text.asm"
 
 .pc = $0ec0 "lower border sprites"
 lower_border_sprites:

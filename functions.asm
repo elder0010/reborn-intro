@@ -33,6 +33,23 @@ copy_screendata:
         rts
 
 
+fill_text_color_zone:
+        lda #WHITE
+        ldx #0
+        .const bd = 19
+!:
+        sta $d800+[bd*$28],x
+        sta $d800+[[bd+1]*$28],x
+        sta $d800+[[bd+2]*$28],x
+        sta $d800+[[bd+3]*$28],x
+        sta $d800+[[bd+4]*$28],x
+        sta $d800+[[bd+5]*$28],x
+
+        inx
+        cpx #$12
+        bne !-
+        rts
+
 prepare_chars_under_sprites:
 
 /*
@@ -132,26 +149,15 @@ bottom_sprites_y:
 
 position_sideborder_sprites:
 
-        lda #[sideborder_sprites/$40]+0
-        sta screen_0+$03f9
-
-        lda #[sideborder_sprites/$40]+1
-        sta screen_0+$03fa
-
-        lda #[sideborder_sprites/$40]+2
-        sta screen_0+$03fb
-
-        lda #[sideborder_sprites/$40]+3
-        sta screen_0+$03fc
-
-        lda #[sideborder_sprites/$40]+4
-        sta screen_0+$03fd
-
-        lda #[sideborder_sprites/$40]+5
-        sta screen_0+$03fe
+        ldx #6
 
         lda #[sideborder_sprites/$40]+6
-        sta screen_0+$03ff
+        sec
+!:
+        sta screen_0+$03f9,x
+        sbc #1
+        dex
+        bpl !-
 
         lda #$ba
         sta $d010
@@ -212,7 +218,10 @@ position_sideborder_sprites:
 position_first_sprites_line:
         lda #0
         sta plex_ct
-        sta $d01d
+        sta $d025
+
+        lda #ORANGE
+        sta $d026
 
         jsr next_bottom_sprites
         jsr recolour_sprites
@@ -240,9 +249,4 @@ position_first_sprites_line:
         sta $d01c
         sta $d015
 
-        lda #$f0
-        sta $d025
-
-        lda #ORANGE
-        sta $d026
         rts
