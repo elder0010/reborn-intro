@@ -93,7 +93,6 @@ spritedef:
 .byte	sprblock/$40,sprblock/$40,b1sprbs+0,b1sprbs+1,b1sprbs+2,$1e,$1d
 .byte	sprblock/$40,sprblock/$40,b1sprbs+3,b1sprbs+4,b1sprbs+5,$1e,$1d
 .byte	sprblock/$40,sprblock/$40,b1sprbs+6,b1sprbs+8,b1sprbs+9,$1e,$1d
-.byte	sprblock/$40,sprblock/$40,b0sprbs+6+4,b0sprbs+8+4,b0sprbs+9+4,$1e,$1d
 
 // VIC configuration at raster 0
 sprite1tbl:
@@ -531,9 +530,7 @@ d8skip:
 	lda spritedef+$07,x
 	sta $5ff8,x
 	lda spritedef+$0e,x
-	sta $47f8,x	
-	lda spritedef+$15,x
-	sta $03f8,x
+	sta $47f8,x
 	dex
 	bpl !-
 
