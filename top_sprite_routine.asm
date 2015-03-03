@@ -1,5 +1,6 @@
 //Freshness
 
+
 // Switching rasters
 // *****************
 .const	rst_sprite1		=	$120		// Top sprites
@@ -7,25 +8,18 @@
 .const	rst_sprite3		=	$35			// More sprites
 .const	rst_msx			=	$f9			// Sid player
 
-// Mode switch
-// ***********
-.const	vic_d011	=	$d011		// Change this for testing purpose
-.const	mdlvalue	=	$3b			// Bitmap mode
-.const	tnbvalue	=	$1b			// Char mode
-
 // Zero page variables
 // *******************
-.const	switchmode	=	$c0	
-.const	savex		=	$c1
-.const	savey		=	$c2
-.const	hix			=	$c3
-.const	scrollcolor	=	$c5
-.const	ptr			=	$c6
-.const	temp		=	$c9
-.const	dummy		=	$ca
-.const	movpos		=	$cb
-.const	tmppos		=	$cc
-.const	lox			=	$cd
+.const	savex		=	$c1			// Save x inside IRQ handler
+.const	savey		=	$c2			// Save y inside IRQ handler
+.const	lox			=	$c3			// D016 current value (C8-CF)
+.const	hix			=	$c4			// Upper scroll position
+.const	scrollcolor	=	$c5			// Logo color
+.const	ptr			=	$c6			// Misc 16 bit pointer 
+.const	temp		=	$c8			// Misc 8 bit temporary data
+.const	dummy		=	$ca			// Dummy byte for timing
+.const	movpos		=	$cb			// Current scroll index position
+.const	fstpageval	=	$cc			// First d018/dd00 value
 
 // Colors
 // ******
@@ -52,26 +46,28 @@
 // FPP Precalc'd tables	
 // ********************
 
+
+// D018: create d018 list for next use
+.var	fpplines=List()
+.eval	fpplines.add(0,1,2,3,4,5,6,7,7,7,7,7,8,9,10,11,12,13,14,15)
+.var	d018values=List()
+.for(var i=0;i<39;i++)	
+	.eval	d018values.add([[$f+fpplines.get(floor([i+1]/2))]&$f]+[16*[[floor([i+4]/21)*2+5]&$7]])
+
 // D011: skip badlines and alternate EBCM/Char mode (gfx*2)
 .print "D011 table: "+toHexString(*)
 d011table:
-.fill 19,[[[19-i]*2]&6]+[[[i^1]&1]*$40]+$18+1
-
-// D018: create d018 list for next use
-.var	d018values=List()
-.for(var i=0;i<38;i++)	
-	.eval	d018values.add([[$2e-floor(i/2)]&$f]+[16*[floor([i+5]/21)*2+1]])
+.fill 19,[[[19-i]*2]&6]+[[[fpplines.get(i)^1]&1]*$40]+$18+1
 	
 // D018: change gfx (even)
 .print "D018 table: "+toHexString(*)
 d018table1:
-.fill 19,d018values.get([18-i]*2)
+.fill 19,d018values.get([18-i]*2+1)
 
 // D018: change gfx (odd)
 .print "D018 table: "+toHexString(*)
 d018table2:
-.fill 19,d018values.get([18-i]*2+1)
-.byte $1f
+.fill 20,d018values.get([19-i]*2)
 
 
 // Plexer
@@ -86,9 +82,6 @@ plexport:
 // Values to be assigned
 plexvalue:
 .byte	$33,$33,$33,$36+42,$36+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21
-
-convlogo:
-.fill	16,[3*[i&1]]+[6*[i&2]]+[12*[i&4]]+[24*[i&8]]
 
 masks:
 .byte	$00,$03,$07,$0f
@@ -193,8 +186,8 @@ irq_sprite2:
 	sta $d00a
 	eor #[$58^$e0]
 	sta $d00c	
-	nop	
-	cmp (0,x)	
+	lda.a scrollcolor
+	sta $d02c
 	lda #b0sprbs+4
 	sta $07fa
 	lda #b0sprbs+5
@@ -219,11 +212,11 @@ irq_sprite3:
 	sta *+4
 	bpl *
 	.byte	LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,BIT_ZP,NOP		
-	nop
-	lda #$92
-	ldx scrollcolor
+	lda fstpageval
+	sta $d018
 	sta $dd00	
-	stx $d02c		
+	nop
+	nop
 	lda #b0sprbs+10
 	sta $07fa
 	ldx #b0sprbs+12
@@ -268,16 +261,13 @@ irq_sprite3:
 		stx $d016			// 4		
 		dey					// 2
 		bpl logoloop_pos	// 3
-
-	lda #$5f	// 
-	sta $d018
 	ldy #$93
-	
+	sty $dd00
+	ldx #$07
 	// DMA delay
 	// *********
 	lda #$1e
-	sta $d011		
-	sty $dd00
+	sax $d011			
 	sta $d018
 	lda #$03
 	sta $d017	
@@ -301,35 +291,26 @@ irq_sprite3:
 	sta $d02c
 	lda #ORANGE
 	sta $d02d	
-	nop
-	ldy #$2b
+	ldy #$2f
 !:
 	dey	
-	bne !-		
-	ldy #$18	
-	lda #$93
-	sta $dd00	
-	lda #[$18+7]
-	ldy #13
-	!:	
-		nop
-		clc
-		sta $d011		
-		adc #$01
-		and #$07
-		ora #$18		
-		cmp (0,x)	// w6
-		pha			// w3
-		pla			// w4
-		dey
-		php
-		cpy #08
-		bcs wtskip
+	bne !-
+	btmcrunch:					
+		inc $d011-7,x	// Line crunch
+		lda #$10		// W = 6+5*(ASL_No.-1) => 21
+	!:
+		asl
+		bcc !-
+		cpy #$05
+		bcc wtskip
 		inc dummy
-	wtskip:
-		plp		
-		bne !-		
-
+	wtskip:	
+		cpy #12
+		beq !+
+		nop
+		iny		
+		bcc btmcrunch
+!:
 	lda #$38+[[12+7]&7]	
 	sta $d011	
 	lsr $d019
@@ -344,7 +325,7 @@ irq_sprite3:
 	sta $ffff				// 4
 	
 	inc movpos	// Next logo position
-	lda movpos	// Manage 2Â°/4Â° sector
+	lda movpos	// Manage 2°/4° sector
 	anc #$3f	// AND + clear carry
 	bit movpos
 	bvc !+
@@ -353,7 +334,7 @@ irq_sprite3:
 !:
 	tax	
 	lda movement,x	
-	bit movpos	// Manage 3Â°/4Â° sector
+	bit movpos	// Manage 3°/4° sector
 	bpl !+
 	eor #$ff	
 	adc #$01	
@@ -385,12 +366,12 @@ irq_sprite3:
 	lda hix
 	adc #$13
 	alr #$3f	
-	ldy #>[logoswap+[12*32]]	
+	ldy #>[logoswap+[14*32]]	
 	bcc !+
-	ldy #>[logo+[12*32]]
+	ldy #>[logo+[14*32]]
 !:
 	sty ptr+1	
-	ldy #<[logoswap+[12*32]]
+	ldy #<[logoswap+[14*32]]
 	sty ptr	
 	ldx #$1f
 	clc
@@ -435,14 +416,20 @@ trdbyte2:
 	dex
 	dex
 	dex
-	clc
+	cpx #[8*3]
+	bcc contlogo
+	cpx #[12*3]
+	bcc skiplogo
+contlogo:
+	sec
 	lda ptr
-	adc #$20
-	sta ptr
-	lda #$00
-	rol
+	sbc #$20
+	sta ptr	
+	adc #$01
+	and #$01
 	eor ptr+1	
 	sta ptr+1
+skiplogo:	
 	cpx #-3
 	bne fstbyte1
 	// Charscreen copy
@@ -503,7 +490,7 @@ d81sta:
 d8skip:
 	inx	
 	inx
-	bne d8loop
+	bne d8loop	
 	inc d81sta+2
 	inc d82sta+2
 	lda ptr+1
@@ -540,11 +527,11 @@ d8skip:
 	ldx #$06
 !:
 	lda spritedef+$00,x
-	sta $47f8,x
+	sta $57f8,x
 	lda spritedef+$07,x
-	sta $4ff8,x
+	sta $5ff8,x
 	lda spritedef+$0e,x
-	sta $57f8,x	
+	sta $47f8,x	
 	lda spritedef+$15,x
 	sta $03f8,x
 	dex
@@ -556,36 +543,43 @@ d8skip:
 	sta ptr
 	lda #>logofpp
 	sta ptr+1
-	ldy #$00
-rowloop:
-	ldx #$00	
-halfloop:	
-	lda logo
-	pha		
-	lsr
-	lsr
-	lsr
-	lsr
-	jsr saveandinc
-	pla
-	anc #$0f
-	jsr saveandinc
-	inc halfloop+1
-	bcc halfloop
-	lax halfloop+1
-	anc #$3f		// Every row has 64 characters
-	beq !+	
-	inc ptr+1		// [ptr&3]==0 -> EBCM . [ptr&3]==1 -> normal char mode
-	bne halfloop
-!:	
-	cpx #$00
-	bne !+
-	inc halfloop+2
-!:	
-	lda ptr+1		// Carry always set (cpx #$00)
-	adc #$04
-	sta ptr+1	
-	bpl rowloop
+	ldy #$00	
+	ldx #$00
+rowloop:	
+	lda logo,x		// Load "compressed" byte
+	sta temp		// Store in temp
+doublechar:
+	lda #$01		// Set exit condition
+bitloop:
+	asl temp		// Get bit
+	php
+	rol				// Stuff it once
+	plp
+	rol				// Stuff it twice
+	bcc bitloop		// Loop 4 times (1->4->10->40->C)
+	sta (ptr),y
+	tya	
+	adc #$07		// Carry always set => +8
+	tay
+	and #$08		// If (y&8) then 
+	bne doublechar	// we need to compute the low nibble of temp
+	inx				// Ok, next byte
+	bcc rowloop		// Till we need to change destination page
+	bne !+			// End of source page?
+	inc rowloop+2	// Change source page
+!:
+	txa
+	and #$3f
+	bne !+			// Here Y = A = 0, Z Flag refer to X status	
+	lda #$04
+!:		
+	and #$0f
+	adc ptr+1		// [ptr&3]==0 -> EBCM . [ptr&3]==1 -> normal char mode
+	sta ptr+1
+	bpl rowloop		// Stop at the of bank 1
+
+	stx $79ff		// TEST <- DA LEVARE!!!
+	stx $7fff		// Needed!
 	
 // Copy logoswap
 // *************	
@@ -638,16 +632,6 @@ swapdst:
 	sta scrollcolor	
 	lda #$c8
 	sta lox	
+	lda #$5e
+	sta fstpageval	
 	rts
-	
-// This is just for saving some bytes
-saveandinc:			
-	tax
-	lda convlogo,x
-	sta (ptr),y
-	tya
-	clc
-	adc #$08
-	tay
-	rts
-	

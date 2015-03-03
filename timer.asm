@@ -1,8 +1,6 @@
-// Zero page
-// *********
-
-.const	done		=	$f0
-//.const	videomode	=	$80		// 0 PAL, 1 NTSC => This must be set outside this routine
+// Raster line for stabilizing
+// ***************************
+.const	testline	=	1
 
 // Constants
 // *********
@@ -19,9 +17,8 @@ start_timer:
 	lda #$7f
 	sta $dc0d
 	bit $dc0d	
-	lda #$01
-	sta $d012
-	sta done	
+	ldx #testline
+	stx $d012	
 	lda #<irq_timer1
 	sta $fffe
 	lda #>irq_timer1
@@ -29,7 +26,7 @@ start_timer:
 	lsr $d019
 	cli
 !:
-	lda done
+	txa
 	bne !-	
 	plp
 	rts
@@ -40,36 +37,34 @@ start_timer:
 // ********************************	
 irq_timer1:	
 	lsr $d019			// 6+9+0/7
-	pha					// 3
+	tsx					// 2
 	inc $d012			// 6
 	lda #<irq_timer2	// 2
 	sta $fffe			// 4
-	lda #>irq_timer2	// 2
-	sta $ffff			// 4
-	lda #$00			// 2 Stop timer B
-	sta $dc0e			// 4
+	ldy #$00			// 2 Stop timer B
+	sty $dc0e			// 4
 	lda #[pal_line-1]	// 2 Set timer B to PAL line length
-	sta $dc04			// 4
-	ldy #$00			// 2
+	sta $dc04			// 4	
 	sty $dc05			// 4
-	cli					// 2 - 56/63
+	cmp (0,x)			// 6
+	ldy #[testline+1]	// 2
+	cli					// 2 - 55/62
+	.fill 2,NOP			// 4 IRQ1
 irq_timer2:	
-	.fill 5,NOP			// 10
-	cmp ($0,x)			// 6
-	cmp ($0,x)			// 6
+	.if	([>[irq_timer1]]!=[>[irq_timer2]]) .error "Page crossed on timer module!"	
+	.fill 2,NOP			// 4 IRQ1 IRQ2 (2nd IRQ +9+0/1)
+	lda #$91			// 2 IRQ1 IRQ2
+	txs					// 2 IRQ1 IRQ2
+	ldx #$07			// W = 6+(X-1)*5 => 36
+!:
+	dex
+	bne !-
 	lsr $d019			// 6	
-	sty.a done			// 4
-	pla					// 4+9+0/1
-	pla					// 4
-	pla					// 4	
-	lda #$91			// 2	
-	ldx $d012			// 4
-	cpx $d012			// 4	
+	cpy $d012			// 4	
 	beq !+	
 !:
 	.if	([>[*-1]]!=[>[!-]]) .error "Page crossed on timer module!"	
-	sta $dc0e,y
-	pla
+	sta $dc0e,x	
 	rti	
 
 

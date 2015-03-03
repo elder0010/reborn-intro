@@ -74,12 +74,17 @@ msx_irq:
 //<FRESHNESS>
 .import source "top_sprite_routine.asm"
 .import source "timer.asm"
+.align $0100
+logo:
+.fill	$200,random()*256
 
 .pc = $2000 "Top sprites"
 b0sprite:
 .import binary "sprites.prg"	// Fresh
-logo:
-.fill $200,floor(i/$20)+floor(i/24)
+.pc = * "colour ram"
+.align $0100
+colorbase:
+.import binary "data/d800_comp.raw"
 
 //</FRESHNESS>
 
@@ -90,12 +95,9 @@ screendata:
 .pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
 
-.pc = * "colour ram"
-.align $0100
-colorbase:
-.import binary "data/d800_comp.raw"
+.pc = $3800
+.fill $800,0
 
 
-.pc = $4000
-.fill $4000,[floor(2*random())*$03]+[floor(2*random())*$0c]+[floor(2*random())*$30]+[floor(2*random())*$c0]
-//.fill $4000,0
+//.pc = $4000
+//.fill $4000,[floor(2*random())*$03]+[floor(2*random())*$0c]+[floor(2*random())*$30]+[floor(2*random())*$c0]
