@@ -1,4 +1,6 @@
-//Freshness
+// *********
+// Freshness
+// *********
 
 
 // Switching rasters
@@ -24,28 +26,33 @@
 // Colors
 // ******
 .const	d800scr		=	WHITE
-.const	bgcolor		=	LIGHT_GRAY
+.const	bgcolor		=	LIGHT_GRAY	// MUST Be >=8
 
 // Pointers
 // ********
-.const	b1sprite	=	$4400		// Bank 1 sprite base
 .const	logoswap	=	$fc00		// Swap zone
-.const	sprblock	=	$37c0		// Filled block sprite
-.const	sbleft		=	$4780		// Sideborder sprite left
-.const	sbright		=	$4740		// Sideborder sprite right
+// Bank 0
+.const	sprblock0	=	$3f80		// Filled block sprite
+// Bank 1
 .const	logofpp		=	$4007		// FPP starting position (Last line FPP)
+.const	b1sprite	=	$7c00		// Bank 1 sprite base
+.const	sbleft		=	$7f00		// Sideborder sprite left
+.const	sbright		=	$7f40		// Sideborder sprite right
+.const	sprblock	=	$7f80		// Filled block sprite
+.const	sprempty	=	$7fc0		// Empty block sprite
+
 
 // Sprite def.
 // ***********
-.const	b0sprbs		=	[b0sprite&$3fff]/$40	// Sprite base (bank 0)
-.const	b1sprbs		=	[b1sprite&$3fff]/$40	// Sprite base (bank 1)
+.function def(area) {
+	.return floor([area&$3fff]/$40)
+}
 
 
 
 .align $0100	
 // FPP Precalc'd tables	
 // ********************
-
 
 // D018: create d018 list for next use
 .var	fpplines=List()
@@ -54,11 +61,6 @@
 .for(var i=0;i<39;i++)	
 	.eval	d018values.add([[$f+fpplines.get(floor([i+1]/2))]&$f]+[16*[[floor([i+4]/21)*2+5]&$7]])
 
-// D011: skip badlines and alternate EBCM/Char mode (gfx*2)
-.print "D011 table: "+toHexString(*)
-d011table:
-.fill 19,[[[19-i]*2]&6]+[[[fpplines.get(i)^1]&1]*$40]+$18+1
-	
 // D018: change gfx (even)
 .print "D018 table: "+toHexString(*)
 d018table1:
@@ -77,11 +79,11 @@ d018table2:
 // D0xx ports
 .print "Plex on FPP tables [$80]: "+toHexString(*)
 plexport:
-.byte	$3f,$3f,$3f,$0b,$0d,$3f,$3f,$09,$07,$05,$3f,$3f,$3f,$3f,$3f,$3f,$09,$07,$05
+.byte	$40+$3f,$40+$3f,$40+$3f,$40+$3f,$40+$0b,$40+$0d,$40+$3f,$40+$3f,$09,$07,$05,$3f,$40+$3f,$40+$3f,$40+$3f,$40+$3f,$40+$3f,$40+$09,$40+$07,$40+$05
 
 // Values to be assigned
 plexvalue:
-.byte	$33,$33,$33,$36+42,$36+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21
+.byte	$00,$33,$33,$33,$36+42,$36+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21
 
 masks:
 .byte	$00,$03,$07,$0f
@@ -90,9 +92,9 @@ masks:
 // ******************
 // To be copied on second bank
 spritedef:
-.byte	sprblock/$40,sprblock/$40,b1sprbs+0,b1sprbs+1,b1sprbs+2,$1e,$1d
-.byte	sprblock/$40,sprblock/$40,b1sprbs+3,b1sprbs+4,b1sprbs+5,$1e,$1d
-.byte	sprblock/$40,sprblock/$40,b1sprbs+6,b1sprbs+8,b1sprbs+9,$1e,$1d
+.byte	def(sprblock),def(sprblock),def(b1sprite)+0,def(b1sprite)+1,def(b1sprite)+2,def(sbleft),def(sbright)
+.byte	def(sprblock),def(sprblock),def(b1sprite)+3,def(b1sprite)+4,def(b1sprite)+5,def(sbleft),def(sbright)
+.byte	def(sprblock),def(sprblock),def(b1sprite)+6,def(b1sprite)+8,def(b1sprite)+9,def(sbleft),def(sbright)
 
 // VIC configuration at raster 0
 sprite1tbl:
@@ -104,7 +106,7 @@ sprite1tbl:
 .byte	$f4,$fa											// Multicolor sprite colors
 .byte	$fb,$fb,$fe,$fe,$fe,0,$f1,GREY					// Sprite colors
 sprite1def:	// Sprite definitions
-.byte   sprblock/$40,sprblock/$40,b0sprbs+1,b0sprbs+2,b0sprbs+3,b0sprbs,b0sprbs,b0sprbs+14
+.byte   def(sprblock0),def(sprblock0),def(b0sprite)+1,def(b0sprite)+2,def(b0sprite)+3,def(b0sprite),def(b0sprite),def(b0sprite)+14
 
 
 // Logo positions (a quarter)
@@ -146,6 +148,8 @@ i1loop:
 	bpl i1loop
 	lda #<irq_sprite2
 	sta $fffe
+	lda #>irq_sprite2
+	sta $ffff
 	ldx savex
 	pla
 	rti
@@ -187,13 +191,13 @@ irq_sprite2:
 	sta $d00c	
 	lda.a scrollcolor
 	sta $d02c
-	lda #b0sprbs+4
+	lda #def(b0sprite)+4
 	sta $07fa
-	lda #b0sprbs+5
+	lda #def(b0sprite)+5
 	sta $07fb
-	lda #b0sprbs+6
+	lda #def(b0sprite)+6
 	sta $07fc
-	lda #b0sprbs+11
+	lda #def(b0sprite)+11
 	sta $07fd
 	pla	 	
 	rti
@@ -214,50 +218,51 @@ irq_sprite3:
 	lda fstpageval
 	sta $d018
 	sta $dd00	
-	nop
-	nop
-	lda #b0sprbs+10
+	ldx.a lox
+	lda #def(b0sprite)+10
 	sta $07fa
-	ldx #b0sprbs+12
-	stx $07fb
-	inx
-	stx $07fc
-	lda #b0sprbs+15	
+	lda #def(b0sprite)+12
+	sta $07fb
+	lda #def(b0sprite)+13
+	sta $07fc
+	lda #def(b0sprite)+15	
 	sta $07fe
 	lda #$1f
 	sta $d01c	
-	ldx.a lox			// 4
+	stx loxabs+1		// 4
 	ldy #19				// 2
 	lda #$19			// 2	
 	bne logo_start		// 4 Page cross
 	
 .align $0100		
-	logoloop_pos:	// Do FPP and plex sprites		
-		nop					// 2
+	logoloop_pos:	// Do FPP and plex sprites				
 		sta $d02d			// 4
 		lda scrollcolor		// 3
 		sta $d02c			// 4		
-		lda plexport,y		// 4
-		sta ll_mod+1		// 4
 		lda d018table1,y	// 4
 		sta $d018			// 4
-		lda d011table,y		// 4
+		txa					// 2
+		anc #$40			// 2
+		eor $d011			// 4
+		adc #$02			// 2
+		and #$47			// 2
+	loxabs:
+		ldx #$00			// 2
 	logo_start:			
 		lsr $d016			// 6
 		sta $d011			// 4
 		stx $d016			// 4		
-		inc dummy			// 5
-		lda d018table2,y	// 4
-		sta $d018			// 4
-		lda plexvalue,y		// 4
-	ll_mod:
-		sta $d03f			// 4
+		ldx plexport,y		// 4		
+		lda plexvalue,y		// 4	
+		sta $d000,x			// 5
 		lda scrollcolor		// 4
 		sta $d02d			// 4
+		lda d018table2,y	// 4
+		sta $d018			// 4						
 		lda #bgcolor		// 2
-		sta $d02c			// 4		
+		sta $d02c			// 4
 		lsr $d016			// 6
-		stx $d016			// 4		
+		sta $d016			// 4		
 		dey					// 2
 		bpl logoloop_pos	// 3
 	ldy #$93
@@ -620,12 +625,14 @@ swapdst:
 	ldx #$3f
 !:	
 	lda #$aa
-	sta $4000+sprblock-1,x
-	sta sprblock-1,x
+	sta sprblock,x
+	sta sprblock0,x		// May be useless => Use Elder's one
+	lda #$00
+	sta sprempty,x
 	lda #d800scr	
-	sta $d800-1,x
+	sta $d800,x
 	dex
-	bne !-
+	bpl !-
 	sta scrollcolor	
 	lda #$c8
 	sta lox	
