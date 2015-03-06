@@ -74,6 +74,7 @@ msx_irq:
 //<FRESHNESS>
 .import source "top_sprite_routine.asm"
 .import source "timer.asm"
+.pc=* "End of code"
 .align $0100
 logo:
 .fill	$200,random()*256
@@ -99,5 +100,5 @@ screendata:
 .fill $800,0
 
 
-//.pc = $4000
-//.fill $4000,[floor(2*random())*$03]+[floor(2*random())*$0c]+[floor(2*random())*$30]+[floor(2*random())*$c0]
+.pc = $4000
+.fill $4000,[floor(2*random())*$03]+[floor(2*random())*$0c]+[floor(2*random())*$30]+[floor(2*random())*$c0]

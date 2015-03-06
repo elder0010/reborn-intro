@@ -13,10 +13,7 @@
 // ****************************	
 start_timer:	
 	php	
-	sei	
-	lda #$7f
-	sta $dc0d
-	bit $dc0d	
+	sei
 	ldx #testline
 	stx $d012	
 	lda #<irq_timer1
@@ -64,7 +61,7 @@ irq_timer2:
 	beq !+	
 !:
 	.if	([>[*-1]]!=[>[!-]]) .error "Page crossed on timer module!"	
-	sta $dc0e,x	
+	sta $dc0e
 	rti	
 
 

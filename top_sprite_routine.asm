@@ -2,6 +2,7 @@
 // Freshness
 // *********
 
+// Manca salvataggio byte 7 e linea 6
 
 // Switching rasters
 // *****************
@@ -12,16 +13,17 @@
 
 // Zero page variables
 // *******************
-.const	savex		=	$c1			// Save x inside IRQ handler
-.const	savey		=	$c2			// Save y inside IRQ handler
-.const	lox			=	$c3			// D016 current value (C8-CF)
-.const	hix			=	$c4			// Upper scroll position
+.const	savex		=	$c0			// Save x inside IRQ handler
+.const	savey		=	$c1			// Save y inside IRQ handler
+.const	lox			=	$c2			// D016 current value (C8-CF)
+.const	hix			=	$c3			// Upper scroll position
+.const	movpos		=	$c4			// Current scroll index position
 .const	scrollcolor	=	$c5			// Logo color
 .const	ptr			=	$c6			// Misc 16 bit pointer 
-.const	temp		=	$c8			// Misc 8 bit temporary data
-.const	dummy		=	$ca			// Dummy byte for timing
-.const	movpos		=	$cb			// Current scroll index position
-.const	fstpageval	=	$cc			// First d018/dd00 value
+.const	ptr2		=	$c8			// Misc 16 bit pointer 
+.const	ptr3		=	$ca			// Misc 16 bit pointer 
+.const	temp		=	$cc			// Misc 8 bit temporary data
+.const	dummy		=	$cd			// Dummy byte for timing
 
 // Colors
 // ******
@@ -30,6 +32,7 @@
 
 // Pointers
 // ********
+.const	savesprite	=	$f800		// Swap zone
 .const	logoswap	=	$fc00		// Swap zone
 // Bank 0
 .const	sprblock0	=	$3f80		// Filled block sprite
@@ -39,7 +42,6 @@
 .const	sbleft		=	$7f00		// Sideborder sprite left
 .const	sbright		=	$7f40		// Sideborder sprite right
 .const	sprblock	=	$7f80		// Filled block sprite
-.const	sprempty	=	$7fc0		// Empty block sprite
 
 
 // Sprite def.
@@ -115,6 +117,41 @@ movement:
 .fill	64,floor(127*sin(i*PI/128))
 
 
+// Save stuff
+// **********
+savestuff:			// Sprites
+	lda #>b1sprite
+	ldx #>savesprite	
+	bne !+
+loadstuff:		
+	ldx #>b1sprite
+	lda #>savesprite		
+!:	
+	sta ptr+1
+	stx ptr+3
+	ldy #>b0sprite+[4*$40]
+	sty ptr+5
+	ldy #$00
+	sty ptr
+	sty ptr+2
+	sty ptr+4
+	ldx #$04	
+!:
+	lda (ptr),y
+	sta (ptr2),y
+	lda (ptr3),y
+	sta (ptr),y
+	dey
+	bne !-
+	inc ptr+1
+	inc ptr+3
+	inc ptr+5
+	dex
+	bne !-
+	rts		
+
+	
+
 // Effect handler
 // **************
 // Call this inside an IRQ to create effect on next frame
@@ -148,8 +185,7 @@ i1loop:
 	bpl i1loop
 	lda #<irq_sprite2
 	sta $fffe
-	lda #>irq_sprite2
-	sta $ffff
+quitirq:
 	ldx savex
 	pla
 	rti
@@ -208,19 +244,21 @@ irq_sprite2:
 // *********************
 irq_sprite3:	
 	pha
-	stx savex
-	sty savey		
+	sty savey
+	nop
 	lda $dc04
 	eor #$2f
 	sta *+4
 	bpl *
 	.byte	LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,BIT_ZP,NOP		
-	lda fstpageval
+	lda #$5e
+	ldy #def(b0sprite)+10	
 	sta $d018
 	sta $dd00	
-	ldx.a lox
-	lda #def(b0sprite)+10
-	sta $07fa
+	stx savex
+	ldx lox
+	stx loxabs+1		// 4	
+	sty $07fa
 	lda #def(b0sprite)+12
 	sta $07fb
 	lda #def(b0sprite)+13
@@ -228,13 +266,41 @@ irq_sprite3:
 	lda #def(b0sprite)+15	
 	sta $07fe
 	lda #$1f
-	sta $d01c	
-	stx loxabs+1		// 4
+	sta $d01c		
 	ldy #19				// 2
 	lda #$19			// 2	
+jmptest:
 	bne logo_start		// 4 Page cross
+
+
+// Copy sprite pointers
+// ********************	
+copydef:
+	ldx #$06
+cpdef:
+	ldy #$08
+!:	
+	lda $57f8,x
+	rol
+	rol spritedef+$00,x
+	rol $57f8,x	
+	lda $5ff8,x
+	rol	
+	rol spritedef+$07,x
+	rol $5ff8,x
+	lda $47f8,x
+	rol		
+	rol spritedef+$0e,x
+	rol $47f8,x
+	dey
+	bne !-
+	dex
+	bpl cpdef	
+	rts	
+
 	
-.align $0100		
+// Main FPP Code
+// *************
 	logoloop_pos:	// Do FPP and plex sprites				
 		sta $d02d			// 4
 		lda scrollcolor		// 3
@@ -248,7 +314,7 @@ irq_sprite3:
 		and #$47			// 2
 	loxabs:
 		ldx #$00			// 2
-	logo_start:			
+	logo_start:			.if ([>logo_start]==[>jmptest]) .error "FPP - Page not crossed"
 		lsr $d016			// 6
 		sta $d011			// 4
 		stx $d016			// 4		
@@ -273,10 +339,10 @@ irq_sprite3:
 	lda #$1e
 	sax $d011			
 	sta $d018
-	lda #$03
-	sta $d017	
 	lda #$c3
-	sta $d01d
+	sta $d017	
+	nop
+	sax $d01d
 	lda #$50
 	sta $d00a
 	lda #$68
@@ -285,9 +351,9 @@ irq_sprite3:
 	sta $d016		
 	lda #$3f
 	sta $d01c
-	lda #$02
-	sta $d010
-	lda #$33+63
+	lda #$72
+	sax $d010
+	nop
 	sta $d005
 	sta $d007
 	sta $d009	
@@ -343,15 +409,13 @@ irq_sprite3:
 	eor #$ff	
 	adc #$01	
 !:
-	tax
-	anc #$f8	// Carry cleared
-	bpl	!+
-	ora #$03
-	sec
-!:	
+	tax	
+	ldy #$02	
+!:
+	anc #$fe	// Carry cleared
 	ror
-	ror
-	ror	
+	dey
+	bpl	!-
 	eor #$ff
 	adc #$01
 	sta hix		// Save 5 MSb
@@ -377,18 +441,18 @@ irq_sprite3:
 	sty ptr+1	
 	ldy #<[logoswap+[14*32]]
 	sty ptr	
-	ldx #$1f
-	clc
+	tax
+	lda #$1f	
 	sax fstbyte1+1
-	adc #$01	
+	inx
 	sax secbyte1+1	
-	adc #$01	
+	inx
 	sax trdbyte1+1			
-	adc #$15	
+	axs #[$100-$15]
 	sax fstbyte2+1	
-	adc #$01	
+	inx
 	sax secbyte2+1	
-	adc #$01	
+	inx
 	sax trdbyte2+1	
 	ldx #57
 fstbyte1:
@@ -447,22 +511,14 @@ skiplogo:
 	ora #$40
 	sta $0400,x
 	dex
-	bpl !-			
-	
-	ldx savex
+	bpl !-	
 	ldy savey	
-	pla
-	rti
+	jmp quitirq		
 		
 		
 		
 		
 		
-		
-		
-		
-		
-
 // *********************
 // Scroll initialization
 // *********************
@@ -501,6 +557,12 @@ d8skip:
 	cmp #[[>colorbase]+2]
 	bne d8loop
 
+	
+// Copy sprites to bank 1
+// **********************	
+	jsr savestuff
+	
+	
 // Clear line 5/6 of first definition ($D018 <= $xe)
 // *************************************************
 	ldx #$06
@@ -513,31 +575,10 @@ d8skip:
 	cpx #$08
 	bcs !-
 
-// Copy sprites to bank 1
-// **********************
-	ldx #$00
-!:
-	lda b0sprite+$4*$40,x
-	sta b1sprite,x
-	lda b0sprite+$8*$40,x
-	sta b1sprite+$100,x
-	lda b0sprite+$c*$40,x
-	sta b1sprite+$200,x		
-	dex
-	bne !-
 	
 // Copy sprite pointers
 // ********************	
-	ldx #$06
-!:
-	lda spritedef+$00,x
-	sta $57f8,x
-	lda spritedef+$07,x
-	sta $5ff8,x
-	lda spritedef+$0e,x
-	sta $47f8,x
-	dex
-	bpl !-
+	jsr	copydef
 
 // Build FPP logo
 // **************
@@ -580,7 +621,6 @@ bitloop:
 	sta ptr+1
 	bpl rowloop		// Stop at the of bank 1
 
-	stx $79ff		// TEST <- DA LEVARE!!!
 	stx $7fff		// Needed!
 	
 // Copy logoswap
@@ -627,8 +667,6 @@ swapdst:
 	lda #$aa
 	sta sprblock,x
 	sta sprblock0,x		// May be useless => Use Elder's one
-	lda #$00
-	sta sprempty,x
 	lda #d800scr	
 	sta $d800,x
 	dex
@@ -636,6 +674,6 @@ swapdst:
 	sta scrollcolor	
 	lda #$c8
 	sta lox	
-	lda #$5e
-	sta fstpageval	
 	rts
+
+	
