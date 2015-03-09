@@ -23,9 +23,9 @@ code:
 		sta $d021
 
 		:bank_0()
-
-		lda #$d8
-		sta $d016
+		
+		//lda #$d8
+		//sta $d016
 
 		lda #$18
 		sta $d018
@@ -36,6 +36,7 @@ code:
 		sta $d015
 
 		:d011($00)		// Freshness
+		
 		jsr initscroll	// Freshness
 		
 		:wait_frame()
@@ -47,10 +48,15 @@ code:
 		:set_irq(msx_irq)
 
 		cli
-
+		sei
+		//jsr restorefppmem
+		lsr $d019
+		cli
 	test:				// Main with misc jittering
-		inc.a $0002		
-		jmp test
+		nop			// WT2		
+		inc $e000	// WT6						
+		jmp test	// WT3
+
 
 msx_irq:
 		:open_irq()
@@ -59,14 +65,15 @@ msx_irq:
 		asl $d019
 		lda #$10
 		sta $d011
-		inc $d020
+		//inc $d020
 		jsr music.play
-		dec $d020
+		//dec $d020
 
 		jsr set_mdlirq	// Freshness
 		:close_irq()
 		rti
 
+	
 .pc = * "functions"
 .import source "functions.asm"
 
@@ -77,7 +84,8 @@ msx_irq:
 .pc=* "End of code"
 .align $0100
 logo:
-.fill	$200,random()*256
+.import source "logoparser.asm"
+//.fill	$200,random()*256
 
 .pc = $2000 "Top sprites"
 b0sprite:

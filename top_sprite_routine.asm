@@ -23,25 +23,31 @@
 .const	ptr2		=	$c8			// Misc 16 bit pointer 
 .const	ptr3		=	$ca			// Misc 16 bit pointer 
 .const	temp		=	$cc			// Misc 8 bit temporary data
-.const	dummy		=	$cd			// Dummy byte for timing
+.const	temp2		=	$cd			// Misc 8 bit temporary data
+.const	dummy		=	$ce			// Dummy byte for timing
+.const	spr			=	$cf			// Sprites definitions (2 bytes)
+.const	direction	=	$d0			// Sprites definitions (2 bytes)
 
 // Colors
 // ******
 .const	d800scr		=	WHITE
-.const	bgcolor		=	LIGHT_GRAY	// MUST Be >=8
+.const	bgcolor		=	LIGHT_GREY	// MUST Be >8!!!
 
 // Pointers
 // ********
-.const	savesprite	=	$f800		// Swap zone
-.const	logoswap	=	$fc00		// Swap zone
+.const	savesprite	=	$f600		// Save bank 1 sprite definition RAM
+.const	logoswap	=	$fa00		// Swapped nibble for sprites
+.const	savecfpp	=	$fc00		// Save bank 1 FPP char definition RAM
+.const	saveline6	=	$fe00		// Save bank 1 line 6 of 1st char definition (needed for blanking bank swap)
 // Bank 0
 .const	sprblock0	=	$3f80		// Filled block sprite
 // Bank 1
 .const	logofpp		=	$4007		// FPP starting position (Last line FPP)
 .const	b1sprite	=	$7c00		// Bank 1 sprite base
-.const	sbleft		=	$7f00		// Sideborder sprite left
-.const	sbright		=	$7f40		// Sideborder sprite right
-.const	sprblock	=	$7f80		// Filled block sprite
+.const	sprblock	=	$7f00		// Filled block sprite
+.const	sbleft		=	$7f40		// Sideborder sprite left
+.const	sbright		=	$7f80		// Sideborder sprite right
+
 
 
 // Sprite def.
@@ -65,13 +71,8 @@
 
 // D018: change gfx (even)
 .print "D018 table: "+toHexString(*)
-d018table1:
+d018table:
 .fill 19,d018values.get([18-i]*2+1)
-
-// D018: change gfx (odd)
-.print "D018 table: "+toHexString(*)
-d018table2:
-.fill 20,d018values.get([19-i]*2)
 
 
 // Plexer
@@ -85,7 +86,7 @@ plexport:
 
 // Values to be assigned
 plexvalue:
-.byte	$00,$33,$33,$33,$36+42,$36+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21
+.byte	$1e,$33,$33,$33,$36+42,$36+42,$33+42,$33+42,$33+42,$33+42,$33+42,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21,$33+21
 
 masks:
 .byte	$00,$03,$07,$0f
@@ -114,19 +115,19 @@ sprite1def:	// Sprite definitions
 // Logo positions (a quarter)
 // **************************
 movement:
-.fill	64,floor(127*sin(i*PI/128))
+.fill	65,floor(31*sin(i*PI/128))
 
 
 // Save stuff
 // **********
 savestuff:			// Sprites
 	lda #>b1sprite
-	ldx #>savesprite	
+	ldx #>savesprite		
 	bne !+
 loadstuff:		
 	ldx #>b1sprite
-	lda #>savesprite		
-!:	
+	lda #>savesprite			
+!:		
 	sta ptr+1
 	stx ptr+3
 	ldy #>b0sprite+[4*$40]
@@ -149,7 +150,6 @@ loadstuff:
 	dex
 	bne !-
 	rts		
-
 	
 
 // Effect handler
@@ -245,17 +245,17 @@ irq_sprite2:
 irq_sprite3:	
 	pha
 	sty savey
-	nop
-	lda $dc04
-	eor #$2f
+	sec	
+	lda #$2e
+	sbc $dc04
 	sta *+4
 	bpl *
 	.byte	LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,BIT_ZP,NOP		
 	lda #$5e
-	ldy #def(b0sprite)+10	
-	sta $d018
+	ldy #def(b0sprite)+10
+	sta $d018-[def(b0sprite)+10],y
 	sta $dd00	
-	stx savex
+	stx savex	
 	ldx lox
 	stx loxabs+1		// 4	
 	sty $07fa
@@ -298,14 +298,17 @@ cpdef:
 	bpl cpdef	
 	rts	
 
-	
+
+.align	$0100
 // Main FPP Code
 // *************
+	skipper:
+		bne sprcol
 	logoloop_pos:	// Do FPP and plex sprites				
 		sta $d02d			// 4
 		lda scrollcolor		// 3
 		sta $d02c			// 4		
-		lda d018table1,y	// 4
+		lda d018table,y		// 4
 		sta $d018			// 4
 		txa					// 2
 		anc #$40			// 2
@@ -314,23 +317,26 @@ cpdef:
 		and #$47			// 2
 	loxabs:
 		ldx #$00			// 2
-	logo_start:			.if ([>logo_start]==[>jmptest]) .error "FPP - Page not crossed"
+	logo_start:
 		lsr $d016			// 6
 		sta $d011			// 4
 		stx $d016			// 4		
 		ldx plexport,y		// 4		
 		lda plexvalue,y		// 4	
-		sta $d000,x			// 5
+		sta $d000,x			// 5		
+		cpy #$00			// 2 Special case for sprite definitions
+		bne skipper			// 3
+		sta $d018			// 4
+	sprcol:
 		lda scrollcolor		// 4
 		sta $d02d			// 4
-		lda d018table2,y	// 4
-		sta $d018			// 4						
 		lda #bgcolor		// 2
-		sta $d02c			// 4
+		sta $d02c			// 4				
 		lsr $d016			// 6
 		sta $d016			// 4		
 		dey					// 2
 		bpl logoloop_pos	// 3
+	
 	ldy #$93
 	sty $dd00
 	ldx #$07
@@ -340,9 +346,9 @@ cpdef:
 	sax $d011			
 	sta $d018
 	lda #$c3
-	sta $d017	
+	sta $d01d
 	nop
-	sax $d01d
+	sax $d017
 	lda #$50
 	sta $d00a
 	lda #$68
@@ -395,13 +401,14 @@ cpdef:
 	sta $ffff				// 4
 	
 	inc movpos	// Next logo position
-	lda movpos	// Manage 2°/4° sector
-	anc #$3f	// AND + clear carry
+	lda movpos	// Manage 2°/4° sector	
 	bit movpos
-	bvc !+
-	eor #$ff
-	adc #$40	// Carry always cleared after this
+	anc #$3f	// AND + clear carry
+	bvc !+	
+	eor #$3f
+	adc #$01	// Carry always cleared after this
 !:
+	
 	tax	
 	lda movement,x	
 	bit movpos	// Manage 3°/4° sector
@@ -424,7 +431,7 @@ cpdef:
 	ora #$c8
 	sta lox		// Save 3 LSb
 
-		
+	asl $d020
 	// Sideborder sprite copy
 	// **********************	
 	alr #$06
@@ -441,52 +448,35 @@ cpdef:
 	sty ptr+1	
 	ldy #<[logoswap+[14*32]]
 	sty ptr	
-	tax
-	lda #$1f	
-	sax fstbyte1+1
-	inx
-	sax secbyte1+1	
-	inx
-	sax trdbyte1+1			
-	axs #[$100-$15]
-	sax fstbyte2+1	
-	inx
-	sax secbyte2+1	
-	inx
-	sax trdbyte2+1	
-	ldx #57
-fstbyte1:
-	ldy #$00
+	sta spr
+	ldx #60
+spcprloop:	
+	lda #$02
+	sta temp
+	clc
+spcpcloop:
+	dex
+	lda temp
+	adc spr	
+	pha	
+	adc #$17
+	anc #$1f
+	tay
 	lda (ptr),y
-lftmask:
-	and #$00
+	sta sbright,x		
+	pla
+	anc #$1f
+	tay
+	lda (ptr),y
 	sta sbleft,x
-secbyte1:	
-	ldy #$00
-	lda (ptr),y
-	sta sbleft+1,x
-trdbyte1:	
-	ldy #$00
-	lda (ptr),y
-	sta sbleft+2,x
-fstbyte2:
-	ldy #$00
-	lda (ptr),y
-	sta sbright,x
-secbyte2:	
-	ldy #$00
-	lda (ptr),y
-	sta sbright+1,x
-trdbyte2:	
-	ldy #$00
-	lda (ptr),y
-	sta sbright+2,x	
-	dex
-	dex
-	dex
-	cpx #[8*3]
+	dec temp
+	bpl spcpcloop	
+lftmask:	.pc=* "And mask"
+	and #$00
+	sta sbleft,x			
+	cpx #[9*3]
 	bcc contlogo
-	cpx #[12*3]
+	cpx #[13*3]
 	bcc skiplogo
 contlogo:
 	sec
@@ -498,8 +488,9 @@ contlogo:
 	eor ptr+1	
 	sta ptr+1
 skiplogo:	
-	cpx #-3
-	bne fstbyte1
+	cpx #$00
+	bne spcprloop
+	
 	// Charscreen copy
 	// ***************
 	lda hix
@@ -513,6 +504,7 @@ skiplogo:
 	dex
 	bpl !-	
 	ldy savey	
+	lsr $d020
 	jmp quitirq		
 		
 		
@@ -524,6 +516,11 @@ skiplogo:
 // *********************
 
 initscroll:	
+	lsr direction
+	jsr savestuff		// Save RAM for bank 1 sprites
+	jsr buildfpp		// Build char FPP (and save RAM)
+	jsr saveline6rnt	// Reset line 6 (and save RAM)
+
 // Prepare D800
 // ************
 	lda #<colorbase
@@ -558,73 +555,25 @@ d8skip:
 	bne d8loop
 
 	
-// Copy sprites to bank 1
-// **********************	
-	jsr savestuff
+// Prepare first line
+// ******************
+	ldx #$3f
+!:	
+	lda #$aa
+	sta sprblock,x
+	sta sprblock0,x		// May be useless => Use Elder's one
+	lda #d800scr	
+	sta $d800,x
+	dex
+	bpl !-
+	sta scrollcolor	
+	lda #$c8
+	sta lox		
 	
-	
-// Clear line 5/6 of first definition ($D018 <= $xe)
-// *************************************************
-	ldx #$06
-!:
-	lda #$00
-	sta $7a00,x
-	sta $7b00,x
-	txa
-	axs #[$100-$8]
-	cpx #$08
-	bcs !-
-
-	
-// Copy sprite pointers
-// ********************	
-	jsr	copydef
-
-// Build FPP logo
-// **************
-	lda #<logofpp	// Prepare char definitions
-	sta ptr
-	lda #>logofpp
-	sta ptr+1
-	ldy #$00	
-	ldx #$00
-rowloop:	
-	lda logo,x		// Load "compressed" byte
-	sta temp		// Store in temp
-doublechar:
-	lda #$01		// Set exit condition
-bitloop:
-	asl temp		// Get bit
-	php
-	rol				// Stuff it once
-	plp
-	rol				// Stuff it twice
-	bcc bitloop		// Loop 4 times (1->4->10->40->C)
-	sta (ptr),y
-	tya	
-	adc #$07		// Carry always set => +8
-	tay
-	and #$08		// If (y&8) then 
-	bne doublechar	// we need to compute the low nibble of temp
-	inx				// Ok, next byte
-	bcc rowloop		// Till we need to change destination page
-	bne !+			// End of source page?
-	inc rowloop+2	// Change source page
-!:
-	txa
-	and #$3f
-	bne !+			// Here Y = A = 0, Z Flag refer to X status	
-	lda #$04
-!:		
-	and #$0f
-	adc ptr+1		// [ptr&3]==0 -> EBCM . [ptr&3]==1 -> normal char mode
-	sta ptr+1
-	bpl rowloop		// Stop at the of bank 1
-
-	stx $7fff		// Needed!
 	
 // Copy logoswap
 // *************	
+copylogo:
 	ldx #$20		// Create swapped nibbles table for sideborder sprites
 	ldy #$10
 swapsrc1:
@@ -633,7 +582,7 @@ swapsrc1:
 	asl
 	asl
 	asl
-	sta temp
+	sta temp2
 	lda #$1f
 	axs #[$100-1]
 swapsrc2:	
@@ -642,7 +591,7 @@ swapsrc2:
 	lsr
 	lsr
 	lsr	
-	ora temp
+	ora temp2
 swapdst:
 	sta logoswap-1,x
 	cpx #$20
@@ -659,21 +608,107 @@ swapdst:
 !:
 	dey
 	bne swapsrc1
+	sty $7fff
+	sty $79ff			// TEST ONLY!!!	
+	jmp	copydef			// Copy sprite pointers
+	
 
-// Prepare first line
-// ******************
-	ldx #$3f
-!:	
-	lda #$aa
-	sta sprblock,x
-	sta sprblock0,x		// May be useless => Use Elder's one
-	lda #d800scr	
-	sta $d800,x
-	dex
-	bpl !-
-	sta scrollcolor	
-	lda #$c8
-	sta lox	
+// Clear line 5/6 of first definition ($D018 <= $xe)
+// *************************************************
+saveline6rnt:
+	ldx #$06
+	ldy #$40
+s6loop:	
+	bit direction
+	bpl s61
+	lda saveline6-1,y	
+	bcc s62
+s61:
+	lda $7a00,x
+	sta saveline6-1,y	
+	lda #$00
+s62:
+	sta $7a00,x	
+	dey
+	txa
+	axs #[$100-$8]
+	cpx #$08
+	bcs s6loop
+	lda s61+2
+	eor #$01
+	sta s61+2
+	sta s62+2
+	and #$01
+	bne s6loop
 	rts
+	
 
+// Build FPP logo
+// **************
+buildfpp:
+	lda #<logofpp	// Prepare char definitions
+	sta ptr
+	lda #>logofpp
+	sta ptr+1
+	ldy #$00	
+	ldx #$00
+rowloop:	
+	lda logo,x		// Load "compressed" byte
+	sta temp2		// Store in temp
+doublechar:
+	lda #$01		// Set exit condition
+bitloop:
+	asl temp2		// Get bit
+	php
+	rol				// Stuff it once
+	plp
+	rol				// Stuff it twice
+	bcc bitloop		// Loop 4 times (1->4->10->40->C)
+	bit direction
+	bmi !+
+	pha
+	lda (ptr),y
+rlsave:
+	sta savecfpp,x	
+	pla	
+	bcs rlcont
+rlresume:
+	lda savecfpp,x		
+rlcont:	
+	sta (ptr),y	
+	tya	
+	adc #$07		// Carry always set => +8
+	tay
+	and #$08		// If (y&8) then 
+	bne doublechar	// we need to compute the low nibble of temp
+	inx				// Ok, next byte
+	bcc rowloop		// Till we need to change destination page
+	bne !+			// End of source page?
+	lda rowloop+2
+	eor #$01
+	sta rowloop+2
+	lda rlsave+2
+	eor #$01
+	sta rlsave+2
+	sta rlresume+2	
+!:
+	txa
+	and #$3f
+	bne !+			// Here Y = A = 0, Z Flag refer to X status	
+	lda #$04
+!:		
+	and #$0f
+	adc ptr+1		// [ptr&3]==0 -> EBCM . [ptr&3]==1 -> normal char mode
+	sta ptr+1
+	bpl rowloop		// Stop at the of bank 1
+	rts
+	
+// Restore old values
+// ******************	
+restorefppmem:
+	sec
+	ror direction
+	jsr loadstuff	
+	jsr buildfpp	
+	jmp saveline6rnt	
 	
