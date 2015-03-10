@@ -2,7 +2,7 @@
 .import source "macros.asm"
 .pc=music.location "Music" .fill music.size, music.getData(i)
 
-:BasicUpstart2(code)
+//:BasicUpstart2(code)
 
 .pc = $2000 "charset"
 .import binary "data/charset.raw"
@@ -10,7 +10,7 @@
 .fill 7,$ff
 .byte 0
 
-.pc = $2110 "code"
+.pc = $810 "code"
 code:
 		sei
 		.if(PLAY_MUSIC){
@@ -37,14 +37,42 @@ code:
 		jsr prepare_cover_sprites
 		jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
 
+		/*
+		//vecchio init elder
 		:d012($0f)
 		:d011($90)
 		:set_irq(msx_irq)
+		*/
 
+		:d011($00)		// Freshness
+		jsr initscroll	// Freshness
+
+		:wait_frame()
+
+		jsr start_timer	// Freshness
+
+		:d011($3b)
+		:d012($f9)
+		:set_irq(msx_irq)
+		//jsr restorefppmem
+		//	lsr $d019
 		cli
-
 		jmp *
 
+.pc = $9000 "logo_swinger"
+//<FRESHNESS>
+.import source "top_sprite_routine.asm"
+.import source "timer.asm"
+.pc=* "End of code"
+
+.align $0100
+logo:
+.import source "logoparser.asm"
+.pc = $2140 "Top sprites"
+b0sprite:
+.import binary "sprites.prg"	// Fresh
+
+/*
 top_irq:
 		:open_irq()
 		asl $d019
@@ -52,19 +80,7 @@ top_irq:
 		lda #top_bg_colour
 		sta $d021
 
-		lda #0
-		sta $d017
-
-		lda #18
-		sta counter
-
-		lda #2
-		sta sprrow
-
-		lda #$fe
-		sta $d015
-
-		jsr position_sideborder_sprites
+		:init_first_bitmap_irq()
 
 		:d011($1b)
 		:set_irq(stabilizer_irq_pal)
@@ -72,6 +88,20 @@ top_irq:
 
 		:close_irq()
 		rti
+*/
+
+.macro init_first_bitmap_irq(){
+//		lda #top_bg_colour
+//		sta $d021
+
+		lda #0
+		sta $d017
+
+		lda #$fe
+		sta $d015
+
+		jsr position_sideborder_sprites
+}
 
 .import source "sideborder_pal.asm"
 
@@ -308,10 +338,14 @@ msx_irq:
 		lda #screen_0_d018
 		sta $d018
 
+		/*
 		:set_irq(top_irq)
 
 		:d011($3b)
 		:d012($00)
+		*/
+
+		jsr set_mdlirq
 
 		lda #$ff
 		sta $d015
@@ -321,20 +355,25 @@ msx_irq:
 		sta $d00d
 		sta $d00f
 
+		lda #18
+		sta counter
+
+		lda #2
+		sta sprrow
+
 		jsr music.play
 
 		:close_irq()
 		rti
 
 
-.pc = * "functions"
-.import source "functions.asm"
+
 
 .pc = $5600 "screen data"
 screendata:
 .import binary "data/screen.raw"
 
-.pc = $2800 "sideborder sprites"
+.pc = $0540 "sideborder sprites"
 sideborder_sprites:
 .import binary "data/sideborder_sprites.raw"
 
@@ -347,10 +386,15 @@ sideborder_sprites:
 .pc = $3800 "text"
 .import source "data/text.asm"
 
-.pc = $0ec0 "lower border sprites"
+.pc = $0400 "lower border sprites"
 lower_border_sprites:
 .import binary "data/lower_border_sprites.raw"
 
 .pc = $8000 "colour ram"
 colour_ram:
-.import c64 "data/colors"
+colorbase:
+.import binary "data/d800_comp.raw"
+//.import c64 "data/colors"
+
+.pc = * "functions"
+.import source "functions.asm"
