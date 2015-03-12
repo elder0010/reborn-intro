@@ -49,7 +49,7 @@ code:
 
 		cli
 		sei
-		//jsr restorefppmem
+	//	jsr restorefppmem
 		lsr $d019
 		cli
 	test:				// Main with misc jittering
@@ -109,4 +109,4 @@ screendata:
 
 
 .pc = $4000
-.fill $4000,[floor(2*random())*$03]+[floor(2*random())*$0c]+[floor(2*random())*$30]+[floor(2*random())*$c0]
+.fill $4000,256*random()

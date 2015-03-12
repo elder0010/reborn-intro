@@ -1,15 +1,26 @@
-// *********
-// Freshness
-// *********
+// ************************
+// Ons Logo FPP - Freshness
+// ************************
 
-// Manca salvataggio byte 7 e linea 6
+// Useful routines:
+// - initscroll: this must be called before everything else to prepare tables (at least before IRQs)
+// - set_mdlirq: this must be called every frame in the last irq handler before this effect (it sets next irq handler)
+// - setscrollcolor: this can be called whenever needed (A = Scroll color)
+// - restorefppmem: this must be called at the end of the intro to restore bank 1 memory
+
+// Linking:
+// These are the things that need to be modified for linking:
+// - rst_next: next raster line IRQ (after this effect)
+// - next_irq: next raster IRQ handler (happening at rst_next)
+// - bmp_switch: routine for handling bitmap and sideborder
+
 
 // Switching rasters
 // *****************
 .const	rst_sprite1		=	$120		// Top sprites
 .const	rst_sprite2		=	$30			// More sprites
 .const	rst_sprite3		=	$35			// More sprites
-.const	rst_msx			=	$f9			// Sid player
+.const	rst_next		=	$f9			// Next raster IRQ
 
 // Zero page variables
 // *******************
@@ -31,14 +42,14 @@
 // Colors
 // ******
 .const	d800scr		=	WHITE
-.const	bgcolor		=	LIGHT_GREY	// MUST Be >8!!!
+.const	bgcolor		=	LIGHT_GREY	// MUST Be >=8!!!
 
 // Pointers
 // ********
-.const	savesprite	=	$f600		// Save bank 1 sprite definition RAM
-.const	logoswap	=	$fa00		// Swapped nibble for sprites
-.const	savecfpp	=	$fc00		// Save bank 1 FPP char definition RAM
-.const	saveline6	=	$fe00		// Save bank 1 line 6 of 1st char definition (needed for blanking bank swap)
+.const	savesprite	=	$f000		// Save bank 1 sprite definition RAM
+.const	savecfpp	=	$f400		// Save bank 1 FPP char definition RAM
+.const	logoswap	=	$f800		// Swapped nibble for sprites
+.const	saveline6	=	$fa00		// Save bank 1 line 6 of 1st char definition (needed for blanking bank swap)
 // Bank 0
 .const	sprblock0	=	$3f80		// Filled block sprite
 // Bank 1
@@ -48,7 +59,10 @@
 .const	sbleft		=	$7f40		// Sideborder sprite left
 .const	sbright		=	$7f80		// Sideborder sprite right
 
-
+// External routine (Test only)
+// ****************************
+.const	bmpswitch 	=	testjsr		// Routine to call for bmp + sideborder
+.const	next_irq	=	msx_irq		// Next irq handler (after this effect)
 
 // Sprite def.
 // ***********
@@ -115,7 +129,7 @@ sprite1def:	// Sprite definitions
 // Logo positions (a quarter)
 // **************************
 movement:
-.fill	65,floor(31*sin(i*PI/128))
+.fill	65,floor(30.4*sin(i*PI/128))
 
 
 // Save stuff
@@ -128,6 +142,7 @@ loadstuff:
 	ldx #>b1sprite
 	lda #>savesprite			
 !:		
+	ror direction	// Set/Clear carry according to data direction
 	sta ptr+1
 	stx ptr+3
 	ldy #>b0sprite+[4*$40]
@@ -220,10 +235,9 @@ irq_sprite2:
 	sta $d010	
 	// Line 50	
 	lda lox
-	and #$07
-	ora #$e0
+	eor #[$c8^$e0]	
 	sta $d00a
-	eor #[$58^$e0]
+	eor #[$e0^$58]
 	sta $d00c	
 	lda.a scrollcolor
 	sta $d02c
@@ -391,13 +405,14 @@ cpdef:
 	sta $d011	
 	lsr $d019
 	cli
+	jsr bmpswitch
 	lda #ORANGE
 	sta $d021
-	lda #rst_msx			// 2
+	lda #rst_next			// 2
 	sta $d012				// 4
-	lda #<msx_irq			// 2
+	lda #<next_irq			// 2
 	sta $fffe				// 4
-	lda #>msx_irq			// 2
+	lda #>next_irq			// 2
 	sta $ffff				// 4
 	
 	inc movpos	// Next logo position
@@ -407,14 +422,13 @@ cpdef:
 	bvc !+	
 	eor #$3f
 	adc #$01	// Carry always cleared after this
-!:
-	
-	tax	
-	lda movement,x	
+!:	
+	tay	
+	lda movement,y
 	bit movpos	// Manage 3°/4° sector
 	bpl !+
-	eor #$ff	
-	adc #$01	
+	eor #$ff
+	adc #$01
 !:
 	tax	
 	ldy #$02	
@@ -515,11 +529,10 @@ skiplogo:
 // Scroll initialization
 // *********************
 
-initscroll:	
-	lsr direction
+initscroll:		
+	clc
 	jsr savestuff		// Save RAM for bank 1 sprites
 	jsr buildfpp		// Build char FPP (and save RAM)
-	jsr saveline6rnt	// Reset line 6 (and save RAM)
 
 // Prepare D800
 // ************
@@ -556,17 +569,14 @@ d8skip:
 
 	
 // Prepare first line
-// ******************
+// ******************	
 	ldx #$3f
-!:	
 	lda #$aa
+!:		
 	sta sprblock,x
 	sta sprblock0,x		// May be useless => Use Elder's one
-	lda #d800scr	
-	sta $d800,x
 	dex
-	bpl !-
-	sta scrollcolor	
+	bpl !-	
 	lda #$c8
 	sta lox		
 	
@@ -609,38 +619,20 @@ swapdst:
 	dey
 	bne swapsrc1
 	sty $7fff
-	sty $79ff			// TEST ONLY!!!	
-	jmp	copydef			// Copy sprite pointers
+	jsr	copydef			// Copy sprite pointers
 	
+	lda #d800scr
 
-// Clear line 5/6 of first definition ($D018 <= $xe)
-// *************************************************
-saveline6rnt:
-	ldx #$06
-	ldy #$40
-s6loop:	
-	bit direction
-	bpl s61
-	lda saveline6-1,y	
-	bcc s62
-s61:
-	lda $7a00,x
-	sta saveline6-1,y	
-	lda #$00
-s62:
-	sta $7a00,x	
-	dey
-	txa
-	axs #[$100-$8]
-	cpx #$08
-	bcs s6loop
-	lda s61+2
-	eor #$01
-	sta s61+2
-	sta s62+2
-	and #$01
-	bne s6loop
-	rts
+// Set scroll color
+// ****************
+setscrollcolor:
+	ldx #$27
+!:	
+	sta $d800,x
+	dex
+	bpl !-
+	sta scrollcolor	
+	rts	
 	
 
 // Build FPP logo
@@ -650,6 +642,10 @@ buildfpp:
 	sta ptr
 	lda #>logofpp
 	sta ptr+1
+	lda #<savecfpp	// Prepare char definitions
+	sta ptr2
+	lda #>savecfpp
+	sta ptr2+1	
 	ldy #$00	
 	ldx #$00
 rowloop:	
@@ -664,18 +660,17 @@ bitloop:
 	plp
 	rol				// Stuff it twice
 	bcc bitloop		// Loop 4 times (1->4->10->40->C)
-	bit direction
-	bmi !+
+	
+	bit direction	
+	bmi rlresume	
 	pha
-	lda (ptr),y
-rlsave:
-	sta savecfpp,x	
+	lda (ptr),y	
+	sta (ptr2),y
 	pla	
-	bcs rlcont
+	.byte BIT_ABS
 rlresume:
-	lda savecfpp,x		
-rlcont:	
-	sta (ptr),y	
+	lda (ptr2),y	
+	sta (ptr),y
 	tya	
 	adc #$07		// Carry always set => +8
 	tay
@@ -687,10 +682,14 @@ rlcont:
 	lda rowloop+2
 	eor #$01
 	sta rowloop+2
-	lda rlsave+2
-	eor #$01
-	sta rlsave+2
-	sta rlresume+2	
+!:
+	inc ptr2
+	lda ptr2
+	and #$08
+	beq !+
+	lda #$00
+	sta ptr2
+	inc ptr2+1
 !:
 	txa
 	and #$3f
@@ -698,17 +697,45 @@ rlcont:
 	lda #$04
 !:		
 	and #$0f
+	sec
 	adc ptr+1		// [ptr&3]==0 -> EBCM . [ptr&3]==1 -> normal char mode
 	sta ptr+1
 	bpl rowloop		// Stop at the of bank 1
+
+// Clear line 5/6 of first definition ($D018 <= $xe)
+// *************************************************
+saveline6rnt:
+	ldx #$06
+	ldy #$40
+s6loop:	
+	lda saveline6-1,y	
+	bit direction
+	bmi s62
+s61:
+	lda $7a00,x
+	sta saveline6-1,y	
+	lda #$00
+s62:
+	sta $7a00,x	
+	dey
+	txa
+	axs #[$100-$8]	
+	bcc s6loop
+	lda s61+2
+	eor #$01
+	sta s61+2
+	sta s62+2
+	lsr
+	bcs s6loop
+testjsr:				// Removable label (test purpose only)
 	rts
+	
 	
 // Restore old values
 // ******************	
 restorefppmem:
-	sec
-	ror direction
+	sec	
 	jsr loadstuff	
-	jsr buildfpp	
-	jmp saveline6rnt	
+	jsr copydef
+	jmp buildfpp	
 	
