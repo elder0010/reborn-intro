@@ -24,3 +24,7 @@
 .const stabilizer_irq_line = $74
 .const counter = $13
 .const sprrow = $14
+
+.const page_pt = $15
+.const char_pt = $16
+.const row_pt = $17

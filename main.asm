@@ -10,13 +10,21 @@
 .fill 7,$ff
 .byte 0
 
-.pc = $2110 "code"
+caret:
+.fill $8,00
+.fill $6,0
+.byte $fc
+.byte 0
+
+.pc = $2120 "code"
 code:
 		sei
 		.if(PLAY_MUSIC){
 			lda #0
 			sta $d015
 			sta $d011
+			sta char_pt
+			sta row_pt
 			jsr music.init
 		}
 
@@ -36,6 +44,8 @@ code:
 		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
 		jsr prepare_cover_sprites
 		jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
+
+		jsr clear_screen
 
 		:d012($0f)
 		:d011($90)
@@ -321,6 +331,9 @@ msx_irq:
 		sta $d00d
 		sta $d00f
 
+		jsr write_char
+		jsr print_text
+
 		jsr music.play
 
 		:close_irq()
@@ -354,3 +367,6 @@ lower_border_sprites:
 .pc = $8000 "colour ram"
 colour_ram:
 .import c64 "data/colors"
+
+.pc = * "text writer"
+.import source "text_writer.asm"

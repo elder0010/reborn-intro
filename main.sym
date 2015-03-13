@@ -1,33 +1,47 @@
-.label recolour_sprites=$2535
+.label currow=$8433
+.label rows_lo=$848a
+.label recolour_sprites=$253b
+.label caretsw=$8436
+.label caret=$2110
 .label badline=$226a
 .label page_0=$381c
 .label page_1=$3888
+.label text_hi=$8496
+.label clear_screen=$8400
 .label screendata=$5600
 .label exit=$227c
-.label lower_border_sprites=$ec0
-.label bottom_sprites_y=$2540
 .label stabilizer_irq_pal=$2200
+.label noline=$847b
 .label msx_irq=$2460 {
 }
-.label sideborder_sprites=$2800
-.label code=$2110
-.label start_np=$224f
-.label position_first_sprites_line=$25b6
-.label next_bottom_sprites=$251a
-.label position_sideborder_sprites=$2543
-.label fill_text_color_zone=$24ca
-.label colour_ram=$8000
-.label prepare_cover_sprites=$250f
-.label start=$224a
-.label prepare_chars_under_sprites=$24e6
-.label stabilized_irq=$2225
-.label top_irq=$217c {
+.label print_text=$847c
+.label storcaret=$844b
+.label position_first_sprites_line=$25be
+.label next_bottom_sprites=$2520
+.label position_sideborder_sprites=$254b
+.label prepare_chars_under_sprites=$24ec
+.label curchrow=$844c
+.label top_irq=$2193 {
 }
 .label bitmap_split_irq=$22a4
-.label lower_border_irq=$23c0 {
-}
-.label copy_screendata=$249a
+.label copy_screendata=$24a0
 .label plex_1_irq=$2340 {
+}
+.label rows_hi=$848f
+.label text_lo=$8494
+.label lower_border_sprites=$ec0
+.label bottom_sprites_y=$2548
+.label write_char=$841a
+.label sideborder_sprites=$2800
+.label code=$2120
+.label start_np=$224f
+.label fill_text_color_zone=$24d0
+.label colour_ram=$8000
+.label prepare_cover_sprites=$2515
+.label curpage=$8430
+.label start=$224a
+.label stabilized_irq=$2225
+.label lower_border_irq=$23c0 {
 }
 .label lower_split_irq=$22c0 {
 }

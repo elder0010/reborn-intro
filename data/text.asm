@@ -1,3 +1,5 @@
+.const page_no = 2
+
 .align 108
 page_0:
 .text "onslaught is proud"
