@@ -5,11 +5,11 @@
 .const row_4 = screen_0+$28*23
 .const row_5 = screen_0+$28*24
 
-.const caret_on = $22
-.const caret_off = $23
+.const caret_on = $23
+.const caret_off = $20
 
-clear_screen:
-        lda #$22
+clear_text_screen:
+        lda #$20
         ldx #17
 !:
         sta row_0,x
@@ -35,10 +35,95 @@ write_char:
         sta curchrow+2
 
         ldx char_pt
+        ldy text_pt
 curpage:
-        lda page_0,x
+        lda page_0,y
+        bne !+
+//---------------------------
+//Attesa per la prox pagina
+        lda #1
+        sta print_text+1 //Disabilito il text writer perchè è finita la pagina
+        dex
+        jsr caret_blink
+
+delay_doubler:
+        lda #0
+        eor #$ff
+        sta delay_doubler+1
+
+        beq pagdl
+        inc page_delay
+pagdl:
+        lda page_delay
+        cmp #page_wt_amount
+        bne nonextpg
+
+        jsr reset_writer_pointers
+        jsr clear_text_screen
+
+        lda #0
+        sta print_text+1
+
+        inc page_pt
+        lda page_pt
+        cmp #page_no
+        bne switchpg
+        lda #0
+        sta page_pt
+
+switchpg:
+        tax
+        lda text_lo,x
+        sta curpage+1
+
+        lda text_hi,x
+        sta curpage+2
+nonextpg:
+
+        jmp noline
+//---------------------------
+!:
 currow:
         sta row_0,x
+
+        jsr caret_blink
+
+        lda char_pt
+        cmp #17
+        bne noline
+
+        //Pre line delay
+        lda #0
+
+//next line
+        lda #0
+        sta char_pt
+        inc row_pt
+        inc text_pt
+
+        lda row_pt
+        cmp #6
+        bne noline
+//next page
+        inc page_pt
+        lda page_pt
+        cmp #page_no
+        bne !+
+        lda #0
+        sta page_pt
+!:
+        ldx row_pt
+        lda rows_lo,x
+        sta currow+1
+
+        lda rows_hi,x
+        sta currow+2
+noline:
+
+        bit print_text //jsr
+        rts
+
+caret_blink:
 
 //-------------------
 //Caret blink
@@ -56,61 +141,46 @@ caretsw:
         lda #caret_off
 storcaret:
         inx
+        cpx #18
+        beq !+
 curchrow:
         sta $ffff,x
-//-------------------
-
-//        inc char_pt questo va messo dentro la routine che manda avanti il testo
-        lda char_pt
-        cmp #17
-        bne noline
-
-//next line
-        lda #0
-        sta char_pt
-        inc row_pt
-
-        lda row_pt
-        cmp #5
-        bne noline
-//next page
-        inc page_pt
-        lda page_pt
-        cmp #page_no
-        bne !+
-        lda #0
-        sta page_pt
 !:
-        ldx row_pt
-        lda rows_lo,x
-        sta currow+1
-
-        lda rows_hi,x
-        sta currow+2
-noline:
+//-------------------
         rts
-
 
 print_text:
         lda #0
+        bne !+
+printsw:
+        lda #0
         eor #$ff
-        sta print_text+1
+        sta printsw+1
         //cmp #$4
         bne !+
-    //    inc char_pt
+        inc char_pt
+        inc text_pt
 !:
         rts
 
+reset_writer_pointers:
+        lda #0
+        sta char_pt
+        sta row_pt
+        sta text_pt
+        sta page_delay
 
-.align 10
+        rts
+
+.align 12
 rows_lo:
-.byte <row_0,<row_1,<row_2,<row_3,<row_4
+.byte <row_0,<row_1,<row_2,<row_3,<row_4,<row_5
 rows_hi:
-.byte >row_0,>row_1,>row_2,>row_3,>row_4
+.byte >row_0,>row_1,>row_2,>row_3,>row_4,>row_5
 
-.align 4
+.align page_no*2
 text_lo:
-.byte <page_0,<page_1
+.byte <page_0,<page_1,<page_2
 
 text_hi:
-.byte >page_0,>page_1
+.byte >page_0,>page_1,>page_2

@@ -74,30 +74,21 @@ prepare_chars_under_sprites:
 
         //ora copio il char nella zona a dx
         ldx #$12
-        lda #$20
+        lda #$21
         .const bb = 17
 !:
         sta screen_0+[[bb+1]*$28],x
         sta screen_0+[[bb+2]*$28],x
-    //    sta screen_0+[[bb+3]*$28],x
-    //    sta screen_0+[[bb+4]*$28],x
-    //    sta screen_0+[[bb+5]*$28],x
         sta screen_0+[[bb+6]*$28],x
         sta screen_0+[[bb+7]*$28],x
-
-    //    sta screen_1+[[bb+1]*$28],x
-    //    sta screen_1+[[bb+2]*$28],x
         sta screen_1+[[bb+3]*$28],x
         sta screen_1+[[bb+4]*$28],x
         sta screen_1+[[bb+5]*$28],x
-    //    sta screen_1+[[bb+6]*$28],x
-    //    sta screen_1+[[bb+7]*$28],x
-
         inx
         cpx #$28
         bne !-
 
-        lda #$21
+        lda #$22
         ldx #$8
 !:
         sta screen_0+[[bb+7]*$28]+31,x //che tocca fa..

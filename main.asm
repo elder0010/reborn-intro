@@ -6,25 +6,28 @@
 
 .pc = $2000 "charset"
 .import binary "data/charset.raw"
-.fill 8,$ff
-.fill 7,$ff
+.fill $8,00 //Spazio vuoto
+
+.fill 8,$ff //Char pieno per sotto sprite
+.fill 7,$ff	//Char pieno un po' di meno per sotto sprite
 .byte 0
 
 caret:
-.fill $8,00
 .fill $6,0
 .byte $fc
 .byte 0
 
-.pc = $2120 "code"
+.pc = $2128 "code"
 code:
 		sei
 		.if(PLAY_MUSIC){
 			lda #0
 			sta $d015
 			sta $d011
-			sta char_pt
-			sta row_pt
+			sta text_delay
+			sta page_pt
+			jsr reset_writer_pointers
+			dec char_pt
 			jsr music.init
 		}
 
@@ -45,7 +48,7 @@ code:
 		jsr prepare_cover_sprites
 		jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
 
-		jsr clear_screen
+		jsr clear_text_screen
 
 		:d012($0f)
 		:d011($90)
@@ -332,7 +335,19 @@ msx_irq:
 		sta $d00f
 
 		jsr write_char
-		jsr print_text
+
+introend:
+		lda #0
+		bne !+
+		inc text_delay
+		lda text_delay
+		cmp #text_wait_delay
+		bne !+
+		lda #JSR_ABS
+		sta noline
+		jsr reset_writer_pointers
+		inc introend+1
+!:
 
 		jsr music.play
 

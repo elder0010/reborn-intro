@@ -1,4 +1,4 @@
-.const page_no = 2
+.const page_no = 3
 
 .align 108
 page_0:
@@ -7,13 +7,33 @@ page_0:
 .text "another intro blax"
 .text "this time a remake"
 .text "of the almighty   "
-.text "legend intro      "
+.text "legend intro"
+.byte 0
 
 .align 108
 page_1:
 .text "howdy mr spicecake"
 .text "or droopface or   "
 .text "whatever the name "
-.text "is! my name is    "
-.text "guybrushthreepwood"
-.text "and i am a pirate "
+.text "is"
+.byte 0
+
+.align 108
+page_2:
+.text "my name is elder  "
+.text "and i am a mighty "
+.text "pirate"
+.byte 0
+
+
+/*
+
+.text "onslaught is proud"
+.text "to present a bla  "
+.text "another intro blax"
+.text "this time a remake"
+.text "of the almighty   "
+.text "legend intro      "
+.byte 0
+
+*/
