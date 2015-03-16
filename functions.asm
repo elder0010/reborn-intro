@@ -74,7 +74,7 @@ prepare_chars_under_sprites:
 
         //ora copio il char nella zona a dx
         ldx #$12
-        lda #$21
+        lda #$34
         .const bb = 17
 !:
         sta screen_0+[[bb+1]*$28],x
@@ -88,12 +88,14 @@ prepare_chars_under_sprites:
         cpx #$28
         bne !-
 
-        lda #$22
+
+        lda #$35
         ldx #$8
 !:
         sta screen_0+[[bb+7]*$28]+31,x //che tocca fa..
         dex
         bpl !-
+
         rts
 
 prepare_cover_sprites:

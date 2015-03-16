@@ -5,19 +5,14 @@
 :BasicUpstart2(code)
 
 .pc = $2000 "charset"
-.import binary "data/charset.raw"
-.fill $8,00 //Spazio vuoto
-
-.fill 8,$ff //Char pieno per sotto sprite
-.fill 7,$ff	//Char pieno un po' di meno per sotto sprite
-.byte 0
-
+mini_charset:
+.import binary "data/charset_full.raw"
 caret:
 .fill $6,0
 .byte $fc
 .byte 0
 
-.pc = $2128 "code"
+.pc = * "code"
 code:
 		sei
 		.if(PLAY_MUSIC){
@@ -27,7 +22,6 @@ code:
 			sta text_delay
 			sta page_pt
 			jsr reset_writer_pointers
-			dec char_pt
 			jsr music.init
 		}
 
@@ -345,7 +339,9 @@ introend:
 		bne !+
 		lda #JSR_ABS
 		sta noline
-		jsr reset_writer_pointers
+		lda #INX
+		sta storcaret
+		//jsr reset_writer_pointers
 		inc introend+1
 !:
 

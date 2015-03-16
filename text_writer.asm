@@ -5,11 +5,11 @@
 .const row_4 = screen_0+$28*23
 .const row_5 = screen_0+$28*24
 
-.const caret_on = $23
-.const caret_off = $20
+.const caret_on = [caret-mini_charset]/$8
+.const caret_off = $0
 
 clear_text_screen:
-        lda #$20
+        lda #$0
         ldx #17
 !:
         sta row_0,x
@@ -65,14 +65,15 @@ pagdl:
         sta print_text+1
 
         inc page_pt
-        lda page_pt
-        cmp #page_no
+        ldx page_pt
+        cpx #page_no
         bne switchpg
-        lda #0
-        sta page_pt
+        ldx #0
+        stx page_pt
+        stx printsw+1
 
 switchpg:
-        tax
+        //tax
         lda text_lo,x
         sta curpage+1
 
@@ -89,29 +90,17 @@ currow:
         jsr caret_blink
 
         lda char_pt
-        cmp #17
+        cmp #15
         bne noline
-
-        //Pre line delay
-        lda #0
-
+//---------------------------
 //next line
+next_line:
+
         lda #0
         sta char_pt
         inc row_pt
         inc text_pt
 
-        lda row_pt
-        cmp #6
-        bne noline
-//next page
-        inc page_pt
-        lda page_pt
-        cmp #page_no
-        bne !+
-        lda #0
-        sta page_pt
-!:
         ldx row_pt
         lda rows_lo,x
         sta currow+1
@@ -119,8 +108,8 @@ currow:
         lda rows_hi,x
         sta currow+2
 noline:
-
         bit print_text //jsr
+endx:
         rts
 
 caret_blink:
@@ -140,8 +129,8 @@ caretsw:
 !:
         lda #caret_off
 storcaret:
-        inx
-        cpx #18
+        nop //inx
+        cpx #16
         beq !+
 curchrow:
         sta $ffff,x
@@ -174,9 +163,9 @@ reset_writer_pointers:
 
 .align 12
 rows_lo:
-.byte <row_0,<row_1,<row_2,<row_3,<row_4,<row_5
+.byte <row_0+1,<row_1+1,<row_2+1,<row_3+1,<row_4+1,<row_5+1
 rows_hi:
-.byte >row_0,>row_1,>row_2,>row_3,>row_4,>row_5
+.byte >row_0+1,>row_1+1,>row_2+1,>row_3+1,>row_4+1,>row_5+1
 
 .align page_no*2
 text_lo:

@@ -27,11 +27,11 @@
 
 .const page_pt = $23
 .const char_pt = $16
-.const row_pt = $17
+.const row_pt = $42
 .const text_pt = $18
 .const page_delay = $19
-.const page_wt_amount = $fe //Quanto aspettare prima di flippare pagina
+.const page_wt_amount = $3e //Quanto aspettare prima di flippare pagina
 
-.const text_wait_delay = $ff //Quanto aspettare prima di iniziare a scrivere la prima volta
+.const text_wait_delay = $1f //Quanto aspettare prima di iniziare a scrivere la prima volta
 .const text_delay = $24
 .const newline_delay = $40
