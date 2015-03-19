@@ -1,5 +1,6 @@
 .label buildfpp=$880e
 .label logoloop_pos=$8602
+.label stabilized_sideborder_routine=$2600
 .label sprite1tbl=$8454
 .label start_timer=$88a8
 .label plexvalue=$8427
@@ -9,7 +10,7 @@
 .label irq_timer2=$88e2
 .label d018table=$8400
 .label loadstuff=$84d2
-.label badline=$266a
+.label badline=$2645
 .label page_0=$381c
 .label page_1=$3888
 .label saveline6rnt=$8873
@@ -19,10 +20,9 @@
 .label s6loop=$8877
 .label screendata=$5600
 .label setscrollcolor=$8803
-.label exit=$267c
+.label exit=$2657
 .label spcpcloop=$871f
-.label stabilizer_irq_pal=$2600
-.label msx_irq=$2860 {
+.label msx_irq=$2840 {
 }
 .label sprcol=$8635
 .label set_mdlirq=$84ff
@@ -40,11 +40,11 @@
 .label btmcrunch=$8692
 .label prepare_chars_under_sprites=$8944
 .label s62=$8886
-.label bitmap_split_irq=$26a4
+.label bitmap_split_irq=$267d
 .label s61=$887e
 .label d81sta=$8791
 .label copy_screendata=$88f8
-.label plex_1_irq=$2740 {
+.label plex_1_irq=$2720 {
 }
 .label logo_start=$861c
 .label wtskip=$86a0
@@ -66,7 +66,7 @@
 .label sideborder_sprites=$540
 .label skipper=$8600
 .label code=$810
-.label start_np=$264f
+.label start_np=$262a
 .label initscroll=$8775
 .label rowloop=$8822
 .label d82sta=$878a
@@ -77,15 +77,14 @@
 .label doublechar=$8827
 .label cpdef=$85d9
 .label lftmask=$873c
-.label start=$264a
-.label stabilized_irq=$2625
-.label lower_border_irq=$27c0 {
+.label start=$2625
+.label lower_border_irq=$27a0 {
 }
 .label contlogo=$8749
 .label swapsrc2=$87cf
 .label swapsrc1=$87c2
-.label lower_split_irq=$26c0 {
+.label lower_split_irq=$26a0 {
 }
-.label plex_0_irq=$2700 {
+.label plex_0_irq=$26e0 {
 }
 .label quitirq=$8531

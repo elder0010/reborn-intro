@@ -1,4 +1,5 @@
 .align $100
+/*
 stabilizer_irq_pal:
         sta reset_a
         stx reset_x
@@ -22,10 +23,11 @@ stabilizer_irq_pal:
         }
 
         brk
+*/
 
 .pc = * "stabilized irq pal"
-stabilized_irq:
-        txs
+stabilized_sideborder_routine:
+        nop //txs
         ldx #$8
 !:
         dex
@@ -136,4 +138,5 @@ exit:
         lda #border_colour
         sta $d020
 
-        jmp bitmap_split_irq
+        rts
+        //jmp bitmap_split_irq

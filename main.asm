@@ -127,13 +127,10 @@ top_irq:
 
 
 bitmap_split_irq:
-/*
+
 		sta reset_a
 		stx reset_x
 		sty reset_y
-
-		asl $d019
-*/
 
 		asl $d019
 		:set_irq_lo(lower_split_irq)
