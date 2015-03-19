@@ -59,15 +59,9 @@ code:
 		cli
 		jmp *
 
-.pc = $9000 "logo_swinger"
-//<FRESHNESS>
-.import source "top_sprite_routine.asm"
-.import source "timer.asm"
-.pc=* "End of code"
 
-.align $0100
-logo:
-.import source "logoparser.asm"
+
+
 .pc = $2140 "Top sprites"
 b0sprite:
 .import binary "sprites.prg"	// Fresh
@@ -395,6 +389,20 @@ colour_ram:
 colorbase:
 .import binary "data/d800_comp.raw"
 //.import c64 "data/colors"
+
+
+.align $0200
+logo:
+.pc = * "logo data"
+.import source "logoparser.asm"
+
+.align $100
+.pc = * "logo swinger"
+.import source "top_sprite_routine.asm"
+.import source "timer.asm"
+.pc=* "End of code"
+
+
 
 .pc = * "functions"
 .import source "functions.asm"
