@@ -62,7 +62,7 @@ code:
 
 
 
-.pc = $2140 "Top sprites"
+.pc = $2200 "Top sprites"
 b0sprite:
 .import binary "sprites.prg"	// Fresh
 

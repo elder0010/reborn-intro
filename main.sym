@@ -59,7 +59,7 @@
 .label i1loop=$8519
 .label copydef=$85d7
 .label spritedef=$843f
-.label b0sprite=$2140
+.label b0sprite=$2200
 .label colorbase=$8000
 .label lower_border_sprites=$400
 .label bottom_sprites_y=$89a0
