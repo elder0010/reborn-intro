@@ -326,6 +326,8 @@ msx_irq:
 
 		asl $d019
 
+		cli
+		
 		lda #screen_0_d018
 		sta $d018
 

@@ -27,6 +27,7 @@ stabilizer_irq_pal:
 
 .pc = * "stabilized irq pal"
 stabilized_sideborder_routine:
+/*
         nop //txs
         ldx #$8
 !:
@@ -40,13 +41,16 @@ stabilized_sideborder_routine:
         cmp $d012
         beq !+
 !:
-
+*/
+		jsr position_sideborder_sprites
         ldy #7
+	/*
         :wait()
         bit $24
         bit $24
         nop
         nop
+	*/
 
 .macro decinc_brd(debug){
     .if(debug){

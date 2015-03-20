@@ -20,7 +20,7 @@
 .const	rst_sprite1		=	$120		// Top sprites
 .const	rst_sprite2		=	$30			// More sprites
 .const	rst_sprite3		=	$35			// More sprites
-.const	rst_next		=	$f9			// Next raster IRQ
+.const	rst_next		=	$b0			// Next raster IRQ
 
 // Zero page variables
 // *******************
@@ -61,8 +61,8 @@
 
 // External routine (Test only)
 // ****************************
-.const	bmpswitch 	=	testjsr		// Routine to call for bmp + sideborder
-.const	next_irq	=	msx_irq		// Next irq handler (after this effect)
+.const	bmpswitch 	=	stabilized_sideborder_routine		// Routine to call for bmp + sideborder
+.const	next_irq	=	bitmap_split_irq					// Next irq handler (after this effect)
 
 // Sprite def.
 // ***********
