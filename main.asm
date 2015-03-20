@@ -133,7 +133,7 @@ bitmap_split_irq:
 		sty reset_y
 
 		asl $d019
-		:set_irq_lo(lower_split_irq)
+		:set_irq(lower_split_irq)
 		:d012($c2)
 
 		ldy #$f0

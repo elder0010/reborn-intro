@@ -20,7 +20,7 @@
 .const	rst_sprite1		=	$120		// Top sprites
 .const	rst_sprite2		=	$30			// More sprites
 .const	rst_sprite3		=	$35			// More sprites
-.const	rst_next		=	$b0			// Next raster IRQ
+.const	rst_next		=	$a2			// Next raster IRQ
 
 // Zero page variables
 // *******************
@@ -402,9 +402,7 @@ cpdef:
 		bcc btmcrunch
 !:
 	lda #$38+[[12+7]&7]	
-	sta $d011	
-	lsr $d019
-	cli
+	sta $d011
 	jsr bmpswitch
 	lda #ORANGE
 	sta $d021
@@ -414,6 +412,8 @@ cpdef:
 	sta $fffe				// 4
 	lda #>next_irq			// 2
 	sta $ffff				// 4
+	lsr $d019
+	cli
 	
 	inc movpos	// Next logo position
 	lda movpos	// Manage 2°/4° sector	
