@@ -320,7 +320,7 @@ msx_irq:
 		asl $d019
 
 		cli
-		
+
 		lda #screen_0_d018
 		sta $d018
 
@@ -359,7 +359,7 @@ msx_irq:
 screendata:
 .import binary "data/screen.raw"
 
-		
+
 .pc = $2000 "charset"
 .import binary "data/charset.raw"
 .fill 8,$ff
@@ -369,16 +369,16 @@ screendata:
 .pc = $2200 "Top sprites"
 b0sprite:
 .import binary "sprites.prg"	// Fresh
-				
+
 
 .pc = * "lower border sprites"
 lower_border_sprites:
 .import binary "data/lower_border_sprites.raw"
-.align $40		
+.align $40
 .pc = * "sideborder sprites"
 sideborder_sprites:
-.import binary "data/sideborder_sprites.raw"		
-		
+.import binary "data/sideborder_sprites.raw"
+
 .pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
 
@@ -387,7 +387,7 @@ sideborder_sprites:
 
 .pc = $3800 "text"
 .import source "data/text.asm"
-		
+
 
 
 

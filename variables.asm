@@ -8,9 +8,9 @@
 .const bitmap_bg_colour = ORANGE
 .const bottom_bg_colour = DARK_GRAY
 .const screen_0 = $0400
-.const screen_1 = $0800
-.const screen_0_d018 = $18 //$1a
-.const screen_1_d018 = $28 //$28 //$2a
+.const screen_1 = $0000
+.const screen_0_d018 = $18
+.const screen_1_d018 = $8 
 
 .const bottom_sprites = $3a00
 
