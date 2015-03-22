@@ -4,13 +4,8 @@
 
 //:BasicUpstart2(code)
 
-.pc = $2000 "charset"
-.import binary "data/charset.raw"
-.fill 8,$ff
-.fill 7,$ff
-.byte 0
 
-.pc = $810 "code"
+.pc = $800 "code"
 code:
 		sei
 		.if(PLAY_MUSIC){
@@ -62,9 +57,6 @@ code:
 
 
 
-.pc = $2200 "Top sprites"
-b0sprite:
-.import binary "sprites.prg"	// Fresh
 
 /*
 top_irq:
@@ -126,6 +118,7 @@ top_irq:
 }
 
 
+
 bitmap_split_irq:
 
 		sta reset_a
@@ -152,7 +145,7 @@ bitmap_split_irq:
 .const base_plex = $cf
 .const offset_plex = $10
 
-.align $20
+//.align $20
 lower_split_irq:
 		:open_irq()
 
@@ -179,7 +172,7 @@ lower_split_irq:
 		:close_irq()
 		rti
 
-.align $20
+//.align $20
 //Seconda riga di sprites (sotto ai menti)
 plex_0_irq:
 		:open_irq()
@@ -204,7 +197,7 @@ plex_0_irq:
 		:close_irq()
 		rti
 
-.align $20
+//.align $20
 plex_1_irq:
 		:open_irq()
 
@@ -245,7 +238,7 @@ plex_1_irq:
 		:close_irq()
 		rti
 
-.align $20
+//.align $20
 lower_border_irq:
 		:open_irq()
 
@@ -320,7 +313,7 @@ lower_border_irq:
 		:close_irq()
 		rti
 
-.align $20
+//.align $20
 msx_irq:
 		:open_irq()
 
@@ -358,18 +351,34 @@ msx_irq:
 
 		:close_irq()
 		rti
+.pc=* "End of elder's code"
 
 
-
-
-.pc = $5600 "screen data"
+.pc = $0400
+.pc = * "screen data"
 screendata:
 .import binary "data/screen.raw"
 
-.pc = $0540 "sideborder sprites"
-sideborder_sprites:
-.import binary "data/sideborder_sprites.raw"
+		
+.pc = $2000 "charset"
+.import binary "data/charset.raw"
+.fill 8,$ff
+.fill 7,$ff
+.byte 0
 
+.pc = $2200 "Top sprites"
+b0sprite:
+.import binary "sprites.prg"	// Fresh
+				
+
+.pc = * "lower border sprites"
+lower_border_sprites:
+.import binary "data/lower_border_sprites.raw"
+.align $40		
+.pc = * "sideborder sprites"
+sideborder_sprites:
+.import binary "data/sideborder_sprites.raw"		
+		
 .pc = $2a00 "pixels"
 .import binary "data/pixels.raw"
 
@@ -378,17 +387,15 @@ sideborder_sprites:
 
 .pc = $3800 "text"
 .import source "data/text.asm"
+		
 
-.pc = $0400 "lower border sprites"
-lower_border_sprites:
-.import binary "data/lower_border_sprites.raw"
+
+
 
 .pc = $8000 "colour ram"
 colour_ram:
 colorbase:
 .import binary "data/d800_comp.raw"
-//.import c64 "data/colors"
-
 
 .align $0200
 logo:
@@ -400,7 +407,6 @@ logo:
 .import source "top_sprite_routine.asm"
 .import source "timer.asm"
 .pc=* "End of code"
-
 
 
 .pc = * "functions"

@@ -27,30 +27,8 @@ stabilizer_irq_pal:
 
 .pc = * "stabilized irq pal"
 stabilized_sideborder_routine:
-/*
-        nop //txs
-        ldx #$8
-!:
-        dex
-        bne !-
-
-        bit $ea
-        nop
-
-        lda #stabilizer_irq_line+1
-        cmp $d012
-        beq !+
-!:
-*/
-		jsr position_sideborder_sprites
-        ldy #7
-	/*
-        :wait()
-        bit $24
-        bit $24
-        nop
-        nop
-	*/
+	jsr	position_sideborder_sprites
+	bit $fe
 
 .macro decinc_brd(debug){
     .if(debug){
@@ -72,22 +50,18 @@ stabilized_sideborder_routine:
        start:
 		  lda #bitmap_bg_colour
           sta $d021
-       start_np:
-          nop
-
-          //.fill 4,NOP	// 14
-          cmp (0,x)
-
+       start_np:		  
           ldx #$d8
-
           dec counter	// 5 ZP!!
           beq exit		// 2/3	OK, niente, tocca buttare via del tempo in attesa di arrivare alla linea che ci serve
 						// Guarda, facciamo così per buttarne via meno, o quanto meno per raggruppare il tempo buttato. Ok?
-                        // Ora in exit prima di aprire il bordo dobbiamo attendere: 2+4+2+2+4+2(-1 perchè il branch costa un ciclo) =>15
-
-          lda #$8b			//2
-          sta $d009-$d8,x	//5 <- ecco il plex di y  (YEP)
-
+                        // Ora in exit prima di aprire il bordo dobbiamo attendere: 2+4+2+2+4+2(-1 perchè il branch costa un ciclo) =>15		
+		  tya
+		  and #06
+		  tax
+		  lda #$8b
+		  sta $d009,x
+		  ldx #$d8
           dey 			// 2
           beq badline	// 2/3   O BMI qua
 
@@ -118,10 +92,12 @@ badline: // Qua gestiamo la badline normale (non plexante)
         // mancano un paio di linee normali?? si! ma questi non sono 8, si ma adesso siamo allineati alla bad
         // adesso diventa più semplice ok
 exit:
+		bit $f3				// 3
+		cmp (0,x)			// 6
 		dec sprrow			// 5 (ZP) - sprrow inizializzato a 2 prima del sideborder
         beq !+				// 2/3
-        lda #18				// 2 Questo valore va tarato,
-        sta.a counter		// 4 cosè sta roba sta.a !? counter è ZP ma a noi serve waitare 4 per avere un nop dopo
+        lda #17				// 2 Questo valore va tarato,
+        sta counter			// 3 cosè sta roba sta.a !? counter è ZP ma a noi serve waitare 4 per avere un nop dopo
 // Vai!
         lda #$d0			// ah ok, scusa, errore di battitura ok ora torna :D. Vai, compila
         sta $d016

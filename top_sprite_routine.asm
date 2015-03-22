@@ -52,6 +52,7 @@
 .const	saveline6	=	$fa00		// Save bank 1 line 6 of 1st char definition (needed for blanking bank swap)
 // Bank 0
 .const	sprblock0	=	$3f80		// Filled block sprite
+.const	fppcharscreen	=	$0400	// FPP data row
 // Bank 1
 .const	logofpp		=	$4007		// FPP starting position (Last line FPP)
 .const	b1sprite	=	$7c00		// Bank 1 sprite base
@@ -373,10 +374,10 @@ cpdef:
 	sta $d01c
 	lda #$72
 	sax $d010
-	nop
-	sta $d005
-	sta $d007
-	sta $d009	
+	lda #$76		// These are needed for next part
+	sta $d005		//
+	sta $d007		//
+	sta $d009		//
 	lda #LIGHT_BLUE
 	sta $d02c
 	lda #ORANGE
@@ -403,16 +404,14 @@ cpdef:
 !:
 	lda #$38+[[12+7]&7]	
 	sta $d011
-	jsr bmpswitch
-	lda #ORANGE
-	sta $d021
 	lda #rst_next			// 2
 	sta $d012				// 4
 	lda #<next_irq			// 2
 	sta $fffe				// 4
 	lda #>next_irq			// 2
 	sta $ffff				// 4
-	lsr $d019
+	jsr bmpswitch
+	lsr $d019	
 	cli
 	
 	inc movpos	// Next logo position
@@ -514,11 +513,10 @@ skiplogo:
 	sbc #$80
 	anc #$3f
 	ora #$40
-	sta $0400,x
+	sta fppcharscreen,x
 	dex
 	bpl !-	
 	ldy savey	
-	lsr $d020
 	jmp quitirq		
 		
 		

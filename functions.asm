@@ -147,22 +147,19 @@ bottom_sprites_y:
     .byte base_y+[y*21]
 }
 
+
 position_sideborder_sprites:
+		.const base_sideborder = $0
+		.const base_y_sideborder = $76
 
-        ldx #6
-
-        lda #[sideborder_sprites/$40]+6
-        sec
-!:
-        sta screen_0+$03f9,x
-        sbc #1
-        dex
-        bpl !-
-
+		.for(var i=0;i<7;i++) {
+			lda #[sideborder_sprites/$40]+i
+			sta screen_0+$03f9+i
+		}
+		
         lda #$ba
         sta $d010
-
-        .const base_sideborder = $0
+        
         lda #base_sideborder-32
         sta $d002
         sta $d00a
@@ -170,6 +167,8 @@ position_sideborder_sprites:
         lda #base_sideborder
         sta $d004
         sta $d00c
+		sta $d01d
+		sta $d017
 
         lda #$58
         sta $d006
@@ -184,36 +183,22 @@ position_sideborder_sprites:
         lda #LIGHT_GRAY
         sta $d026
 
-        lda #LIGHT_RED
-        sta $d02e
-
         lda #LIGHT_BLUE
         sta $d028
-        sta $d029
-        sta $d02c
         sta $d02d
 
         lda #LIGHT_RED
         sta $d02a
-        sta $d02b
-
-.const base_y_sideborder = $76
+        sta $d02b        
+        sta $d02e		
 
         lda #base_y_sideborder
         sta $d003
-        sta $d005
-        sta $d007
-        sta $d009
-
-        lda #base_y_sideborder+21
-        sta $d00b
-        sta $d00d
-        sta $d00f
-
-        lda #0
-        sta $d01d
-
-        rts
+		
+		lda #$ff
+		sta $d01c		
+		rts
+		
 
 position_first_sprites_line:
         lda #0
