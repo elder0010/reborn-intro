@@ -5,6 +5,13 @@
 .const row_4 = screen_0+$28*23
 .const row_5 = screen_0+$28*24
 
+.print toHexString(row_0+16)
+.print toHexString(row_1+16)
+.print toHexString(row_2+16)
+.print toHexString(row_3+16)
+.print toHexString(row_4+16)
+.print toHexString(row_5+16)
+
 .const caret_on = [caret-mini_charset]/$8
 .const caret_off = $0
 

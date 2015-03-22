@@ -23,9 +23,11 @@
 .label position_sideborder_sprites=$265f
 .label next_line=$8486
 .label introend=$2594
+.label reloc_stuff=$2722
 .label prepare_chars_under_sprites=$2602
+.label sideborder_sprites_source=$2800
 .label curchrow=$84ba
-.label top_irq=$226e {
+.label top_irq=$2271 {
 }
 .label bitmap_split_irq=$23a4
 .label delay_doubler=$8440
@@ -38,7 +40,6 @@
 .label lower_border_sprites=$ec0
 .label bottom_sprites_y=$265c
 .label write_char=$841a
-.label sideborder_sprites=$2800
 .label switchpg=$846b
 .label code=$21f8
 .label start_np=$234f

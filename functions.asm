@@ -243,3 +243,15 @@ position_first_sprites_line:
         sta $d015
 
         rts
+
+reloc_stuff:
+        ldx #0
+!:
+        lda sideborder_sprites_source,x
+        sta sideborder_sprites,x
+
+        lda sideborder_sprites_source+$100,x
+        sta sideborder_sprites+$100,x
+        dex
+        bne !-
+        rts

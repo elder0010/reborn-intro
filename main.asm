@@ -43,6 +43,7 @@ code:
 		jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
 
 		jsr clear_text_screen
+		jsr reloc_stuff
 
 		:d012($0f)
 		:d011($90)
@@ -358,8 +359,8 @@ introend:
 screendata:
 .import binary "data/screen.raw"
 
-.pc = $2800 "sideborder sprites"
-sideborder_sprites:
+.pc = $2800 "sideborder sprites (andranno a $200)"
+sideborder_sprites_source:
 .import binary "data/sideborder_sprites.raw"
 
 .pc = $2a00 "pixels"

@@ -15,6 +15,7 @@
 .const bottom_sprites = $3a00
 
 .const bottom_fake_charset = $2000 //solo 8 bytes per layer di colori sotto le facce
+.const sideborder_sprites = $0200 //Dove rilocare i sideborder sprites 
 
 .const plex_ct = $40
 
