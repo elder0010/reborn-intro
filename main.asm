@@ -5,7 +5,7 @@
 //:BasicUpstart2(code)
 
 
-.pc = $800 "code"
+.pc = $8000 "code"
 code:
 		sei
 		.if(PLAY_MUSIC){
@@ -360,30 +360,40 @@ screendata:
 .import binary "data/screen.raw"
 
 
-.pc = $2000 "charset"
-.import binary "data/charset.raw"
-.fill 8,$ff
-.fill 7,$ff
-.byte 0
-
-.pc = $2200 "Top sprites"
-b0sprite:
-.import binary "sprites.prg"	// Fresh
-
-
-.pc = * "lower border sprites"
-lower_border_sprites:
-.import binary "data/lower_border_sprites.raw"
-.align $40
-.pc = * "sideborder sprites"
+.pc = $0800 "sideborder sprites"	// Elder
 sideborder_sprites:
 .import binary "data/sideborder_sprites.raw"
 
-.pc = $2a00 "pixels"
-.import binary "data/pixels.raw"
+.pc = $0a00 "Top sprites"			// Fresh
+b0sprite:
+.import binary "sprites.prg"
 
-.pc = bottom_sprites "bottom sprites"
+.pc = $0e00 "D800 table"			// Fresh+Elder
+colour_ram:
+colorbase:
+.import binary "data/d800_comp.raw"
+
+
+.pc = $2000 "charset"				// Elder
+.import binary "data/charset.raw"
+//.fill 8,$ff
+//.fill 7,$ff
+//.byte 0
+
+.pc = $21c0 "lower border sprites"	// Elder
+lower_border_sprites:
+.import binary "data/lower_border_sprites.raw"
+
+.pc = $2300 "bottom sprites"		// Elder
+bottom_sprites:
 .import binary "data/sprit.raw"
+
+.pc = $2800 "logo data"				// Fresh
+logo:
+.import source "logoparser.asm"
+
+.pc = $2a00 "pixels"				// Elder+Fresh
+.import binary "data/pixels.raw"
 
 .pc = $3800 "text"
 .import source "data/text.asm"
@@ -392,22 +402,10 @@ sideborder_sprites:
 
 
 
-.pc = $8000 "colour ram"
-colour_ram:
-colorbase:
-.import binary "data/d800_comp.raw"
-
-.align $0200
-logo:
-.pc = * "logo data"
-.import source "logoparser.asm"
-
-.align $100
+.pc = $8800
 .pc = * "logo swinger"
 .import source "top_sprite_routine.asm"
 .import source "timer.asm"
 .pc=* "End of code"
-
-
 .pc = * "functions"
 .import source "functions.asm"
