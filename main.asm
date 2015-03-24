@@ -26,9 +26,9 @@ code:
 		sta $d021
 
 		:bank_0()
-		
+
 		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
-		jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
+		//jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
 
 		/*
 		//vecchio init elder
@@ -154,14 +154,14 @@ lower_split_irq:
 
 		:d011($1b)
 		:d016($c8)
-		
+
 		lda #0
 		sta $d021
 
 		ldy #$18
 		:wait()
 
-		lda #DARK_GRAY		
+		lda #DARK_GRAY
 		sta $d021
 
 		asl $d019
@@ -362,7 +362,7 @@ copyfppcode:
 		ldx #$00
      !:
 		.for(var i=0;i<5;i++) {
-			lda $3b00+i*$100,x        
+			lda $3b00+i*$100,x
         	sta freshcode+i*$100,x
         }
 		lda #$00
@@ -373,15 +373,15 @@ copyfppcode:
 		sta $3e00,x
 		sta $3f00,x
         dex
-        bne !-		
+        bne !-
         rts
-        
+
 .pc = * "functions"
 .import source "functions.asm"
 
 .pc = $3800 "text"
 .import source "data/text.asm"
-		
+
 .pc=* "End of elder's code"
 
 
@@ -426,16 +426,15 @@ logo:
 .pc = $2a00 "pixels"				// Elder+Fresh
 .import binary "data/pixels.raw"
 
-.pc = $3680 "Elder's code" 
+.pc = $3680 "Elder's code"
 // Qua ci vai tu
 // fino a 3aff
 
 .pc = $3b00
 .pc = * "logo swinger"
 .pseudopc freshcode
-{	
+{
 .import source "top_sprite_routine.asm"
 .import source "timer.asm"
 }
 .pc=* "End of code Fresh's code"
-

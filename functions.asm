@@ -1,3 +1,4 @@
+/*
 fill_text_color_zone:	// Questa la integriamo direttamente in colordata => Da cancellare!!
         lda #WHITE
         ldx #0
@@ -14,6 +15,7 @@ fill_text_color_zone:	// Questa la integriamo direttamente in colordata => Da ca
         cpx #$12
         bne !-
         rts
+*/
 
 prepare_chars_under_sprites:
 
@@ -121,10 +123,10 @@ position_sideborder_sprites:
 			lda #[sideborder_sprites/$40]+i
 			sta screen_0+$03f9+i
 		}
-		
+
         lda #$ba
         sta $d010
-        
+
         lda #base_sideborder-32
         sta $d002
         sta $d00a
@@ -154,16 +156,16 @@ position_sideborder_sprites:
 
         lda #LIGHT_RED
         sta $d02a
-        sta $d02b        
-        sta $d02e		
+        sta $d02b
+        sta $d02e
 
         lda #base_y_sideborder
         sta $d003
-		
+
 		lda #$ff
-		sta $d01c		
+		sta $d01c
 		rts
-		
+
 
 position_first_sprites_line:
         lda #0
@@ -182,16 +184,16 @@ position_first_sprites_line:
         inc plex_ct
 
         lda #<[$b0+6*24]
-        ldx #14		
+        ldx #14
 !:
         sta $d000,x
         sec
         sbc #24
         dex
-        dex        
+        dex
         bne !-
 		stx $d01b
-		
+
         lda #$e0
         sta $d010
 
