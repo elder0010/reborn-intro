@@ -1,29 +1,4 @@
 .align $100
-/*
-stabilizer_irq_pal:
-        sta reset_a
-        stx reset_x
-        sty reset_y
-
-        lda #$3b
-        sta $d011
-
-        lda #<stabilized_irq
-        sta $fffe
-
-        inc $d012
-
-        asl $d019
-        tsx
-
-        cli
-
-        .for(var n=0;n<12;n++){
-            nop
-        }
-
-        brk
-*/
 
 .pc = * "stabilized irq pal"
 stabilized_sideborder_routine:
@@ -92,8 +67,9 @@ badline: // Qua gestiamo la badline normale (non plexante)
         // mancano un paio di linee normali?? si! ma questi non sono 8, si ma adesso siamo allineati alla bad
         // adesso diventa più semplice ok
 exit:
-		bit $f3				// 3
-		cmp (0,x)			// 6
+		pha					// 3
+		pla					// 4
+		nop					// 2		
 		dec sprrow			// 5 (ZP) - sprrow inizializzato a 2 prima del sideborder
         beq !+				// 2/3
         lda #17				// 2 Questo valore va tarato,
@@ -117,6 +93,6 @@ exit:
 !:
         lda #border_colour
         sta $d020
-
-        rts
-        //jmp bitmap_split_irq
+		//Prima linea di sprites sotto le facce
+		jmp position_first_sprites_line		
+		

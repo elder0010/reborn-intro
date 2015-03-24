@@ -3,6 +3,7 @@
 .pc=music.location "Music" .fill music.size, music.getData(i)
 
 .const	sprblock0	=	$0440		// Filled block sprite
+.const	freshcode	=	$fb00		// Fresh's code real address
 
 .pc = $8000 "code"
 code:
@@ -25,8 +26,7 @@ code:
 		sta $d021
 
 		:bank_0()
-
-		jsr copy_screendata
+		
 		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
 		jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
 
@@ -38,6 +38,7 @@ code:
 		*/
 
 		:d011($00)		// Freshness
+        jsr copyfppcode	// Freshness
 		jsr initscroll	// Freshness
 
 		:wait_frame()
@@ -116,7 +117,7 @@ top_irq:
 }
 
 
-
+/*
 bitmap_split_irq:
 
 		sta reset_a
@@ -139,6 +140,7 @@ bitmap_split_irq:
 		ldy reset_y
 
 		rti
+*/
 
 .const base_plex = $cf
 .const offset_plex = $10
@@ -152,14 +154,14 @@ lower_split_irq:
 
 		:d011($1b)
 		:d016($c8)
-
+		
 		lda #0
 		sta $d021
 
 		ldy #$18
 		:wait()
 
-		lda #DARK_GRAY
+		lda #DARK_GRAY		
 		sta $d021
 
 		asl $d019
@@ -199,7 +201,8 @@ plex_0_irq:
 plex_1_irq:
 		:open_irq()
 
-		ldy #2
+		//ldy #2
+		ldy #$01
 		:wait()
 
 		:point_next_sprites([bottom_sprites/$40]+14,screen_0)
@@ -232,6 +235,8 @@ plex_1_irq:
 		:set_irq(lower_border_irq)
 		:d012($f9)
 		asl $d019
+		inc $d021
+		dec $d021
 
 		:close_irq()
 		rti
@@ -349,6 +354,34 @@ msx_irq:
 
 		:close_irq()
 		rti
+
+
+// Copy FPP code high memory (F700)
+
+copyfppcode:
+		ldx #$00
+     !:
+		.for(var i=0;i<5;i++) {
+			lda $3b00+i*$100,x        
+        	sta freshcode+i*$100,x
+        }
+		lda #$00
+		sta $3a00,x			// Attenzione, coccia con la roba di Elder
+		sta $3b00,x
+		sta $3c00,x
+		sta $3d00,x
+		sta $3e00,x
+		sta $3f00,x
+        dex
+        bne !-		
+        rts
+        
+.pc = * "functions"
+.import source "functions.asm"
+
+.pc = $3800 "text"
+.import source "data/text.asm"
+		
 .pc=* "End of elder's code"
 
 
@@ -364,7 +397,7 @@ sideborder_sprites:
 
 .pc = $0a00 "Top sprites"			// Fresh
 b0sprite:
-.import binary "sprites.prg"
+.import binary "data\top_sprites.prg"
 
 .pc = $0e00 "D800 table"			// Fresh+Elder
 colour_ram:
@@ -393,17 +426,16 @@ logo:
 .pc = $2a00 "pixels"				// Elder+Fresh
 .import binary "data/pixels.raw"
 
-.pc = $3800 "text"
-.import source "data/text.asm"
+.pc = $3680 "Elder's code" 
+// Qua ci vai tu
+// fino a 3aff
 
-
-
-
-
-.pc = $8800
+.pc = $3b00
 .pc = * "logo swinger"
+.pseudopc freshcode
+{	
 .import source "top_sprite_routine.asm"
 .import source "timer.asm"
-.pc=* "End of code"
-.pc = * "functions"
-.import source "functions.asm"
+}
+.pc=* "End of code Fresh's code"
+

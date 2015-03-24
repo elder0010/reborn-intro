@@ -1,39 +1,4 @@
-copy_screendata:
-
-        ldx #0
-!:
-        lda screendata+$100,x
-        sta screen_0+$100,x
-    //    sta screen_1+$100,x
-
-        lda screendata+$200,x
-        sta screen_0+$200,x
-    //    sta screen_1+$200,x
-
-        lda screendata+$300,x
-        sta screen_0+$300,x
-    //    sta screen_1+$300,x
-
-
-        lda colour_ram,x
-        sta $d800,x
-
-        lda colour_ram+$100,x
-        sta $d800+$100,x
-
-        lda colour_ram+$200,x
-        sta $d800+$200,x
-
-        lda colour_ram+$300,x
-        sta $d800+$300,x
-
-        dex
-        bne !-
-
-        rts
-
-
-fill_text_color_zone:
+fill_text_color_zone:	// Questa la integriamo direttamente in colordata => Da cancellare!!
         lda #WHITE
         ldx #0
         .const bd = 19
@@ -216,17 +181,17 @@ position_first_sprites_line:
 
         inc plex_ct
 
-        lda #$b0
-        ldx #0
+        lda #<[$b0+6*24]
+        ldx #14		
 !:
-        sta $d002,x
-        clc
-        adc #24
-        inx
-        inx
-        cpx #14
+        sta $d000,x
+        sec
+        sbc #24
+        dex
+        dex        
         bne !-
-
+		stx $d01b
+		
         lda #$e0
         sta $d010
 

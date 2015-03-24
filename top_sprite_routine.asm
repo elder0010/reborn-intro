@@ -20,7 +20,7 @@
 .const	rst_sprite1		=	$120		// Top sprites
 .const	rst_sprite2		=	$30			// More sprites
 .const	rst_sprite3		=	$35			// More sprites
-.const	rst_next		=	$a2			// Next raster IRQ
+.const	rst_next		=	$c2			// Next raster IRQ
 
 // Zero page variables
 // *******************
@@ -68,7 +68,7 @@
 // External routine (Test only)
 // ****************************
 .const	bmpswitch 	=	stabilized_sideborder_routine		// Routine to call for bmp + sideborder
-.const	next_irq	=	bitmap_split_irq					// Next irq handler (after this effect)
+.const	next_irq	=	lower_split_irq						// Next irq handler (after this effect)
 
 // Sprite def.
 // ***********
@@ -77,8 +77,6 @@
 }
 
 
-
-.align $0100	
 // FPP Precalc'd tables	
 // ********************
 
@@ -88,7 +86,7 @@
 .var	d018values=List()
 .for(var i=0;i<39;i++)	
 	.eval	d018values.add([[$f+fpplines.get(floor([i+1]/2))]&$f]+[16*[[floor([i+4]/21)*2+5]&$7]])
-
+	
 // D018: change gfx (even)
 .print "D018 table: "+toHexString(*)
 d018table:
@@ -136,7 +134,6 @@ sprite1def:	// Sprite definitions
 // **************************
 movement:
 .fill	65,floor(30.4*sin(i*PI/128))
-
 
 // Save stuff
 // **********
@@ -408,7 +405,7 @@ cpdef:
 		iny		
 		bcc btmcrunch
 !:
-	lda #$38+[[12+7]&7]	
+	lda #$38+[[12+7]&7]
 	sta $d011
 	lda #rst_next			// 2
 	sta $d012				// 4
@@ -481,35 +478,31 @@ cpdef:
 	sax sb5
 	ldx #60
 	
-spcprloop:	
-	dex
+spcprloop:		
 	ldy sb5
 	lda (ptr),y
-	sta sbright,x
+	sta sbright-1,x
 	ldy sb2
 	lda (ptr),y
-	sta sbleft,x
-	dex
+	sta sbleft-1,x	
 	ldy sb4
 	lda (ptr),y
-	sta sbright,x
+	sta sbright-2,x
 	ldy sb1
 	lda (ptr),y
-	sta sbleft,x
-	dex
+	sta sbleft-2,x	
 	ldy sb3
 	lda (ptr),y
-	sta sbright,x
+	sta sbright-3,x
 	ldy sb0
 	lda (ptr),y
-	sta sbleft,x
+lftmask:
+	and #$00	
+	sta sbleft-3,x
 	
-lftmask:	.pc=* "And mask"
-	and #$00
-	sta sbleft,x			
-	cpx #[9*3]
+	cpx #[10*3]
 	bcc contlogo
-	cpx #[13*3]
+	cpx #[14*3]
 	bcc skiplogo
 contlogo:
 	sec
@@ -522,6 +515,7 @@ contlogo:
 	sta ptr+1
 skiplogo:	
 	txa
+	axs #3
 	bne spcprloop
 	
 	// Charscreen copy
@@ -754,4 +748,3 @@ restorefppmem:
 	jsr loadstuff	
 	jsr copydef
 	jmp buildfpp	
-	
