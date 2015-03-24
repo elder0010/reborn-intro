@@ -38,6 +38,12 @@
 .const	dummy		=	$ce			// Dummy byte for timing
 .const	spr			=	$cf			// Sprites definitions (2 bytes)
 .const	direction	=	$d0			// Sprites definitions (2 bytes)
+.const	sb0			=	$b0
+.const	sb1			=	$b1
+.const	sb2			=	$b2
+.const	sb3			=	$b3
+.const	sb4			=	$b4
+.const	sb5			=	$b5
 
 // Colors
 // ******
@@ -51,7 +57,6 @@
 .const	logoswap	=	$f800		// Swapped nibble for sprites
 .const	saveline6	=	$fa00		// Save bank 1 line 6 of 1st char definition (needed for blanking bank swap)
 // Bank 0
-.const	sprblock0	=	$3f80		// Filled block sprite
 .const	fppcharscreen	=	$0400	// FPP data row
 // Bank 1
 .const	logofpp		=	$4007		// FPP starting position (Last line FPP)
@@ -240,7 +245,8 @@ irq_sprite2:
 	sta $d00a
 	eor #[$e0^$58]
 	sta $d00c	
-	lda.a scrollcolor
+	lda scrollcolor
+	nop
 	sta $d02c
 	lda #def(b0sprite)+4
 	sta $07fa
@@ -443,8 +449,7 @@ cpdef:
 	and #$07
 	ora #$c8
 	sta lox		// Save 3 LSb
-
-	asl $d020
+	
 	// Sideborder sprite copy
 	// **********************	
 	alr #$06
@@ -460,30 +465,45 @@ cpdef:
 !:
 	sty ptr+1	
 	ldy #<[logoswap+[14*32]]
-	sty ptr	
-	sta spr
+	sty ptr		
+	tax
+	lda #$1f
+	sax sb0
+	inx
+	sax sb1
+	inx
+	sax sb2
+	axs #[$100-$15]
+	sax sb3
+	inx
+	sax sb4
+	inx
+	sax sb5
 	ldx #60
+	
 spcprloop:	
-	lda #$02
-	sta temp
-	clc
-spcpcloop:
 	dex
-	lda temp
-	adc spr	
-	pha	
-	adc #$17
-	anc #$1f
-	tay
+	ldy sb5
 	lda (ptr),y
-	sta sbright,x		
-	pla
-	anc #$1f
-	tay
+	sta sbright,x
+	ldy sb2
 	lda (ptr),y
 	sta sbleft,x
-	dec temp
-	bpl spcpcloop	
+	dex
+	ldy sb4
+	lda (ptr),y
+	sta sbright,x
+	ldy sb1
+	lda (ptr),y
+	sta sbleft,x
+	dex
+	ldy sb3
+	lda (ptr),y
+	sta sbright,x
+	ldy sb0
+	lda (ptr),y
+	sta sbleft,x
+	
 lftmask:	.pc=* "And mask"
 	and #$00
 	sta sbleft,x			
@@ -501,7 +521,7 @@ contlogo:
 	eor ptr+1	
 	sta ptr+1
 skiplogo:	
-	cpx #$00
+	txa
 	bne spcprloop
 	
 	// Charscreen copy
@@ -516,7 +536,7 @@ skiplogo:
 	sta fppcharscreen,x
 	dex
 	bpl !-	
-	ldy savey	
+	ldy savey		
 	jmp quitirq		
 		
 		
@@ -534,11 +554,11 @@ initscroll:
 
 // Prepare D800
 // ************
-	lda #<colorbase
-	sta ptr	
+
 	lda #>colorbase
 	sta ptr+1
-	ldx #$00	
+	ldx #$00		
+	stx ptr				// Colorbase must be aligned
 	ldy #$00	
 d8loop:
 	lda (ptr),y
@@ -572,7 +592,7 @@ d8skip:
 	lda #$aa
 !:		
 	sta sprblock,x
-	sta sprblock0,x		// May be useless => Use Elder's one
+	sta sprblock0,x		// Used by Elder and me.
 	dex
 	bpl !-	
 	lda #$c8
@@ -639,12 +659,11 @@ buildfpp:
 	lda #<logofpp	// Prepare char definitions
 	sta ptr
 	lda #>logofpp
-	sta ptr+1
-	lda #<savecfpp	// Prepare char definitions
-	sta ptr2
+	sta ptr+1		
 	lda #>savecfpp
-	sta ptr2+1	
+	sta ptr2+1		
 	ldy #$00	
+	sty ptr2		// Must be $100 aligned
 	ldx #$00
 rowloop:	
 	lda logo,x		// Load "compressed" byte
@@ -695,7 +714,6 @@ rlresume:
 	lda #$04
 !:		
 	and #$0f
-	sec
 	adc ptr+1		// [ptr&3]==0 -> EBCM . [ptr&3]==1 -> normal char mode
 	sta ptr+1
 	bpl rowloop		// Stop at the of bank 1

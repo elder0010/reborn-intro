@@ -2,8 +2,7 @@
 .import source "macros.asm"
 .pc=music.location "Music" .fill music.size, music.getData(i)
 
-//:BasicUpstart2(code)
-
+.const	sprblock0	=	$0440		// Filled block sprite
 
 .pc = $8000 "code"
 code:
@@ -29,7 +28,6 @@ code:
 
 		jsr copy_screendata
 		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
-		jsr prepare_cover_sprites
 		jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
 
 		/*
@@ -210,7 +208,7 @@ plex_1_irq:
 		sta $d018
 
 		//Spritoni grigi
-		lda #[bottom_sprites/$40]+21
+		lda #[sprblock0/$40]
 		sta screen_1+$03f8
 		sta screen_1+$03fe
 		sta screen_1+$03ff
@@ -292,7 +290,7 @@ lower_border_irq:
 		sta screen_0+$03fb
 
 		//Spritoni grigi
-		lda #[bottom_sprites/$40]+21
+		lda #[sprblock0/$40]
 
 		sta screen_0+$03f8
 		sta screen_0+$03fe
