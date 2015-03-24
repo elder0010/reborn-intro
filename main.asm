@@ -27,9 +27,9 @@ code:
 
 		:bank_0()
 
-		jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
+		//jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
 		//jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
-
+		jsr clone_screen_1_to_0
 		/*
 		//vecchio init elder
 		:d012($0f)
@@ -406,12 +406,12 @@ colorbase:
 
 
 .pc = $2000 "charset"				// Elder
-.import binary "data/charset.raw"
+.import binary "data/charset_full_original.raw"
 //.fill 8,$ff
 //.fill 7,$ff
 //.byte 0
 
-.pc = $21c0 "lower border sprites"	// Elder
+.pc = $91c0 "lower border sprites"	// Elder
 lower_border_sprites:
 .import binary "data/lower_border_sprites.raw"
 

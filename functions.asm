@@ -17,27 +17,8 @@ fill_text_color_zone:	// Questa la integriamo direttamente in colordata => Da ca
         rts
 */
 
-prepare_chars_under_sprites:
-
 /*
-
-        ldx #8
-        lda #$ff
-!:
-        sta bottom_fake_charset,x
-        dex
-        bpl !-
-
-        ldx #7
-        lda #$00
-!:
-        sta bottom_fake_charset+8,x
-        dex
-        bpl !-
-*/
-
-    //    lda #0
-    //    sta bottom_fake_charset+16 //Azzero l'ultima riga o si vede il glitch :(
+prepare_chars_under_sprites:
 
         //ora copio il char nella zona a dx
         ldx #$12
@@ -46,19 +27,11 @@ prepare_chars_under_sprites:
 !:
         sta screen_0+[[bb+1]*$28],x
         sta screen_0+[[bb+2]*$28],x
-    //    sta screen_0+[[bb+3]*$28],x
-    //    sta screen_0+[[bb+4]*$28],x
-    //    sta screen_0+[[bb+5]*$28],x
         sta screen_0+[[bb+6]*$28],x
         sta screen_0+[[bb+7]*$28],x
-
-    //    sta screen_1+[[bb+1]*$28],x
-    //    sta screen_1+[[bb+2]*$28],x
         sta screen_1+[[bb+3]*$28],x
         sta screen_1+[[bb+4]*$28],x
         sta screen_1+[[bb+5]*$28],x
-    //    sta screen_1+[[bb+6]*$28],x
-    //    sta screen_1+[[bb+7]*$28],x
 
         inx
         cpx #$28
@@ -71,7 +44,9 @@ prepare_chars_under_sprites:
         dex
         bpl !-
         rts
+*/
 
+/*
 prepare_cover_sprites:
 
         lda #$aa
@@ -80,6 +55,16 @@ prepare_cover_sprites:
         sta [bottom_sprites+$40*21],x
         dex
         bpl !-
+        rts
+*/
+
+clone_screen_1_to_0:
+        ldx #0
+!:
+        lda $0600,x
+        sta $0200,x
+        dex
+        bne !-
         rts
 
 next_bottom_sprites:
