@@ -94,5 +94,9 @@ exit:
         lda #border_colour
         sta $d020
 		//Prima linea di sprites sotto le facce
+		
+		lda #screen_0_d018
+		sta $d018
+		
 		jmp position_first_sprites_line		
 		

@@ -44,7 +44,7 @@ code:
 		:wait_frame()
 
 		jsr start_timer	// Freshness
-
+		jsr clone_screen_1_to_0
 		:d011($3b)
 		:d012($f9)
 		:set_irq(msx_irq)
@@ -52,10 +52,6 @@ code:
 		//	lsr $d019
 		cli
 		jmp *
-
-
-
-
 
 /*
 top_irq:
@@ -151,7 +147,8 @@ lower_split_irq:
 
 		.fill $2,NOP
 		bit $24
-
+		
+		
 		:d011($1b)
 		:d016($c8)
 
@@ -204,9 +201,27 @@ plex_1_irq:
 		//ldy #2
 		ldy #$01
 		:wait()
+		
+		//:point_next_sprites([bottom_sprites/$40]+14,screen_0)
+		
+		//fatto senza macro
+		ldx #0
+		lda #[bottom_sprites/$40]+14
+!:
+		sta screen_0+$03f9,x
+		clc
+		adc #1
 
-		:point_next_sprites([bottom_sprites/$40]+14,screen_0)
-
+		inx
+		cpx #7
+		bne !-
+		
+		/*
+		lda #$12 devo usare questo
+		sta screen_0+$03f9,x
+		*/
+		//fine cambio pt
+		
 		lda #screen_0_d018
 		sta $d018
 
@@ -385,9 +400,10 @@ copyfppcode:
 .pc=* "End of elder's code"
 
 
-.pc = $0400
-.pc = * "screen data"
-screendata:
+.pc=$0440
+.fill $40,$aa
+.fill $40,$55
+.pc=$540
 .import binary "data/screen.raw"
 
 
@@ -406,12 +422,13 @@ colorbase:
 
 
 .pc = $2000 "charset"				// Elder
-.import binary "data/charset_full_original.raw"
-//.fill 8,$ff
-//.fill 7,$ff
-//.byte 0
-
-.pc = $91c0 "lower border sprites"	// Elder
+.import binary "data/charset.raw"
+/*
+.fill 8,$ff
+.fill 7,$ff
+.byte 0
+*/
+.pc = $21c0 "lower border sprites"	// Elder
 lower_border_sprites:
 .import binary "data/lower_border_sprites.raw"
 
