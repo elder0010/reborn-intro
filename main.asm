@@ -96,7 +96,7 @@ logo:
 .import source "sideborder_pal.asm"
 .import source "bottom_irqs.asm"
 // Qua ci vai tu
-// fino a 3aff 
+// fino a 3aff SICURO FRESH? prova a fillare fill $100,$ff da qui, compare sporcizia sotto al logo e siamo a $3898!
 
 .pc = $3b00
 .pc = * "logo swinger"
