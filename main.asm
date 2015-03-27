@@ -146,9 +146,8 @@ lower_split_irq:
 		:open_irq()
 
 		.fill $2,NOP
-		bit $24
-		
-		
+		nop
+
 		:d011($1b)
 		:d016($c8)
 
@@ -201,9 +200,8 @@ plex_1_irq:
 		//ldy #2
 		ldy #$01
 		:wait()
-		
+
 		//:point_next_sprites([bottom_sprites/$40]+14,screen_0)
-		
 		//fatto senza macro
 		ldx #0
 		lda #[bottom_sprites/$40]+14
@@ -215,21 +213,21 @@ plex_1_irq:
 		inx
 		cpx #7
 		bne !-
-		
+
 		/*
 		lda #$12 devo usare questo
 		sta screen_0+$03f9,x
 		*/
 		//fine cambio pt
-		
-		lda #screen_0_d018
-		sta $d018
 
 		//Spritoni grigi
 		lda #[sprblock0/$40]
 		sta screen_1+$03f8
 		sta screen_1+$03fe
 		sta screen_1+$03ff
+
+		lda #screen_0_d018 //switchone sopra le spalle
+		sta $d018
 
 		//Continuo del disegno
 		lda #[lower_border_sprites/$40]
@@ -250,26 +248,23 @@ plex_1_irq:
 		:set_irq(lower_border_irq)
 		:d012($f9)
 		asl $d019
-		inc $d021
-		dec $d021
 
 		:close_irq()
 		rti
 
-//.align $20
 lower_border_irq:
 		:open_irq()
 
-		lda #LIGHT_GRAY
-		sta $d020
+		.fill $2,NOP
+		bit $24
+
+		lda #$18
+		sta $d000
 
 		lda #DARK_GRAY
 		sta $d027
 		sta $d02d
 		sta $d02e
-
-		lda #$18
-		sta $d000
 
 		ldx #0
 		stx $d025
@@ -280,16 +275,13 @@ lower_border_irq:
 
 		//-------------------------
 		//Sprites grigi 1-2
-		lda #$18+48
-
-		stx $d021
-
-		sta $d00c
-
+		ldy #$18+48
 		lda #$18+[48*2]
 		sta $d00e
+		sty $d00c
 		//-------------------------
 
+		stx $d021
 		lda #screen_1_d018
 		sta $d018
 
@@ -303,18 +295,19 @@ lower_border_irq:
 		lda #PURPLE
 		sta $d026
 
-		//Continuo del disegno
-		lda #[lower_border_sprites/$40]+3
-		sta screen_0+$03fa
-		lda #[lower_border_sprites/$40]+4
-		sta screen_0+$03fb
-
 		//Spritoni grigi
 		lda #[sprblock0/$40]
 
 		sta screen_0+$03f8
 		sta screen_0+$03fe
 		sta screen_0+$03ff
+
+
+		//Continuo del disegno
+		lda #[lower_border_sprites/$40]+3
+		sta screen_0+$03fa
+		lda #[lower_border_sprites/$40]+4
+		sta screen_0+$03fb
 
 		asl $d019
 
