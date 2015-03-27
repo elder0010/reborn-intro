@@ -1,63 +1,3 @@
-/*
-fill_text_color_zone:	// Questa la integriamo direttamente in colordata => Da cancellare!!
-        lda #WHITE
-        ldx #0
-        .const bd = 19
-!:
-        sta $d800+[bd*$28],x
-        sta $d800+[[bd+1]*$28],x
-        sta $d800+[[bd+2]*$28],x
-        sta $d800+[[bd+3]*$28],x
-        sta $d800+[[bd+4]*$28],x
-        sta $d800+[[bd+5]*$28],x
-
-        inx
-        cpx #$12
-        bne !-
-        rts
-*/
-
-/*
-prepare_chars_under_sprites:
-
-        //ora copio il char nella zona a dx
-        ldx #$12
-        lda #$20
-        .const bb = 17
-!:
-        sta screen_0+[[bb+1]*$28],x
-        sta screen_0+[[bb+2]*$28],x
-        sta screen_0+[[bb+6]*$28],x
-        sta screen_0+[[bb+7]*$28],x
-        sta screen_1+[[bb+3]*$28],x
-        sta screen_1+[[bb+4]*$28],x
-        sta screen_1+[[bb+5]*$28],x
-
-        inx
-        cpx #$28
-        bne !-
-
-        lda #$21
-        ldx #$8
-!:
-        sta screen_0+[[bb+7]*$28]+31,x //che tocca fa..
-        dex
-        bpl !-
-        rts
-*/
-
-/*
-prepare_cover_sprites:
-
-        lda #$aa
-        ldx #$40
-!:
-        sta [bottom_sprites+$40*21],x
-        dex
-        bpl !-
-        rts
-*/
-
 clone_screen_1_to_0:
         ldx #0
 !:
@@ -186,4 +126,23 @@ position_first_sprites_line:
         sta $d01c
         sta $d015
 
+        rts
+
+// Copy FPP code high memory (F700)
+copyfppcode:
+		ldx #$00
+     !:
+		.for(var i=0;i<5;i++) {
+			lda $3b00+i*$100,x
+        	sta freshcode+i*$100,x
+        }
+		lda #$00
+		sta $3a00,x			// Attenzione, coccia con la roba di Elder
+		sta $3b00,x
+		sta $3c00,x
+		sta $3d00,x
+		sta $3e00,x
+		sta $3f00,x
+        dex
+        bne !-
         rts

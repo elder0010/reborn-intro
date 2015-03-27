@@ -1,6 +1,4 @@
-.align $100
-
-.pc = * "stabilized irq pal"
+//.align $100
 stabilized_sideborder_routine:
 	jsr	position_sideborder_sprites
 	bit $fe
@@ -25,12 +23,12 @@ stabilized_sideborder_routine:
        start:
 		  lda #bitmap_bg_colour
           sta $d021
-       start_np:		  
+       start_np:
           ldx #$d8
           dec counter	// 5 ZP!!
           beq exit		// 2/3	OK, niente, tocca buttare via del tempo in attesa di arrivare alla linea che ci serve
 						// Guarda, facciamo così per buttarne via meno, o quanto meno per raggruppare il tempo buttato. Ok?
-                        // Ora in exit prima di aprire il bordo dobbiamo attendere: 2+4+2+2+4+2(-1 perchè il branch costa un ciclo) =>15		
+                        // Ora in exit prima di aprire il bordo dobbiamo attendere: 2+4+2+2+4+2(-1 perchè il branch costa un ciclo) =>15
 		  tya
 		  and #06
 		  tax
@@ -69,7 +67,7 @@ badline: // Qua gestiamo la badline normale (non plexante)
 exit:
 		pha					// 3
 		pla					// 4
-		nop					// 2		
+		nop					// 2
 		dec sprrow			// 5 (ZP) - sprrow inizializzato a 2 prima del sideborder
         beq !+				// 2/3
         lda #17				// 2 Questo valore va tarato,
@@ -94,9 +92,8 @@ exit:
         lda #border_colour
         sta $d020
 		//Prima linea di sprites sotto le facce
-		
+
 		lda #screen_0_d018
 		sta $d018
-		
-		jmp position_first_sprites_line		
-		
+
+		jmp position_first_sprites_line
