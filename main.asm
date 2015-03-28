@@ -3,7 +3,7 @@
 .pc=music.location "Music" .fill music.size, music.getData(i)
 
 .const	sprblock0	=	$0100		// Filled block sprite
-.const	sprspecial	=	$0140		// Filled block sprite
+.const	sprspecial	=	$2800		// Filled block sprite
 .const	freshcode	=	$fb00		// Fresh's code real address
 
 .pc = $8000 "code"
@@ -31,9 +31,10 @@ code:
 		//jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
 		//jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800		
 
-		:d011($00)		// Freshness
-        jsr copyfppcode	// Freshness
-		jsr initscroll	// Freshness
+		:d011($00)			// Freshness
+        jsr copyfppcode		// Freshness
+		jsr initscroll		// Freshness
+		jsr createsprites	// Elder
 		jsr clear_text_screen
 		//:wait_frame()
 
@@ -67,10 +68,10 @@ sideborder_sprites:
 b0sprite:
 .import binary "data\top_sprites.prg"
 
-.pc = $0e00 "D800 table"			// Fresh+Elder
-colour_ram:
-colorbase:
-.import binary "data/d800_comp.raw"
+
+.pc = $0e00 "logo data"				// Fresh
+logo:
+.import source "logoparser.asm"
 
 .pc = $2000 "charset"				// Elder
 .import binary "data/charset.raw"
@@ -83,9 +84,10 @@ lower_border_sprites:
 bottom_sprites:
 .import binary "data/sprit.raw"
 
-.pc = $2800 "logo data"				// Fresh
-logo:
-.import source "logoparser.asm"
+.pc = $2800 "D800 table"			// Fresh+Elder
+colour_ram:
+colorbase:
+.import binary "data/d800_comp.raw"
 
 .pc = $2a00 "pixels"				// Elder+Fresh
 .import binary "data/pixels.raw"

@@ -15,18 +15,22 @@ copyfppcode:
         lda $0600,x
         sta $0200,x
         lda $0700,x
-        sta $0300,x		
-		cpx #$40
-		bcs cfcskip
-		lda #$aa
-		sta sprblock0,x
-		lsr
-		sta sprspecial,x
-cfcskip:
+        sta $0300,x
         dex
         bne !-
         rts
 
+createsprites:
+		ldx #$3f
+	!:
+		lda #$aa
+		sta sprblock0,x
+		lsr
+		sta sprspecial,x
+		dex
+		bpl !-
+		rts
+		
 position_first_sprites_line:
         lda #0
         sta plex_ct
