@@ -6,22 +6,23 @@ copyfppcode:
 			lda $3b00+i*$100,x
         	sta freshcode+i*$100,x
         }
-		lda #$00
-		//sta $3a00,x			// Attenzione, coccia con la roba di Elder
+		lda #$00		
 		sta $3b00,x
 		sta $3c00,x
 		sta $3d00,x
 		sta $3e00,x
 		sta $3f00,x
-        dex
-        bne !-
-        rts
-
-clone_screen_1_to_0:
-        ldx #0
-!:
         lda $0600,x
         sta $0200,x
+        lda $0700,x
+        sta $0300,x		
+		cpx #$40
+		bcs cfcskip
+		lda #$aa
+		sta sprblock0,x
+		lsr
+		sta sprspecial,x
+cfcskip:
         dex
         bne !-
         rts

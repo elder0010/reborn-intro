@@ -2,7 +2,8 @@
 .import source "macros.asm"
 .pc=music.location "Music" .fill music.size, music.getData(i)
 
-.const	sprblock0	=	$0440		// Filled block sprite
+.const	sprblock0	=	$0100		// Filled block sprite
+.const	sprspecial	=	$0140		// Filled block sprite
 .const	freshcode	=	$fb00		// Fresh's code real address
 
 .pc = $8000 "code"
@@ -28,17 +29,15 @@ code:
 		//:bank_0()
 
 		//jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
-		//jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
-		jsr clone_screen_1_to_0
+		//jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800		
 
 		:d011($00)		// Freshness
         jsr copyfppcode	// Freshness
 		jsr initscroll	// Freshness
 		jsr clear_text_screen
-		:wait_frame()
+		//:wait_frame()
 
-		jsr start_timer	// Freshness
-		jsr clone_screen_1_to_0
+		jsr start_timer	// Freshness		
 		:d011($3b)
 		:d012($f9)
 		:set_irq(msx_irq)
@@ -56,8 +55,7 @@ code:
 
 
 .pc=$0440
-.fill $40,$aa
-.fill $40,$55
+// $100 bytes free for code
 .pc=$540
 .import binary "data/screen.raw"
 
