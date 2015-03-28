@@ -12,6 +12,9 @@ code:
 			lda #0
 			sta $d015
 			sta $d011
+			sta text_delay
+			sta page_pt
+			jsr reset_writer_pointers
 			jsr music.init
 		}
 
@@ -34,7 +37,7 @@ code:
 		:d011($00)		// Freshness
         jsr copyfppcode	// Freshness
 		jsr initscroll	// Freshness
-
+		jsr clear_text_screen
 		:wait_frame()
 
 		jsr start_timer	// Freshness
@@ -95,8 +98,9 @@ logo:
 .pc = $3680 "Elder's code"
 .import source "sideborder_pal.asm"
 .import source "bottom_irqs.asm"
-// Qua ci vai tu
-// fino a 3aff SICURO FRESH? prova a fillare fill $100,$ff da qui, compare sporcizia sotto al logo e siamo a $3898!
+.import source "text_writer.asm"
+.pc = $3a00  "end of zona franca elder"
+
 
 .pc = $3b00
 .pc = * "logo swinger"

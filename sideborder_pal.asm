@@ -18,12 +18,12 @@ stabilized_sideborder_routine:
         :decinc_brd(false)	// Ok, fin qua siamo dentro alla unrolled => non cambi nulla
 //------------------------
 
-        bne start	// 3
+		bne start	// 3
 
-       start:
+start:
 		  lda #bitmap_bg_colour
-          sta $d021
-       start_np:
+	      sta $d021
+start_np:
           ldx #$d8
           dec counter	// 5 ZP!!
           beq exit		// 2/3	OK, niente, tocca buttare via del tempo in attesa di arrivare alla linea che ci serve

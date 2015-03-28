@@ -29,32 +29,40 @@
 
 //.align $20
 lower_split_irq:
-		:open_irq()
+        sty reset_y
 
-		.fill $2,NOP
-		nop
+        asl $d019
+        bit $24
 
-		:d011($1b)
-		:d016($c8)
+        ldy #<plex_0_irq
+        sty $fffe
+        ldy #>plex_0_irq
+        sty $ffff
 
-		lda #0
-		sta $d021
+        ldy #$cf
+        sty $d012
 
-		ldy #$18
+        ldy #7
+        :wait()
+
+        ldy #$1b
+        sty $d011
+        ldy #$c8
+        sty $d016
+
+        ldy #0
+        sty $d021
+
+		ldy #$17
 		:wait()
 
-		lda #DARK_GRAY
-		sta $d021
+		ldy #DARK_GRAY
+		sty $d021
 
-		asl $d019
-
-		:set_irq(plex_0_irq)
-		:d012($cf)
-
-		:close_irq()
+        ldy reset_y
 		rti
 
-//.align $20
+//.align $10
 //Seconda riga di sprites (sotto ai menti)
 plex_0_irq:
 		:open_irq()
@@ -99,11 +107,6 @@ plex_1_irq:
 		inx
 		cpx #7
 		bne !-
-
-		/*
-		lda #$12 devo usare questo
-		sta screen_0+$03f9,x
-		*/
 		//fine cambio pt
 
 		//Spritoni grigi
@@ -244,6 +247,25 @@ msx_irq:
 
 		lda #2
 		sta sprrow
+
+
+        jsr write_char
+
+introend:
+		lda #0
+		bne !+
+		inc text_delay
+		lda text_delay
+		cmp #text_wait_delay
+		bne !+
+		lda #JSR_ABS
+		sta noline
+		lda #INX
+		sta storcaret
+		//jsr reset_writer_pointers
+		inc introend+1
+!:
+
 
 		jsr music.play
 

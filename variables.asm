@@ -10,7 +10,7 @@
 .const screen_0 = $0400
 .const screen_1 = $0000
 .const screen_0_d018 = $18
-.const screen_1_d018 = $8 
+.const screen_1_d018 = $8
 
 .const bottom_fake_charset = $2000 //solo 8 bytes per layer di colori sotto le facce
 
@@ -22,3 +22,15 @@
 .const stabilizer_irq_line = $74
 .const counter = $13
 .const sprrow = $14
+
+//text writer vars
+.const page_pt = $e3
+.const char_pt = $e6
+.const row_pt = $e2
+.const text_pt = $e8
+.const page_delay = $e9
+.const page_wt_amount = $3e //Quanto aspettare prima di flippare pagina
+
+.const text_wait_delay = $1f //Quanto aspettare prima di iniziare a scrivere la prima volta
+.const text_delay = $24
+.const newline_delay = $40

@@ -20,7 +20,7 @@
 .const	rst_sprite1		=	$120		// Top sprites
 .const	rst_sprite2		=	$30			// More sprites
 .const	rst_sprite3		=	$35			// More sprites
-.const	rst_next		=	$c2			// Next raster IRQ
+.const	rst_next		=	$c1			// Next raster IRQ
 
 // Zero page variables
 // *******************
@@ -30,9 +30,9 @@
 .const	hix			=	$c3			// Upper scroll position
 .const	movpos		=	$c4			// Current scroll index position
 .const	scrollcolor	=	$c5			// Logo color
-.const	ptr			=	$c6			// Misc 16 bit pointer 
-.const	ptr2		=	$c8			// Misc 16 bit pointer 
-.const	ptr3		=	$ca			// Misc 16 bit pointer 
+.const	ptr			=	$c6			// Misc 16 bit pointer
+.const	ptr2		=	$c8			// Misc 16 bit pointer
+.const	ptr3		=	$ca			// Misc 16 bit pointer
 .const	temp		=	$cc			// Misc 8 bit temporary data
 .const	temp2		=	$cd			// Misc 8 bit temporary data
 .const	dummy		=	$ce			// Dummy byte for timing
@@ -77,16 +77,16 @@
 }
 
 
-// FPP Precalc'd tables	
+// FPP Precalc'd tables
 // ********************
 
 // D018: create d018 list for next use
 .var	fpplines=List()
 .eval	fpplines.add(0,1,2,3,4,5,6,7,7,7,7,7,8,9,10,11,12,13,14,15)
 .var	d018values=List()
-.for(var i=0;i<39;i++)	
+.for(var i=0;i<39;i++)
 	.eval	d018values.add([[$f+fpplines.get(floor([i+1]/2))]&$f]+[16*[[floor([i+4]/21)*2+5]&$7]])
-	
+
 // D018: change gfx (even)
 .print "D018 table: "+toHexString(*)
 d018table:
@@ -139,12 +139,12 @@ movement:
 // **********
 savestuff:			// Sprites
 	lda #>b1sprite
-	ldx #>savesprite		
+	ldx #>savesprite
 	bne !+
-loadstuff:		
+loadstuff:
 	ldx #>b1sprite
-	lda #>savesprite			
-!:		
+	lda #>savesprite
+!:
 	ror direction	// Set/Clear carry according to data direction
 	sta ptr+1
 	stx ptr+3
@@ -154,7 +154,7 @@ loadstuff:
 	sty ptr
 	sty ptr+2
 	sty ptr+4
-	ldx #$04	
+	ldx #$04
 !:
 	lda (ptr),y
 	sta (ptr2),y
@@ -167,8 +167,8 @@ loadstuff:
 	inc ptr+5
 	dex
 	bne !-
-	rts		
-	
+	rts
+
 
 // Effect handler
 // **************
@@ -181,23 +181,23 @@ set_mdlirq:
 	lda #<irq_sprite1
 	sta $fffe
 	lda #>irq_sprite1
-	sta $ffff			
+	sta $ffff
 	rts
 
-	
+
 // Top sprite management
 // *********************
-irq_sprite1:	
-	pha	
+irq_sprite1:
+	pha
 	stx savex
-	ldx #$2f	
+	ldx #$2f
 i1loop:
 	lda sprite1tbl,x
 	sta $d000,x
 	cpx #$08
 	bcs !+
 	lda sprite1def,x
-	sta $07f8,x	
+	sta $07f8,x
 !:
 	dex
 	bpl i1loop
@@ -214,7 +214,7 @@ quitirq:
 // *********************
 irq_sprite2:
 	lsr $d019
-	pha	
+	pha
 	lda #rst_sprite3
 	sta $d012
 	lda #<irq_sprite3
@@ -222,11 +222,11 @@ irq_sprite2:
 	// Update coordinates
 	lda #$36
 	sta $d00b
-	sta $d00d		
+	sta $d00d
 	lda #$33
 	sta $d005
 	sta $d007
-	sta $d009		
+	sta $d009
 	lda #$41
 	sta $d001
 	sta $d003
@@ -235,13 +235,13 @@ irq_sprite2:
 	sta $d01d
 	sta $d017
 	lda #$62
-	sta $d010	
-	// Line 50	
+	sta $d010
+	// Line 50
 	lda lox
-	eor #[$c8^$e0]	
+	eor #[$c8^$e0]
 	sta $d00a
 	eor #[$e0^$58]
-	sta $d00c	
+	sta $d00c
 	lda scrollcolor
 	nop
 	sta $d02c
@@ -253,68 +253,68 @@ irq_sprite2:
 	sta $07fc
 	lda #def(b0sprite)+11
 	sta $07fd
-	pla	 	
+	pla
 	rti
-	
-	
+
+
 // *********************
 // Second sprite manager
 // *********************
-irq_sprite3:	
+irq_sprite3:
 	pha
 	sty savey
-	sec	
+	sec
 	lda #$2e
 	sbc $dc04
 	sta *+4
 	bpl *
-	.byte	LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,BIT_ZP,NOP		
+	.byte	LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,LDA_IMM,BIT_ZP,NOP
 	lda #$5e
 	ldy #def(b0sprite)+10
 	sta $d018-[def(b0sprite)+10],y
-	sta $dd00	
-	stx savex	
+	sta $dd00
+	stx savex
 	ldx lox
-	stx loxabs+1		// 4	
+	stx loxabs+1		// 4
 	sty $07fa
 	lda #def(b0sprite)+12
 	sta $07fb
 	lda #def(b0sprite)+13
 	sta $07fc
-	lda #def(b0sprite)+15	
+	lda #def(b0sprite)+15
 	sta $07fe
 	lda #$1f
-	sta $d01c		
+	sta $d01c
 	ldy #19				// 2
-	lda #$19			// 2	
+	lda #$19			// 2
 jmptest:
 	bne logo_start		// 4 Page cross
 
 
 // Copy sprite pointers
-// ********************	
+// ********************
 copydef:
 	ldx #$06
 cpdef:
 	ldy #$08
-!:	
+!:
 	lda $57f8,x
 	rol
 	rol spritedef+$00,x
-	rol $57f8,x	
+	rol $57f8,x
 	lda $5ff8,x
-	rol	
+	rol
 	rol spritedef+$07,x
 	rol $5ff8,x
 	lda $47f8,x
-	rol		
+	rol
 	rol spritedef+$0e,x
 	rol $47f8,x
 	dey
 	bne !-
 	dex
-	bpl cpdef	
-	rts	
+	bpl cpdef
+	rts
 
 
 .align	$0100
@@ -322,10 +322,10 @@ cpdef:
 // *************
 	skipper:
 		bne sprcol
-	logoloop_pos:	// Do FPP and plex sprites				
+	logoloop_pos:	// Do FPP and plex sprites
 		sta $d02d			// 4
 		lda scrollcolor		// 3
-		sta $d02c			// 4		
+		sta $d02c			// 4
 		lda d018table,y		// 4
 		sta $d018			// 4
 		txa					// 2
@@ -338,10 +338,10 @@ cpdef:
 	logo_start:
 		lsr $d016			// 6
 		sta $d011			// 4
-		stx $d016			// 4		
-		ldx plexport,y		// 4		
-		lda plexvalue,y		// 4	
-		sta $d000,x			// 5		
+		stx $d016			// 4
+		ldx plexport,y		// 4
+		lda plexvalue,y		// 4
+		sta $d000,x			// 5
 		cpy #$00			// 2 Special case for sprite definitions
 		bne skipper			// 3
 		sta $d018			// 4
@@ -349,19 +349,19 @@ cpdef:
 		lda scrollcolor		// 4
 		sta $d02d			// 4
 		lda #bgcolor		// 2
-		sta $d02c			// 4				
+		sta $d02c			// 4
 		lsr $d016			// 6
-		sta $d016			// 4		
+		sta $d016			// 4
 		dey					// 2
 		bpl logoloop_pos	// 3
-	
+
 	ldy #$93
 	sty $dd00
 	ldx #$07
 	// DMA delay
 	// *********
 	lda #$1e
-	sax $d011			
+	sax $d011
 	sta $d018
 	lda #$c3
 	sta $d01d
@@ -372,7 +372,7 @@ cpdef:
 	lda #$68
 	sta $d00c
 	lda #$d8
-	sta $d016		
+	sta $d016
 	lda #$3f
 	sta $d01c
 	lda #$72
@@ -384,12 +384,12 @@ cpdef:
 	lda #LIGHT_BLUE
 	sta $d02c
 	lda #ORANGE
-	sta $d02d	
+	sta $d02d
 	ldy #$2f
 !:
-	dey	
+	dey
 	bne !-
-	btmcrunch:					
+	btmcrunch:
 		inc $d011-7,x	// Line crunch
 		lda #$10		// W = 6+5*(ASL_No.-1) => 21
 	!:
@@ -398,11 +398,11 @@ cpdef:
 		cpy #$05
 		bcc wtskip
 		inc dummy
-	wtskip:	
+	wtskip:
 		cpy #12
 		beq !+
 		nop
-		iny		
+		iny
 		bcc btmcrunch
 !:
 	lda #$38+[[12+7]&7]
@@ -414,26 +414,26 @@ cpdef:
 	lda #>next_irq			// 2
 	sta $ffff				// 4
 	jsr bmpswitch
-	lsr $d019	
+	lsr $d019
 	cli
-	
+
 	inc movpos	// Next logo position
-	lda movpos	// Manage 2°/4° sector	
+	lda movpos	// Manage 2ï¿½/4ï¿½ sector
 	bit movpos
 	anc #$3f	// AND + clear carry
-	bvc !+	
+	bvc !+
 	eor #$3f
 	adc #$01	// Carry always cleared after this
-!:	
-	tay	
+!:
+	tay
 	lda movement,y
-	bit movpos	// Manage 3°/4° sector
+	bit movpos	// Manage 3ï¿½/4ï¿½ sector
 	bpl !+
 	eor #$ff
 	adc #$01
 !:
-	tax	
-	ldy #$02	
+	tax
+	ldy #$02
 !:
 	anc #$fe	// Carry cleared
 	ror
@@ -446,23 +446,23 @@ cpdef:
 	and #$07
 	ora #$c8
 	sta lox		// Save 3 LSb
-	
+
 	// Sideborder sprite copy
-	// **********************	
+	// **********************
 	alr #$06
 	tax
-	lda masks,x	
-	sta lftmask+1	
+	lda masks,x
+	sta lftmask+1
 	lda hix
 	adc #$13
-	alr #$3f	
-	ldy #>[logoswap+[14*32]]	
+	alr #$3f
+	ldy #>[logoswap+[14*32]]
 	bcc !+
 	ldy #>[logo+[14*32]]
 !:
-	sty ptr+1	
+	sty ptr+1
 	ldy #<[logoswap+[14*32]]
-	sty ptr		
+	sty ptr
 	tax
 	lda #$1f
 	sax sb0
@@ -477,29 +477,29 @@ cpdef:
 	inx
 	sax sb5
 	ldx #60
-	
-spcprloop:		
+
+spcprloop:
 	ldy sb5
 	lda (ptr),y
 	sta sbright-1,x
 	ldy sb2
 	lda (ptr),y
-	sta sbleft-1,x	
+	sta sbleft-1,x
 	ldy sb4
 	lda (ptr),y
 	sta sbright-2,x
 	ldy sb1
 	lda (ptr),y
-	sta sbleft-2,x	
+	sta sbleft-2,x
 	ldy sb3
 	lda (ptr),y
 	sta sbright-3,x
 	ldy sb0
 	lda (ptr),y
 lftmask:
-	and #$00	
+	and #$00
 	sta sbleft-3,x
-	
+
 	cpx #[10*3]
 	bcc contlogo
 	cpx #[14*3]
@@ -508,16 +508,16 @@ contlogo:
 	sec
 	lda ptr
 	sbc #$20
-	sta ptr	
+	sta ptr
 	adc #$01
 	and #$01
-	eor ptr+1	
+	eor ptr+1
 	sta ptr+1
-skiplogo:	
+skiplogo:
 	txa
 	axs #3
 	bne spcprloop
-	
+
 	// Charscreen copy
 	// ***************
 	lda hix
@@ -529,19 +529,19 @@ skiplogo:
 	ora #$40
 	sta fppcharscreen,x
 	dex
-	bpl !-	
-	ldy savey		
-	jmp quitirq		
-		
-		
-		
-		
-		
+	bpl !-
+	ldy savey
+	jmp quitirq
+
+
+
+
+
 // *********************
 // Scroll initialization
 // *********************
 
-initscroll:		
+initscroll:
 	clc
 	jsr savestuff		// Save RAM for bank 1 sprites
 	jsr buildfpp		// Build char FPP (and save RAM)
@@ -551,13 +551,13 @@ initscroll:
 
 	lda #>colorbase
 	sta ptr+1
-	ldx #$00		
+	ldx #$00
 	stx ptr				// Colorbase must be aligned
-	ldy #$00	
+	ldy #$00
 d8loop:
 	lda (ptr),y
-d82sta:	
-	sta $d801,x		
+d82sta:
+	sta $d801,x
 	lsr
 	lsr
 	lsr
@@ -570,36 +570,36 @@ d81sta:
 	bne d8skip
 	inc ptr+1
 d8skip:
-	inx	
 	inx
-	bne d8loop	
+	inx
+	bne d8loop
 	inc d81sta+2
 	inc d82sta+2
 	lda ptr+1
 	cmp #[[>colorbase]+2]
 	bne d8loop
 
-	
+
 // Prepare first line
-// ******************	
+// ******************
 	ldx #$3f
 	lda #$aa
-!:		
+!:
 	sta sprblock,x
 	sta sprblock0,x		// Used by Elder and me.
 	dex
-	bpl !-	
+	bpl !-
 	lda #$c8
-	sta lox		
-	
-	
+	sta lox
+
+
 // Copy logoswap
-// *************	
+// *************
 copylogo:
 	ldx #$20		// Create swapped nibbles table for sideborder sprites
 	ldy #$10
 swapsrc1:
-	lda logo-1,x	
+	lda logo-1,x
 	asl
 	asl
 	asl
@@ -607,12 +607,12 @@ swapsrc1:
 	sta temp2
 	lda #$1f
 	axs #[$100-1]
-swapsrc2:	
+swapsrc2:
 	lda logo-1,x
 	lsr
 	lsr
 	lsr
-	lsr	
+	lsr
 	ora temp2
 swapdst:
 	sta logoswap-1,x
@@ -632,20 +632,20 @@ swapdst:
 	bne swapsrc1
 	sty $7fff
 	jsr	copydef			// Copy sprite pointers
-	
+
 	lda #d800scr
 
 // Set scroll color
 // ****************
 setscrollcolor:
 	ldx #$27
-!:	
+!:
 	sta $d800,x
 	dex
 	bpl !-
-	sta scrollcolor	
-	rts	
-	
+	sta scrollcolor
+	rts
+
 
 // Build FPP logo
 // **************
@@ -653,13 +653,13 @@ buildfpp:
 	lda #<logofpp	// Prepare char definitions
 	sta ptr
 	lda #>logofpp
-	sta ptr+1		
+	sta ptr+1
 	lda #>savecfpp
-	sta ptr2+1		
-	ldy #$00	
+	sta ptr2+1
+	ldy #$00
 	sty ptr2		// Must be $100 aligned
 	ldx #$00
-rowloop:	
+rowloop:
 	lda logo,x		// Load "compressed" byte
 	sta temp2		// Store in temp
 doublechar:
@@ -671,21 +671,21 @@ bitloop:
 	plp
 	rol				// Stuff it twice
 	bcc bitloop		// Loop 4 times (1->4->10->40->C)
-	
-	bit direction	
-	bmi rlresume	
+
+	bit direction
+	bmi rlresume
 	pha
-	lda (ptr),y	
+	lda (ptr),y
 	sta (ptr2),y
-	pla	
+	pla
 	.byte BIT_ABS
 rlresume:
-	lda (ptr2),y	
+	lda (ptr2),y
 	sta (ptr),y
-	tya	
+	tya
 	adc #$07		// Carry always set => +8
 	tay
-	and #$08		// If (y&8) then 
+	and #$08		// If (y&8) then
 	bne doublechar	// we need to compute the low nibble of temp
 	inx				// Ok, next byte
 	bcc rowloop		// Till we need to change destination page
@@ -704,9 +704,9 @@ rlresume:
 !:
 	txa
 	and #$3f
-	bne !+			// Here Y = A = 0, Z Flag refer to X status	
+	bne !+			// Here Y = A = 0, Z Flag refer to X status
 	lda #$04
-!:		
+!:
 	and #$0f
 	adc ptr+1		// [ptr&3]==0 -> EBCM . [ptr&3]==1 -> normal char mode
 	sta ptr+1
@@ -717,19 +717,19 @@ rlresume:
 saveline6rnt:
 	ldx #$06
 	ldy #$40
-s6loop:	
-	lda saveline6-1,y	
+s6loop:
+	lda saveline6-1,y
 	bit direction
 	bmi s62
 s61:
 	lda $7a00,x
-	sta saveline6-1,y	
+	sta saveline6-1,y
 	lda #$00
 s62:
-	sta $7a00,x	
+	sta $7a00,x
 	dey
 	txa
-	axs #[$100-$8]	
+	axs #[$100-$8]
 	bcc s6loop
 	lda s61+2
 	eor #$01
@@ -739,12 +739,12 @@ s62:
 	bcs s6loop
 testjsr:				// Removable label (test purpose only)
 	rts
-	
-	
+
+
 // Restore old values
-// ******************	
+// ******************
 restorefppmem:
-	sec	
-	jsr loadstuff	
+	sec
+	jsr loadstuff
 	jsr copydef
-	jmp buildfpp	
+	jmp buildfpp
