@@ -5,7 +5,7 @@
 .const row_4 = screen_0+$28*23
 .const row_5 = screen_0+$28*24
 
-.const caret_on = 50 //[caret-mini_charset]/$8
+.const caret_on = 39 //[caret-mini_charset]/$8
 .const caret_off = $0
 
 clear_text_screen:
