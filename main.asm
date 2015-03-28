@@ -24,11 +24,8 @@ code:
 
 		lda #border_colour
 		sta $d020
-
-		lda #bottom_bg_colour
-		sta $d021
-
-		:bank_0()
+		//sta $d021
+		//:bank_0()
 
 		//jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
 		//jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800
@@ -50,13 +47,13 @@ code:
 		cli
 		jmp *
 
-.pc = * "functions"
-.import source "functions.asm"
+.pc = * "functions 2"
+.import source "functions_2.asm"
 
 .pc = $8600 "text"
 .import source "data/text.asm"
 
-.pc=* "End of elder's code"
+
 
 .pc=$0440
 .fill $40,$aa
@@ -98,9 +95,14 @@ logo:
 .pc = $3680 "Elder's code"
 .import source "sideborder_pal.asm"
 .import source "bottom_irqs.asm"
+//3900-3907 e 39ff
+.pc = * "text writer"
 .import source "text_writer.asm"
 .pc = $3a00  "end of zona franca elder"
 
+.pc = $3a20 "functions"
+.import source "functions.asm"
+.pc = $3a9f "end of functions area"
 
 .pc = $3b00
 .pc = * "logo swinger"

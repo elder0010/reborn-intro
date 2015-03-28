@@ -8,21 +8,7 @@
 .const caret_on = 39 //[caret-mini_charset]/$8
 .const caret_off = $0
 
-clear_text_screen:
-        lda #$0
-        ldx #17
-!:
-        sta row_0,x
-        sta row_1,x
-        sta row_2,x
-        sta row_3,x
-        sta row_4,x
-        sta row_5,x
 
-        dex
-        bpl !-
-
-        rts
 
 write_char:
 
@@ -71,7 +57,10 @@ pagdl:
         ldx #0
         stx page_pt
         stx printsw+1
-
+        jmp switchpg
+.pc = $3900 "fresh blank area"
+        .fill $8,$00
+.pc = $3908 "end of fresh blank area"
 switchpg:
         //tax
         lda text_lo,x
@@ -158,6 +147,22 @@ reset_writer_pointers:
         sta row_pt
         sta text_pt
         sta page_delay
+
+        rts
+
+clear_text_screen:
+        lda #$0
+        ldx #17
+!:
+        sta row_0,x
+        sta row_1,x
+        sta row_2,x
+        sta row_3,x
+        sta row_4,x
+        sta row_5,x
+
+        dex
+        bpl !-
 
         rts
 
