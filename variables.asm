@@ -30,8 +30,9 @@
 .const row_pt = $e2
 .const text_pt = $e8
 .const page_delay = $e9
-.const page_wt_amount = $3e //Quanto aspettare prima di flippare pagina
+.const page_wt_amount = $e0 //Quanto aspettare prima di flippare pagina
+.const cur_char = $32
 
-.const text_wait_delay = $1f //Quanto aspettare prima di iniziare a scrivere la prima volta
+.const text_wait_delay = $ef //Quanto aspettare prima di iniziare a scrivere la prima volta
 .const text_delay = $24
 .const newline_delay = $40

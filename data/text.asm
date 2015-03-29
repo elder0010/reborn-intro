@@ -4,23 +4,23 @@
 page_0:
 .text "onslaught is abc"
 .text "proud to present"
-.text "another intro[  "
+.text "another intro[".byte $ff
 .text "we did a remake".byte $1d
-.text "of the almighty "
+.text "of the almighty".byte $ff
 .text "legend intro"
 .byte 0
 
 //.align 108
 page_1:
-.text "howdy spicecake "
-.text "or droopface or "
-.text "whatever the    "
+.text "howdy spicecake".byte $ff
+.text "or droopface or".byte $ff
+.text "whatever the".byte $ff
 .text "name is[[["
 .byte 0
 
 //.align 108
 page_2:
-.text "elder is a      "
+.text "elder is a".byte $ff
 .text "mighty pirate".byte $1d
 .byte 0
 

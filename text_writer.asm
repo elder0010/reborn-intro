@@ -8,8 +8,6 @@
 .const caret_on = $36 //[caret-mini_charset]/$8
 .const caret_off = 0
 
-
-
 write_char:
 
         ldx row_pt
@@ -24,6 +22,7 @@ write_char:
         ldy text_pt
 curpage:
         lda page_0,y
+        sta cur_char
         bne !+
 //---------------------------
 //Attesa per la prox pagina
@@ -73,9 +72,15 @@ nonextpg:
         jmp noline
 //---------------------------
 !:
+        lda cur_char
+        cmp #$ff
+        bne !+
+        dex
+        jsr caret_blink
+        jmp next_line
+!:
 currow:
         sta row_0,x
-
         jsr caret_blink
 
         lda char_pt
@@ -87,6 +92,7 @@ next_line:
 
         lda #0
         sta char_pt
+        sta printsw+1 //reset cursor
         inc row_pt
         inc text_pt
 
@@ -102,16 +108,20 @@ endx:
         rts
 
 caret_blink:
-
+        lda cur_char
+        cmp #$ff
+        bne caretsw
+        lda #caret_off
+        jmp storcaret
 //-------------------
 //Caret blink
 caretsw:
         lda #0
         clc
         adc #1
-        and #$f
+        and #$1f
         sta caretsw+1
-        cmp #$8
+        cmp #$f
         bpl !+
         lda #caret_on
         jmp storcaret
