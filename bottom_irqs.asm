@@ -17,8 +17,8 @@
 //.align $20
 lower_split_irq:
 		pha
-        stx reset_x        
-		
+        stx reset_x
+
         ldx #<plex_0_irq
         stx $fffe
         ldx #>plex_0_irq
@@ -28,22 +28,22 @@ lower_split_irq:
         stx $d012
 
         ldx #8
-        :waitx()		
-        
+        :waitx()
+
 		ldx #$13
-		lda #$c8		
+		lda #$c8
         stx $d011
-        sta $d016        
-		sax $d021		
+        sta $d016
+		sax $d021
 
 		ldx #$17
 		:waitx()
 
 		ldx #$1b
 		lda #DARK_GRAY
-		sta $d021		
+		sta $d021
 		stx $d011
-        
+
 		ldx reset_x
 		asl $d019
 		pla
@@ -64,7 +64,7 @@ plex_0_irq:
 
 		:set_irq(plex_1_irq)
 		:d012(base_plex+offset_plex*1+2)
-		
+
 		ldx #screen_1_d018
 		jsr next_bottom_sprites
 
@@ -168,18 +168,37 @@ lower_border_irq:
 		//Spritoni grigi
 		lda #[sprblock0/$40]
 
-		sta screen_0+$03f8		
+		sta screen_0+$03f8
 		sta screen_0+$03fe
-		sta screen_0+$03ff
 
+		sta screen_0+$03ff
 
 		//Continuo del disegno
 		lda #[lower_border_sprites/$40]+3
 		sta screen_0+$03fa
+
 		lda #[lower_border_sprites/$40]+4
 		sta screen_0+$03fb
 
 		asl $d019
+
+/*
+appunto x la stabilizzazione
+dopo il busy wait di $d012 fai una cosa di questo genere:
+lda #$01
+ldx $dc04
+sta $c000,x
+poi fai partire, filla di 00 c000-c0ff
+e lascialo andare (warpa)
+poi checka in c000 dove t'ha scritto 1
+così sappiamo il jittering
+*/
+		dex
+		ldy #24
+		:wait()
+		bit $24
+		bit $24
+		stx $d020
 
 		:set_irq(msx_irq)
 
@@ -188,8 +207,6 @@ lower_border_irq:
 		//lda #$0f
 		sta $d005
 		sta $d007
-
-		:d016($d8)
 
 		:close_irq()
 		rti
@@ -205,17 +222,10 @@ msx_irq:
 		lda #screen_0_d018
 		sta $d018
 
-		/*
-		:set_irq(top_irq)
-
-		:d011($3b)
-		:d012($00)
-		*/
-
 		jsr set_mdlirq
 
-		lda #$ff
-		sta $d015
+	//	lda #$ff
+	//	sta $d015
 
 		lda #$23
 		sta $d001
@@ -227,7 +237,6 @@ msx_irq:
 
 		lda #2
 		sta sprrow
-
 
         jsr write_char
 
@@ -245,8 +254,6 @@ introend:
 		//jsr reset_writer_pointers
 		inc introend+1
 !:
-
-
 		jsr music.play
 
 		:close_irq()
