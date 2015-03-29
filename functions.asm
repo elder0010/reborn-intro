@@ -81,4 +81,19 @@ recolour_sprites:
         dex
         bpl !-
         rts
-		
+
+.align $0020		
+fixsid:
+		lda $15fa,y
+		cpx #$07
+		bne !+
+		cmp #$21
+		bne !+
+		pha
+		lda $13fb,x
+		cmp #$1d
+		pla
+		bcc !+
+		lda #$00
+!:
+		rts
