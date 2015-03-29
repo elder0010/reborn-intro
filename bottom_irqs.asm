@@ -168,7 +168,7 @@ lower_border_irq:
 		//Spritoni grigi
 		lda #[sprblock0/$40]
 
-		sta screen_0+$03f8
+		sta screen_0+$03f8		
 		sta screen_0+$03fe
 		sta screen_0+$03ff
 
