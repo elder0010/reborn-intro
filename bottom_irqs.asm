@@ -136,6 +136,8 @@ lower_border_irq:
 		lda #$18
 		sta $d000
 
+
+
 		ldx #0
 		stx $d025
 		stx $d010

@@ -583,7 +583,7 @@ d8skip:
 	ldx #$3f
 	lda #$aa
 !:
-	sta sprblock,x	
+	sta sprblock,x
 	dex
 	bpl !-
 	lda #$c8

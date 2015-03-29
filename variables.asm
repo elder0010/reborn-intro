@@ -25,14 +25,14 @@
 .const cptr = $16 // 4 bytes
 
 //text writer vars
-.const page_pt = $e3
-.const char_pt = $e6
-.const row_pt = $e2
-.const text_pt = $e8
+.const page_pt = $20
+.const char_pt = $21
+.const row_pt = $22
+.const text_pt = $23
 .const page_delay = $e9
 .const page_wt_amount = $e0 //Quanto aspettare prima di flippare pagina
-.const cur_char = $32
+.const cur_char = $24
 
 .const text_wait_delay = $ef //Quanto aspettare prima di iniziare a scrivere la prima volta
-.const text_delay = $24
-.const newline_delay = $40
+.const text_delay = $25
+.const newline_delay = $26
