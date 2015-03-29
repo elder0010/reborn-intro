@@ -230,17 +230,24 @@ msx_irq:
 	//	sta $d015
 
 		lda #$23
-		sta $d001
+		sta $d001		
 		sta $d00d
 		sta $d00f
+		sta $d003		
+		lda #$00
+		sta $d002
 
+		lda $d017
+		ora #$02
+		sta $d017
+	
 		lda #18
 		sta counter
 
 		lda #2
 		sta sprrow
-
-        jsr write_char
+		
+        jsr write_char		
 
 introend:
 		lda #0
@@ -257,6 +264,6 @@ introend:
 		inc introend+1
 !:
 		jsr music.play
-
 		:close_irq()
 		rti
+

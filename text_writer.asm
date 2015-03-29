@@ -57,9 +57,9 @@ pagdl:
         stx page_pt
         stx printsw+1
         jmp switchpg
-//.pc = $3900 "fresh blank area"
+.pc = $3900 "fresh blank area"
         .fill $8,$00
-//.pc = $3908 "end of fresh blank area"
+.pc = $3908 "end of fresh blank area"
 switchpg:
         //tax
         lda text_lo,x
@@ -160,6 +160,7 @@ reset_writer_pointers:
 
         rts
 
+.pc=$39a8
 clear_text_screen:
         lda #$0
         ldx #17

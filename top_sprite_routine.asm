@@ -119,7 +119,7 @@ spritedef:
 
 // VIC configuration at raster 0
 sprite1tbl:
-.byte	$d8,$17,$08,$17,$38,$1e,$68,$1e					// Sprites (0-3) coordinates
+.byte	$d8,$15,$08,$15,$38,$1e,$68,$1e					// Sprites (0-3) coordinates
 .byte	$80,$1e,$00,$09,$78,$09,$38,$60					// Sprites (4-7) coordinates
 .byte	$02,$18,rst_sprite2,$00,$00,$ff					// D010 - D015
 .byte	$c8,$03,$1e,$01,$01,$67,$ff,$03,$00,$00  		// D016 - D01F
@@ -227,7 +227,7 @@ irq_sprite2:
 	sta $d005
 	sta $d007
 	sta $d009
-	lda #$41
+	lda #$3f
 	sta $d001
 	sta $d003
 	// Update definitons
@@ -395,7 +395,7 @@ cpdef:
 	!:
 		asl
 		bcc !-
-		cpy #$05
+		cpy #$03
 		bcc wtskip
 		inc dummy
 	wtskip:
