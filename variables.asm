@@ -22,6 +22,7 @@
 .const stabilizer_irq_line = $74
 .const counter = $13
 .const sprrow = $14
+.const cptr = $16 // 4 bytes
 
 //text writer vars
 .const page_pt = $e3

@@ -5,8 +5,8 @@
 .const row_4 = screen_0+$28*23
 .const row_5 = screen_0+$28*24
 
-.const caret_on = 39 //[caret-mini_charset]/$8
-.const caret_off = $0
+.const caret_on = $36 //[caret-mini_charset]/$8
+.const caret_off = 0
 
 
 
@@ -58,9 +58,9 @@ pagdl:
         stx page_pt
         stx printsw+1
         jmp switchpg
-.pc = $3900 "fresh blank area"
+//.pc = $3900 "fresh blank area"
         .fill $8,$00
-.pc = $3908 "end of fresh blank area"
+//.pc = $3908 "end of fresh blank area"
 switchpg:
         //tax
         lda text_lo,x
@@ -166,13 +166,13 @@ clear_text_screen:
 
         rts
 
-.align 12
+//.align 12
 rows_lo:
 .byte <row_0+1,<row_1+1,<row_2+1,<row_3+1,<row_4+1,<row_5+1
 rows_hi:
 .byte >row_0+1,>row_1+1,>row_2+1,>row_3+1,>row_4+1,>row_5+1
 
-.align page_no*2
+//.align page_no*2
 text_lo:
 .byte <page_0,<page_1,<page_2
 

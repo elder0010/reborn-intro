@@ -1,50 +1,51 @@
 // Copy FPP code high memory (F700)
 copyfppcode:
-		ldx #$00
-     !:
-		.for(var i=0;i<5;i++) {
-			lda $3b00+i*$100,x
-        	sta freshcode+i*$100,x
-        }
-		lda #$00		
-		sta $3b00,x
-		sta $3c00,x
-		sta $3d00,x
-		sta $3e00,x
-		sta $3f00,x
-        lda $0600,x
-        sta $0200,x
-        lda $0700,x
-        sta $0300,x
-        dex
-        bne !-
-        rts
-
-createsprites:
-		ldx #$3f
-	!:
-		lda #$aa
-		sta sprblock0,x
-		lsr
-		sta sprspecial,x
-		dex
-		bpl !-
+		ldy #$00
+		sty cptr
+		sty cptr+2
+		lda #$3a
+		sta	cptr+1
+		lda #>freshcode
+		sta cptr+3
+!:
+		lda (cptr),y
+		sta (cptr+2),y
+		lda #$00
+		sta (cptr),y
+		lda $0600,y		// these are copied like 6 times (!!) but
+		sta $0200,y		// ... not a problem! :)
+		lda $0700,y
+		sta $0300,y
+		dey
+		bne !-
+		inc cptr+1
+		inc cptr+3
+		bne !-
 		rts
-		
-position_first_sprites_line:
-        lda #0
-        sta plex_ct
-        sta $d025
 
+
+position_first_sprites_line:
+		lda #0		
+        sta plex_ct
+		
         lda #ORANGE
         sta $d026
 
-        jsr next_bottom_sprites
+        jsr next_bottom_sprites+3
         jsr recolour_sprites
 
-        :point_next_sprites([bottom_sprites/$40],screen_0)
-        :point_next_sprites([bottom_sprites/$40]+7,screen_1)
-
+		ldx #$0
+		lda #[bottom_sprites/$40]
+!:
+		clc
+		sta screen_0+$03f9,x //sta screen_1+$03f9,x
+		adc #7
+		sta screen_1+$03f9,x //sta screen_1+$03f9,x		
+		adc #<[1-7]				
+		inx
+		cpx #7
+		bne !-
+		
         inc plex_ct
 
         lda #<[$b0+6*24]
@@ -61,32 +62,5 @@ position_first_sprites_line:
         lda #$e0
         sta $d010
 
-        lda #$ff
-        sta $d01c
-        sta $d015
-
         rts
 
-next_bottom_sprites:
-
-        //Sprites Y & PT
-        ldy plex_ct
-        lda bottom_sprites_y,y
-        sta $d003
-        sta $d005
-        sta $d007
-        sta $d009
-        sta $d00b
-        sta $d00d
-        sta $d00f
-        rts
-
-recolour_sprites:
-
-        ldx #7
-        lda #BROWN
-!:
-        sta $d028,x
-        dex
-        bpl !-
-        rts

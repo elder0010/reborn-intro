@@ -2,11 +2,9 @@
 .import source "macros.asm"
 .pc=music.location "Music" .fill music.size, music.getData(i)
 
-.const	sprblock0	=	$0100		// Filled block sprite
-.const	sprspecial	=	$2800		// Filled block sprite
-.const	freshcode	=	$fb00		// Fresh's code real address
+.const	freshcode	=	$fa00		// Fresh's code real address
 
-.pc = $8000 "code"
+.pc = $0440 "Main code"
 code:
 		sei
 		.if(PLAY_MUSIC){
@@ -33,10 +31,9 @@ code:
 
 		:d011($00)			// Freshness
         jsr copyfppcode		// Freshness
-		jsr initscroll		// Freshness
-		jsr createsprites	// Elder
+		jsr initscroll		// Freshness		
 		jsr clear_text_screen
-		//:wait_frame()
+		:wait_frame()		// Needed by next part
 
 		jsr start_timer	// Freshness		
 		:d011($3b)
@@ -47,20 +44,21 @@ code:
 		cli
 		jmp *
 
-.pc = * "functions 2"
+.pc = * "Functions 2"
 .import source "functions_2.asm"
 
-.pc = $8600 "text"
+// *SPAZIO* Qua abbiamo ancora circa 40 byte
+
+.pc = $8000 "Text"
 .import source "data/text.asm"
 
 
 
-.pc=$0440
 // $100 bytes free for code
-.pc=$540
+.pc=$540 "Screen LUT"
 .import binary "data/screen.raw"
 
-.pc = $0800 "sideborder sprites"	// Elder
+.pc = $0800 "Sideborder sprites"	// Elder
 sideborder_sprites:
 .import binary "data/sideborder_sprites.raw"
 
@@ -69,44 +67,51 @@ b0sprite:
 .import binary "data\top_sprites.prg"
 
 
-.pc = $0e00 "logo data"				// Fresh
+.pc = $0e00 "Logo data"				// Fresh
 logo:
 .import source "logoparser.asm"
 
-.pc = $2000 "charset"				// Elder
+.pc = $2000 "Charset"				// Elder
 .import binary "data/charset.raw"
 
-.pc = $21c0 "lower border sprites"	// Elder
+.pc = $21c0 "Lower border sprites"	// Elder
 lower_border_sprites:
 .import binary "data/lower_border_sprites.raw"
 
-.pc = $2300 "bottom sprites"		// Elder
+.pc = $2300 "Bottom sprites"		// Elder
 bottom_sprites:
 .import binary "data/sprit.raw"
 
 .pc = $2800 "D800 table"			// Fresh+Elder
 colour_ram:
 colorbase:
+sprspecial:							// Special sprite
+.fill $40,$55
+sprblock0:
+.fill $40,$aa						// Filled block sprite
 .import binary "data/d800_comp.raw"
 
-.pc = $2a00 "pixels"				// Elder+Fresh
+.pc = $2a00 "Pixels"				// Elder+Fresh
 .import binary "data/pixels.raw"
 
 .pc = $3680 "Elder's code"
 .import source "sideborder_pal.asm"
 .import source "bottom_irqs.asm"
-//3900-3907 e 39ff
-.pc = * "text writer"
+//3900-3907 e 39ff => Qua rivediamo alla fine per sistemare i bug del logo
+.pc = * "Text writer"
 .import source "text_writer.asm"
-.pc = $3a00  "end of zona franca elder"
+// *SPAZIO* Qua abbiamo ancora $70 bytes
 
-.pc = $3a20 "functions"
-.import source "functions.asm"
-.pc = $3a9f "end of functions area"
-
-.pc = $3b00
-.pc = * "logo swinger"
+.pc = $3a00  "Elder's functions"
 .pseudopc freshcode
+{
+.fill $40,0						// <-- Mandatory!!
+.import source "functions.asm"	// Max size $C0 
+// *SPAZIO* Qua abbiamo 34 byte
+}
+
+.pc = $3b00 "logo swinger"
+.pseudopc freshcode+$100
 {
 .import source "top_sprite_routine.asm"
 .import source "timer.asm"

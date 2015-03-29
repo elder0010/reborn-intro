@@ -56,3 +56,29 @@ position_sideborder_sprites:
 		lda #$ff
 		sta $d01c
 		rts
+		
+		
+next_bottom_sprites:
+        //Sprites Y & PT
+		stx $d018
+        ldy plex_ct
+        lda bottom_sprites_y,y
+        sta $d003
+        sta $d005
+        sta $d007
+        sta $d009
+        sta $d00b
+        sta $d00d
+        sta $d00f		
+        rts
+
+		
+recolour_sprites:
+        ldx #7
+        lda #BROWN
+!:
+        sta $d028,x
+        dex
+        bpl !-
+        rts
+		

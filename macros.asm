@@ -101,6 +101,13 @@ nmi:
 		bne !-
 }
 
+.macro waitx(){
+!:
+		dex
+		bne !-
+}
+
+
 .macro wait_y(y){
 		ldy #y
 !:

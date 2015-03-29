@@ -406,9 +406,9 @@ cpdef:
 		bcc btmcrunch
 !:
 	lda #$38+[[12+7]&7]
-	sta $d011
+	sta $d011-12,y
 	lda #rst_next			// 2
-	sta $d012				// 4
+	sta $d012-12,y			// 5
 	lda #<next_irq			// 2
 	sta $fffe				// 4
 	lda #>next_irq			// 2
@@ -564,8 +564,6 @@ d82sta:
 	lsr
 d81sta:
 	sta $d800,x
-	lda #$00
-	sta (ptr),y
 	iny
 	bne d8skip
 	inc ptr+1
@@ -585,8 +583,7 @@ d8skip:
 	ldx #$3f
 	lda #$aa
 !:
-	sta sprblock,x
-	sta sprblock0,x		// Used by Elder and me.
+	sta sprblock,x	
 	dex
 	bpl !-
 	lda #$c8

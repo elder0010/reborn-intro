@@ -1,6 +1,6 @@
 .const page_no = 3
 
-.align 108
+//.align 108
 page_0:
 .text "onslaught is abc"
 .text "proud to present"
@@ -10,7 +10,7 @@ page_0:
 .text "legend intro"
 .byte 0
 
-.align 108
+//.align 108
 page_1:
 .text "howdy spicecake "
 .text "or droopface or "
@@ -18,7 +18,7 @@ page_1:
 .text "name is[[["
 .byte 0
 
-.align 108
+//.align 108
 page_2:
 .text "elder is a      "
 .text "mighty pirate".byte $1d

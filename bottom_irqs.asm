@@ -1,16 +1,3 @@
-.macro point_next_sprites(base,screen){
-		ldx #0
-		lda #base //lda #[bottom_sprites/$40]+7
-!:
-		sta screen+$03f9,x //sta screen_1+$03f9,x
-		clc
-		adc #1
-
-		inx
-		cpx #7
-		bne !-
-}
-
 .macro point_next_sprites_lower_border(base,screen){
 		ldx #0
 		lda #base //lda #[bottom_sprites/$40]+7
@@ -29,40 +16,40 @@
 
 //.align $20
 lower_split_irq:
-        sty reset_y
+		pha
+        stx reset_x        
+		
+        ldx #<plex_0_irq
+        stx $fffe
+        ldx #>plex_0_irq
+        stx $ffff
 
-        asl $d019
-        bit $24
+        ldx #$cf
+        stx $d012
 
-        ldy #<plex_0_irq
-        sty $fffe
-        ldy #>plex_0_irq
-        sty $ffff
+        ldx #8
+        :waitx()		
+        
+		ldx #$13
+		lda #$c8		
+        stx $d011
+        sta $d016        
+		sax $d021		
 
-        ldy #$cf
-        sty $d012
+		ldx #$17
+		:waitx()
 
-        ldy #7
-        :wait()
-
-        ldy #$1b
-        sty $d011
-        ldy #$c8
-        sty $d016
-
-        ldy #0
-        sty $d021
-
-		ldy #$17
-		:wait()
-
-		ldy #DARK_GRAY
-		sty $d021
-
-        ldy reset_y
+		ldx #$1b
+		lda #DARK_GRAY
+		sta $d021		
+		stx $d011
+        
+		ldx reset_x
+		asl $d019
+		pla
 		rti
 
-//.align $10
+
 //Seconda riga di sprites (sotto ai menti)
 plex_0_irq:
 		:open_irq()
@@ -70,30 +57,24 @@ plex_0_irq:
 
 		ldy #2
 		:wait()
-		nop
-		nop
 
-		lda #screen_1_d018
-		sta $d018
-
+		ldx #screen_1_d018
 		jsr next_bottom_sprites
 		inc plex_ct
 
 		:set_irq(plex_1_irq)
 		:d012(base_plex+offset_plex*1+2)
-
+		
+		ldx #screen_1_d018
 		jsr next_bottom_sprites
 
 		:close_irq()
 		rti
 
-//.align $20
 plex_1_irq:
 		:open_irq()
 
-		//ldy #2
-		ldy #$01
-		:wait()
+		bit $ea
 
 		//:point_next_sprites([bottom_sprites/$40]+14,screen_0)
 		//fatto senza macro
@@ -141,7 +122,6 @@ plex_1_irq:
 		:close_irq()
 		rti
 
-.align $20
 lower_border_irq:
 		:open_irq()
 

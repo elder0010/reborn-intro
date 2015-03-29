@@ -1,7 +1,6 @@
 //.align $100
 stabilized_sideborder_routine:
-	jsr	position_sideborder_sprites
-	bit $fe
+	jsr	position_sideborder_sprites	
 
 .macro decinc_brd(debug){
     .if(debug){
