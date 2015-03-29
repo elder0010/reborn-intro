@@ -17,7 +17,7 @@
 
 // Switching rasters
 // *****************
-.const	rst_sprite1		=	$120		// Top sprites
+.const	rst_sprite1		=	$12c		// Top sprites
 .const	rst_sprite2		=	$30			// More sprites
 .const	rst_sprite3		=	$35			// More sprites
 .const	rst_next		=	$c1			// Next raster IRQ
