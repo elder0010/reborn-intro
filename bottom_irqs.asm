@@ -36,7 +36,7 @@ lower_split_irq:
         sta $d016
 		sax $d021
 
-		ldx #$17
+		ldx #$5
 		:waitx()
 
 		ldx #$1b
@@ -125,16 +125,16 @@ plex_1_irq:
 lower_border_irq:
 		:open_irq()
 
-		.fill $2,NOP
-		bit $24
+		.fill $3,NOP
 
-		lda #$18
-		sta $d000
 
 		lda #DARK_GRAY
 		sta $d027
 		sta $d02d
 		sta $d02e
+
+		lda #$18
+		sta $d000
 
 		ldx #0
 		stx $d025
