@@ -584,6 +584,7 @@ d8skip:
 	lda #$aa
 !:
 	sta sprblock,x
+	sta sprblock0,x
 	dex
 	bpl !-
 	lda #$c8

@@ -3,6 +3,9 @@
 .pc=music.location "Music" .fill music.size, music.getData(i)
 
 .const	freshcode	=	$fa00		// Fresh's code real address
+.const	sprblock0	=	$0100		// Reloc'ed sprite def
+.const	colour_ram 	= 	$2800
+.const	colorbase 	= 	$2800
 
 .pc = $0440 "Main code"
 code:
@@ -51,19 +54,15 @@ code:
 .pc = * "Functions 2"
 .import source "functions_2.asm"
 
-colortab:
-.byte	$0f,$0c,$04,$0b,$06,$00,$00,$06,$1b,$14,$1c,$13,$1d,$11,$11,$11,$11
-
-
-// *SPAZIO* Qua abbiamo ancora circa 40 byte
+// *SPAZIO* Qua abbiamo ancora 30 byte
 
 .pc = $8000 "Text"
 .import source "data/text.asm"
 
-
-// $100 bytes free for code
 .pc=$540 "Screen LUT"
 .import binary "data/screen.raw"
+colortab:
+.byte	$0f,$0c,$04,$0b,$06,$00,$00,$06,$8b,$84,$8c,$83,$8d,$81,$81,$81	// Used by fade
 
 .pc = $0800 "Sideborder sprites"	// Elder
 sideborder_sprites:
@@ -72,7 +71,6 @@ sideborder_sprites:
 .pc = $0a00 "Top sprites"			// Fresh
 b0sprite:
 .import binary "data\top_sprites.prg"
-
 
 .pc = $0e00 "Logo data"				// Fresh
 logo:
@@ -89,13 +87,10 @@ lower_border_sprites:
 bottom_sprites:
 .import binary "data/sprit.raw"
 
-.pc = $2800 "D800 table"			// Fresh+Elder
-colour_ram:
-colorbase:
-sprspecial:							// Special sprite
-.fill $40,$55
-sprblock0:
-.fill $40,$aa						// Filled block sprite
+.pc = * "Functions 3"
+.import source "function3.asm"		// Fresh+Elder
+
+.pc = $2880 "D800 table"			// Fresh+Elder
 .import binary "data/d800_comp.raw"
 
 .pc = $2a00 "Pixels"				// Elder+Fresh
@@ -103,50 +98,19 @@ sprblock0:
 
 .pc = $3680 "Elder's code"
 .import source "sideborder_pal.asm"
+.pc = * "Bottom IRQs"
 .import source "bottom_irqs.asm"
-//3900-3907 e 39ff => Qua rivediamo alla fine per sistemare i bug del logo
 .pc = * "Text writer"
 .import source "text_writer.asm"
-// *SPAZIO* Qua abbiamo ancora $70 bytes
 
-
-
-updatelogo:
-		ldx startlogo+1
-		beq ulfx
-		dex
-		stx startlogo+1
-		rts
-ulfx:
-		lda startlogo
-		bmi ulexit
-		adc #$00				
-		sta	startlogo	
-		lsr
-		tax		
-		lda colortab-$30,x		
-		jsr setscrollcolor		
-		lsr
-		lsr
-		lsr
-		lsr
-		tax
-		lda priortab,x		
-		sta sprite1tbl+$1b
-ulexit:	
-		rts
-					
-priortab:
-.byte	$00,$67
+// *SPAZIO* Qua abbiamo ancora 7 bytes
 
 .pc = $3a00  "Elder's functions"
 .pseudopc freshcode
 {
 .fill $40,0						// <-- Mandatory!!
 .import source "functions.asm"	// Max size $C0 
-// *SPAZIO* Qua abbiamo 34 byte
-
-
+// *SPAZIO* Qua abbiamo 44 byte
 }
 
 .pc = $3b00 "logo swinger"
