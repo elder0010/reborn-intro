@@ -36,3 +36,4 @@
 .const text_wait_delay = $ef //Quanto aspettare prima di iniziare a scrivere la prima volta
 .const text_delay = $25
 .const newline_delay = $26
+.const startlogo	=	$27

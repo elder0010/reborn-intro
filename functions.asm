@@ -82,6 +82,7 @@ recolour_sprites:
         bpl !-
         rts
 
+	
 .align $0020		
 fixsid:
 		lda $15fa,y
@@ -97,3 +98,4 @@ fixsid:
 		lda #$00
 !:
 		rts
+

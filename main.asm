@@ -7,6 +7,10 @@
 .pc = $0440 "Main code"
 code:
 		sei
+		lda #$da
+		sta startlogo+1
+		lda #$60
+		sta startlogo
 		.if(PLAY_MUSIC){
 			lda #0
 			sta $d015
@@ -47,11 +51,14 @@ code:
 .pc = * "Functions 2"
 .import source "functions_2.asm"
 
+colortab:
+.byte	$0f,$0c,$04,$0b,$06,$00,$00,$06,$1b,$14,$1c,$13,$1d,$11,$11,$11,$11
+
+
 // *SPAZIO* Qua abbiamo ancora circa 40 byte
 
 .pc = $8000 "Text"
 .import source "data/text.asm"
-
 
 
 // $100 bytes free for code
@@ -102,12 +109,44 @@ sprblock0:
 .import source "text_writer.asm"
 // *SPAZIO* Qua abbiamo ancora $70 bytes
 
+
+
+updatelogo:
+		ldx startlogo+1
+		beq ulfx
+		dex
+		stx startlogo+1
+		rts
+ulfx:
+		lda startlogo
+		bmi ulexit
+		adc #$00				
+		sta	startlogo	
+		lsr
+		tax		
+		lda colortab-$30,x		
+		jsr setscrollcolor		
+		lsr
+		lsr
+		lsr
+		lsr
+		tax
+		lda priortab,x		
+		sta sprite1tbl+$1b
+ulexit:	
+		rts
+					
+priortab:
+.byte	$00,$67
+
 .pc = $3a00  "Elder's functions"
 .pseudopc freshcode
 {
 .fill $40,0						// <-- Mandatory!!
 .import source "functions.asm"	// Max size $C0 
 // *SPAZIO* Qua abbiamo 34 byte
+
+
 }
 
 .pc = $3b00 "logo swinger"

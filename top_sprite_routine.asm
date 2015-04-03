@@ -47,7 +47,7 @@
 
 // Colors
 // ******
-.const	d800scr		=	WHITE
+.const	d800scr		=	LIGHT_GREY
 .const	bgcolor		=	LIGHT_GREY	// MUST Be >=8!!!
 
 // Pointers
@@ -122,7 +122,7 @@ sprite1tbl:
 .byte	$d8,$15,$08,$15,$38,$1e,$68,$1e					// Sprites (0-3) coordinates
 .byte	$80,$1e,$00,$09,$78,$09,$38,$60					// Sprites (4-7) coordinates
 .byte	$02,$18,rst_sprite2,$00,$00,$ff					// D010 - D015
-.byte	$c8,$03,$1e,$01,$01,$67,$ff,$03,$00,$00  		// D016 - D01F
+.byte	$c8,$03,$1e,$01,$01,$00,$ff,$03,$00,$00  		// D016 - D01F
 .byte	LIGHT_GREY,LIGHT_GREY,bgcolor,bgcolor,bgcolor	// Border/Background colors
 .byte	$f4,$fa											// Multicolor sprite colors
 .byte	$fb,$fb,$fe,$fe,$fe,0,$f1,GREY					// Sprite colors

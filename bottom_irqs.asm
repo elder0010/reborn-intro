@@ -247,8 +247,8 @@ msx_irq:
 		lda #2
 		sta sprrow
 		
+		jsr updatelogo
         jsr write_char		
-
 introend:
 		lda #0
 		bne !+
