@@ -41,7 +41,7 @@ code:
 		jsr start_timer		// Freshness
 		:d011($7b)			// Illegal mode
 		:d012($f9)
-		:set_irq(msx_irq)
+		:set_irq(lower_border_irq)
 		//jsr restorefppmem
 
 		cli

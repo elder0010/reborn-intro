@@ -137,8 +137,8 @@ lower_border_irq:
 		ldx #0
 		stx $d025
 		stx $d010
-
-		lda #$13
+fixlobo:
+		lda #$f3
 		sta $d011
 
 		//-------------------------
@@ -199,7 +199,7 @@ così sappiamo il jittering
 */
 		:set_irq(msx_irq)
 
-		:d011($9b)
+		//:d011($9b)
 		:d012($0f)
 		//lda #$0f
 		sta $d005
@@ -263,6 +263,10 @@ halfdl:
 		//jsr reset_writer_pointers
 		inc introend+1
 !:
-		jsr music.play
+		jsr music.play		
+		lda #$18|[[1]*$80]
+		sta fix1stframe+1		
+		lda #$93
+		sta fixlobo+1
 		:close_irq()
 		rti

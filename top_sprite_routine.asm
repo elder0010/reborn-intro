@@ -176,7 +176,8 @@ loadstuff:
 set_mdlirq:
 	lda #<rst_sprite1
 	sta $d012
-	lda #$18|[[>rst_sprite1]*$80]
+fix1stframe:
+	lda #$78|[[>rst_sprite1]*$80]
 	sta $d011
 	lda #<irq_sprite1
 	sta $fffe
