@@ -19,16 +19,16 @@ copyfppcode:
 		bne !-
 		rts
 
-// Copy LUT 1 on LUT 0 (only pages 2 and 3) 		
+// Copy LUT 1 on LUT 0 (only pages 2 and 3)
 copylut:
 		ldy #$00
 	!:
 		lda $0600,y
 		sta $0200,y
 		lda $0700,y
-		sta $0300,y				
+		sta $0300,y
 		dey
-		bne !-	
+		bne !-
 		lda #$80
 		ldy #$3f
 	!:
@@ -39,9 +39,9 @@ copylut:
 
 
 position_first_sprites_line:
-		lda #0		
+		lda #0
         sta plex_ct
-		
+
         lda #ORANGE
         sta $d026
 
@@ -54,12 +54,12 @@ position_first_sprites_line:
 		clc
 		sta screen_0+$03f9,x //sta screen_1+$03f9,x
 		adc #7
-		sta screen_1+$03f9,x //sta screen_1+$03f9,x		
-		adc #<[1-7]				
+		sta screen_1+$03f9,x //sta screen_1+$03f9,x
+		adc #<[1-7]
 		inx
 		cpx #7
 		bne !-
-		
+
         inc plex_ct
 
         lda #<[$b0+6*24]

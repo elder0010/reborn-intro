@@ -148,6 +148,7 @@ printsw:
         inc char_pt
         inc text_pt
 !:
+        jsr check_fire_space    //dopo che il testo inizia ad essere printato si può quittare l'intro
         rts
 
 reset_writer_pointers:
@@ -173,6 +174,18 @@ clear_text_screen:
 
         dex
         bpl !-
+        rts
+
+check_fire_space:
+        lda $dc01
+        and $dc00
+        and #$10
+        bne !+
+        lda #$37
+        sta $01
+.pc = * "press space jsr target"
+        jsr $fce2
+!:
         rts
 
 //.align 12

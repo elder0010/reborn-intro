@@ -33,7 +33,7 @@
 .const page_wt_amount = $e0 //Quanto aspettare prima di flippare pagina
 .const cur_char = $24
 
-.const text_wait_delay = $d3 //Quanto aspettare prima di iniziare a scrivere la prima volta (questo delay viene moltiplicato * 2 nel codice)
+.const text_wait_delay = $d0 //Quanto aspettare prima di iniziare a scrivere la prima volta (questo delay viene moltiplicato * 2 nel codice)
 .const text_delay = $25
 .const newline_delay = $26
 .const startlogo	=	$27

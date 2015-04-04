@@ -211,9 +211,7 @@ così sappiamo il jittering
 //.align $20
 msx_irq:
 		:open_irq()
-
 		asl $d019
-
 		cli
 
 		lda #screen_0_d018
@@ -221,8 +219,8 @@ msx_irq:
 
 		jsr set_mdlirq
 
-	//	lda #$ff
-	//	sta $d015
+		lda #$ff
+		sta $d015
 
 		lda #$23
 		sta $d001
@@ -263,9 +261,10 @@ halfdl:
 		//jsr reset_writer_pointers
 		inc introend+1
 !:
-		jsr music.play		
+
+		jsr music.play
 		lda #$18|[[1]*$80]
-		sta fix1stframe+1		
+		sta fix1stframe+1
 		lda #$93
 		sta fixlobo+1
 		:close_irq()

@@ -12,15 +12,15 @@ ulexit:
 ulfx:
 		lda startlogo
 		bmi ulexit
-		adc #$00				
-		sta	startlogo	
+		adc #$00
+		sta	startlogo
 		lsr
-		tax		
-		lda colortab-$31,x		
-		jmp setscrollcolor			
+		tax
+		lda colortab-$31,x
+		jmp setscrollcolor
 
 // Recolour sprites
-// ****************		
+// ****************
 recolour_sprites:
         ldx #7
         lda #BROWN
@@ -43,5 +43,4 @@ fixsid:
 		bne !+
 		lda #$00
 !:
-		rts		
-		
+		rts
