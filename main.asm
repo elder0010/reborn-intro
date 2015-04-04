@@ -60,7 +60,7 @@ code:
 }
 
 colortab:
-.byte	fade(0,LIGHT_BLUE),fade(0,LIGHT_BLUE),fade(0,PURPLE),fade(0,DARK_GREY),fade(0,BLUE),fade(0,BLACK),fade(0,BLACK),fade(0,BLUE)
+.byte	fade(1,LIGHT_BLUE),fade(1,LIGHT_BLUE),fade(1,PURPLE),fade(1,DARK_GREY),fade(1,BLUE),fade(1,BLACK),fade(1,BLACK),fade(1,BLUE)
 .byte	fade(1,DARK_GREY),fade(1,PURPLE),fade(1,GREY),fade(1,CYAN),fade(1,LIGHT_GREEN),fade(1,WHITE),fade(1,WHITE),fade(1,WHITE)
 
 .pc = $0800 "Sideborder sprites"	// Elder
