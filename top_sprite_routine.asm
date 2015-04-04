@@ -551,9 +551,10 @@ initscroll:
 
 	lda #>colorbase
 	sta ptr+1
-	ldx #$00
-	stx ptr				// Colorbase must be aligned
-	ldy #$00
+	ldy #<colorbase	
+	ldx #$00	
+	stx ptr
+	//ldy #$00
 d8loop:
 	lda (ptr),y
 d82sta:
@@ -635,16 +636,32 @@ swapdst:
 
 // Set scroll color
 // ****************
+// A: pxxxcccc
+//    cccc: color
+//    p: sprite priority
 setscrollcolor:
-	ldx #$27
+	ldx #$28
 !:
-	sta $d800,x
+	sta $d800-1,x
 	dex
-	bpl !-
-	sta scrollcolor
+	bne !-
+	sta scrollcolor	
+	asl
+	bcc !+
+	ldx #$67
+!:
+	stx sprite1tbl+$1b	
 	rts
 
-
+	
+// Restore old values
+// ******************
+restorefppmem:
+	sec
+	jsr loadstuff
+	jsr copydef	
+	
+	
 // Build FPP logo
 // **************
 buildfpp:
@@ -738,11 +755,3 @@ s62:
 testjsr:				// Removable label (test purpose only)
 	rts
 
-
-// Restore old values
-// ******************
-restorefppmem:
-	sec
-	jsr loadstuff
-	jsr copydef
-	jmp buildfpp

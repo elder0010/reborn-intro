@@ -12,14 +12,22 @@ copyfppcode:
 		sta (cptr+2),y
 		lda #$00
 		sta (cptr),y
-		lda $0600,y		// these are copied like 6 times (!!) but
-		sta $0200,y		// ... not a problem! :)
-		lda $0700,y
-		sta $0300,y
 		dey
 		bne !-
 		inc cptr+1
 		inc cptr+3
+		bne !-
+		rts
+
+// Copy LUT 1 on LUT 0 (only pages 2 and 3) 		
+copylut:
+		ldy #$00
+	!:
+		lda $0600,y
+		sta $0200,y
+		lda $0700,y
+		sta $0300,y
+		dey
 		bne !-
 		rts
 

@@ -4,8 +4,11 @@
 
 .const	freshcode	=	$fa00		// Fresh's code real address
 .const	sprblock0	=	$0100		// Reloc'ed sprite def
-.const	colour_ram 	= 	$2800
-.const	colorbase 	= 	$2800
+.const	colour_ram 	= 	$0240
+.const	colorbase 	= 	$0240
+
+.pc = $02C0 "D800 table"			// Fresh+Elder
+.import binary "data/d800_comp.raw"
 
 .pc = $0440 "Main code"
 code:
@@ -29,14 +32,14 @@ code:
 		:turn_off_cia_turn_on_raster_irq()
 		//:kill_nmi()
 
-		//:d011($00)			// Freshness - already 0
-        jsr copyfppcode		// Freshness
+		jsr copyfppcode		// Freshness
 		jsr initscroll		// Freshness
+		jsr copylut			// Freshness
 		jsr clear_text_screen
 		:wait_frame()		// Needed by next part
 
-		jsr start_timer	// Freshness
-		//:d011($3b)
+		jsr start_timer		// Freshness
+		:d011($7b)			// Illegal mode
 		:d012($f9)
 		:set_irq(msx_irq)
 		//jsr restorefppmem
@@ -47,15 +50,18 @@ code:
 .pc = * "Functions 2"
 .import source "functions_2.asm"
 
-// *SPAZIO* Qua abbiamo ancora 30 byte
-
-.pc = $4400 "Text"
-.import source "data/text.asm"
+// *SPAZIO* Qua abbiamo ancora 41 byte
 
 .pc=$540 "Screen LUT"
 .import binary "data/screen.raw"
+
+.function fade(priority,color) {
+	.return floor(<[[priority*$80]+[color&$f]])
+}
+
 colortab:
-.byte	$0e,$0e,$04,$0b,$06,$00,$00,$06,$8b,$84,$8c,$83,$8d,$81,$81,$81	// Used by fade
+.byte	fade(0,LIGHT_BLUE),fade(0,LIGHT_BLUE),fade(0,PURPLE),fade(0,DARK_GREY),fade(0,BLUE),fade(0,BLACK),fade(0,BLACK),fade(0,BLUE)
+.byte	fade(1,DARK_GREY),fade(1,PURPLE),fade(1,GREY),fade(1,CYAN),fade(1,LIGHT_GREEN),fade(1,WHITE),fade(1,WHITE),fade(1,WHITE)
 
 .pc = $0800 "Sideborder sprites"	// Elder
 sideborder_sprites:
@@ -81,10 +87,10 @@ bottom_sprites:
 .import binary "data/sprit.raw"
 
 .pc = * "Functions 3"
-.import source "function3.asm"		// Fresh+Elder
+.import source "functions_3.asm"	// Fresh+Elder
 
-.pc = $2880 "D800 table"			// Fresh+Elder
-.import binary "data/d800_comp.raw"
+.pc = * "Text"
+.import source "data/text.asm"		// Max $18A bytes
 
 .pc = $2a00 "Pixels"				// Elder+Fresh
 .import binary "data/pixels.raw"
@@ -102,7 +108,7 @@ bottom_sprites:
 .pseudopc freshcode
 {
 .fill $40,0						// <-- Mandatory!!
-.import source "functions.asm"	// Max size $C0
+.import source "functions_1.asm"	// Max size $C0
 // *SPAZIO* Qua abbiamo 44 byte
 }
 
