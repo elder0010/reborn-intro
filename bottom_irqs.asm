@@ -49,7 +49,6 @@ lower_split_irq:
 		pla
 		rti
 
-
 //Seconda riga di sprites (sotto ai menti)
 plex_0_irq:
 		:open_irq()
@@ -127,7 +126,6 @@ lower_border_irq:
 
 		.fill $3,NOP
 
-
 		lda #DARK_GRAY
 		sta $d027
 		sta $d02d
@@ -135,8 +133,6 @@ lower_border_irq:
 
 		lda #$18
 		sta $d000
-
-
 
 		ldx #0
 		stx $d025
@@ -183,7 +179,6 @@ lower_border_irq:
 		sta screen_0+$03fb
 
 		asl $d019
-
 /*
 appunto x la stabilizzazione
 dopo il busy wait di $d012 fai una cosa di questo genere:
@@ -194,14 +189,14 @@ poi fai partire, filla di 00 c000-c0ff
 e lascialo andare (warpa)
 poi checka in c000 dove t'ha scritto 1
 così sappiamo il jittering
-*/
+
 		dex
 		ldy #24
 		:wait()
 		bit $24
 		bit $24
 		stx $d020
-
+*/
 		:set_irq(msx_irq)
 
 		:d011($9b)
@@ -230,28 +225,33 @@ msx_irq:
 	//	sta $d015
 
 		lda #$23
-		sta $d001		
+		sta $d001
 		sta $d00d
 		sta $d00f
-		sta $d003		
+		sta $d003
 		lda #$00
 		sta $d002
 
 		lda $d017
 		ora #$02
 		sta $d017
-	
+
 		lda #18
 		sta counter
 
 		lda #2
 		sta sprrow
-		
+
 		jsr updatelogo
-        jsr write_char		
+        jsr write_char
 introend:
 		lda #0
 		bne !+
+halfdl:
+		lda #0
+		eor #$ff
+		sta halfdl+1
+		beq !+
 		inc text_delay
 		lda text_delay
 		cmp #text_wait_delay
@@ -266,4 +266,3 @@ introend:
 		jsr music.play
 		:close_irq()
 		rti
-

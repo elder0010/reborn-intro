@@ -2,7 +2,7 @@
 
 //.align 108
 page_0:
-.text "onslaught is abc"
+.text "onslaught is".byte $ff
 .text "proud to present"
 .text "another intro[".byte $ff
 .text "we did a remake".byte $1d
@@ -21,7 +21,9 @@ page_1:
 //.align 108
 page_2:
 .text "elder is a".byte $ff
-.text "mighty pirate".byte $1d
+.text "mighty pirate".byte $1d.byte$ff
+.text "and the intro".byte $ff
+.text "looks finished".byte $1d
 .byte 0
 
 

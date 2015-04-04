@@ -77,7 +77,6 @@
 		lda #<nmi sta $fffa
 		lda #>nmi sta $fffb
 		jmp !+
-
 nmi:
 		rti
 !:

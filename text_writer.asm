@@ -9,7 +9,6 @@
 .const caret_off = 0
 
 write_char:
-
         ldx row_pt
         lda rows_lo,x
         sta currow+1
@@ -174,7 +173,6 @@ clear_text_screen:
 
         dex
         bpl !-
-
         rts
 
 //.align 12

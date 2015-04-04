@@ -18,6 +18,7 @@ code:
 			lda #0
 			sta $d015
 			sta $d011
+			sta $d020
 			sta text_delay
 			sta page_pt
 			jsr reset_writer_pointers
@@ -26,28 +27,20 @@ code:
 
 		:kernal_off()
 		:turn_off_cia_turn_on_raster_irq()
-		:kill_nmi()
+		//:kill_nmi()
 
-		lda #border_colour
-		sta $d020
-		//sta $d021
-		//:bank_0()
-
-		//jsr prepare_chars_under_sprites //da chiamare dopo copy_screen_data o rompe i dati
-		//jsr fill_text_color_zone //Questo va rimosso quando avremo sistemato con fresh $d800		
-
-		:d011($00)			// Freshness
+		//:d011($00)			// Freshness - already 0
         jsr copyfppcode		// Freshness
-		jsr initscroll		// Freshness		
+		jsr initscroll		// Freshness
 		jsr clear_text_screen
 		:wait_frame()		// Needed by next part
 
-		jsr start_timer	// Freshness		
-		:d011($3b)
+		jsr start_timer	// Freshness
+		//:d011($3b)
 		:d012($f9)
 		:set_irq(msx_irq)
 		//jsr restorefppmem
-		//	lsr $d019
+
 		cli
 		jmp *
 
@@ -56,13 +49,13 @@ code:
 
 // *SPAZIO* Qua abbiamo ancora 30 byte
 
-.pc = $8000 "Text"
+.pc = $4400 "Text"
 .import source "data/text.asm"
 
 .pc=$540 "Screen LUT"
 .import binary "data/screen.raw"
 colortab:
-.byte	$0f,$0c,$04,$0b,$06,$00,$00,$06,$8b,$84,$8c,$83,$8d,$81,$81,$81	// Used by fade
+.byte	$0e,$0e,$04,$0b,$06,$00,$00,$06,$8b,$84,$8c,$83,$8d,$81,$81,$81	// Used by fade
 
 .pc = $0800 "Sideborder sprites"	// Elder
 sideborder_sprites:
@@ -109,7 +102,7 @@ bottom_sprites:
 .pseudopc freshcode
 {
 .fill $40,0						// <-- Mandatory!!
-.import source "functions.asm"	// Max size $C0 
+.import source "functions.asm"	// Max size $C0
 // *SPAZIO* Qua abbiamo 44 byte
 }
 
