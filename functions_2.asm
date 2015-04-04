@@ -26,9 +26,15 @@ copylut:
 		lda $0600,y
 		sta $0200,y
 		lda $0700,y
-		sta $0300,y
+		sta $0300,y				
 		dey
-		bne !-
+		bne !-	
+		lda #$80
+		ldy #$3f
+	!:
+		sta $400,y
+		dey
+		bpl !-
 		rts
 
 
