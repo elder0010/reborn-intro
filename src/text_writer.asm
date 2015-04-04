@@ -5,34 +5,10 @@
 .const row_4 = screen_0+$28*23
 .const row_5 = screen_0+$28*24
 
-.print toHexString(row_0+16)
-.print toHexString(row_1+16)
-.print toHexString(row_2+16)
-.print toHexString(row_3+16)
-.print toHexString(row_4+16)
-.print toHexString(row_5+16)
-
-.const caret_on = [caret-mini_charset]/$8
-.const caret_off = $0
-
-clear_text_screen:
-        lda #$0
-        ldx #17
-!:
-        sta row_0,x
-        sta row_1,x
-        sta row_2,x
-        sta row_3,x
-        sta row_4,x
-        sta row_5,x
-
-        dex
-        bpl !-
-
-        rts
+.const caret_on = $36 //[caret-mini_charset]/$8
+.const caret_off = 0
 
 write_char:
-
         ldx row_pt
         lda rows_lo,x
         sta currow+1
@@ -45,6 +21,7 @@ write_char:
         ldy text_pt
 curpage:
         lda page_0,y
+        sta cur_char
         bne !+
 //---------------------------
 //Attesa per la prox pagina
@@ -78,7 +55,10 @@ pagdl:
         ldx #0
         stx page_pt
         stx printsw+1
-
+        jmp switchpg
+.pc = $3900 "fresh blank area"
+        .fill $8,$00
+.pc = $3908 "end of fresh blank area"
 switchpg:
         //tax
         lda text_lo,x
@@ -91,9 +71,15 @@ nonextpg:
         jmp noline
 //---------------------------
 !:
+        lda cur_char
+        cmp #$ff
+        bne !+
+        dex
+        jsr caret_blink
+        jmp next_line
+!:
 currow:
         sta row_0,x
-
         jsr caret_blink
 
         lda char_pt
@@ -105,6 +91,7 @@ next_line:
 
         lda #0
         sta char_pt
+        sta printsw+1 //reset cursor
         inc row_pt
         inc text_pt
 
@@ -120,16 +107,20 @@ endx:
         rts
 
 caret_blink:
-
+        lda cur_char
+        cmp #$ff
+        bne caretsw
+        lda #caret_off
+        jmp storcaret
 //-------------------
 //Caret blink
 caretsw:
         lda #0
         clc
         adc #1
-        and #$f
+        and #$1f
         sta caretsw+1
-        cmp #$8
+        cmp #$f
         bpl !+
         lda #caret_on
         jmp storcaret
@@ -157,6 +148,7 @@ printsw:
         inc char_pt
         inc text_pt
 !:
+        jsr check_fire_space    //dopo che il testo inizia ad essere printato si può quittare l'intro
         rts
 
 reset_writer_pointers:
@@ -168,13 +160,41 @@ reset_writer_pointers:
 
         rts
 
-.align 12
+.pc=$39a8
+clear_text_screen:
+        lda #$0
+        ldx #17
+!:
+        sta row_0,x
+        sta row_1,x
+        sta row_2,x
+        sta row_3,x
+        sta row_4,x
+        sta row_5,x
+
+        dex
+        bpl !-
+        rts
+
+check_fire_space:
+        lda $dc01
+        and $dc00
+        and #$10
+        bne !+
+        lda #$37
+        sta $01
+.pc = * "press space jsr target"
+        jsr $fce2
+!:
+        rts
+
+//.align 12
 rows_lo:
 .byte <row_0+1,<row_1+1,<row_2+1,<row_3+1,<row_4+1,<row_5+1
 rows_hi:
 .byte >row_0+1,>row_1+1,>row_2+1,>row_3+1,>row_4+1,>row_5+1
 
-.align page_no*2
+//.align page_no*2
 text_lo:
 .byte <page_0,<page_1,<page_2
 

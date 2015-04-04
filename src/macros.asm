@@ -77,7 +77,6 @@
 		lda #<nmi sta $fffa
 		lda #>nmi sta $fffb
 		jmp !+
-
 nmi:
 		rti
 !:
@@ -100,6 +99,13 @@ nmi:
 		dey
 		bne !-
 }
+
+.macro waitx(){
+!:
+		dex
+		bne !-
+}
+
 
 .macro wait_y(y){
 		ldy #y
@@ -201,3 +207,4 @@ nmi:
 .macro get_d018_charset(screen_0,chrs){
 	.byte [[[screen_0 & $3fff] / $0400] << 4] + [[[chrs & $3fff] / $0800] << 1]
 }
+

@@ -1,50 +1,6 @@
-.align $100
-stabilizer_irq_pal:
-        sta reset_a
-        stx reset_x
-        sty reset_y
-
-        lda #$3b
-        sta $d011
-
-        lda #<stabilized_irq
-        sta $fffe
-
-        inc $d012
-
-        asl $d019
-        tsx
-
-        cli
-
-        .for(var n=0;n<12;n++){
-            nop
-        }
-
-        brk
-
-.pc = * "stabilized irq pal"
-stabilized_irq:
-        txs
-        ldx #$8
-!:
-        dex
-        bne !-
-
-        bit $ea
-        nop
-
-        lda #stabilizer_irq_line+1
-        cmp $d012
-        beq !+
-!:
-
-        ldy #7
-        :wait()
-        bit $24
-        bit $24
-        nop
-        nop
+//.align $100
+stabilized_sideborder_routine:
+	jsr	position_sideborder_sprites
 
 .macro decinc_brd(debug){
     .if(debug){
@@ -61,27 +17,23 @@ stabilized_irq:
         :decinc_brd(false)	// Ok, fin qua siamo dentro alla unrolled => non cambi nulla
 //------------------------
 
-        bne start	// 3
+		bne start	// 3
 
-       start:
+start:
 		  lda #bitmap_bg_colour
-          sta $d021
-       start_np:
-          nop
-
-          //.fill 4,NOP	// 14
-          cmp (0,x)
-
+	      sta $d021
+start_np:
           ldx #$d8
-
           dec counter	// 5 ZP!!
           beq exit		// 2/3	OK, niente, tocca buttare via del tempo in attesa di arrivare alla linea che ci serve
 						// Guarda, facciamo così per buttarne via meno, o quanto meno per raggruppare il tempo buttato. Ok?
                         // Ora in exit prima di aprire il bordo dobbiamo attendere: 2+4+2+2+4+2(-1 perchè il branch costa un ciclo) =>15
-
-          lda #$8b			//2
-          sta $d009-$d8,x	//5 <- ecco il plex di y  (YEP)
-
+		  tya
+		  and #06
+		  tax
+		  lda #$8b
+		  sta $d009,x
+		  ldx #$d8
           dey 			// 2
           beq badline	// 2/3   O BMI qua
 
@@ -112,10 +64,13 @@ badline: // Qua gestiamo la badline normale (non plexante)
         // mancano un paio di linee normali?? si! ma questi non sono 8, si ma adesso siamo allineati alla bad
         // adesso diventa più semplice ok
 exit:
+		pha					// 3
+		pla					// 4
+		nop					// 2
 		dec sprrow			// 5 (ZP) - sprrow inizializzato a 2 prima del sideborder
         beq !+				// 2/3
-        lda #18				// 2 Questo valore va tarato,
-        sta.a counter		// 4 cosè sta roba sta.a !? counter è ZP ma a noi serve waitare 4 per avere un nop dopo
+        lda #17				// 2 Questo valore va tarato,
+        sta counter			// 3 cosè sta roba sta.a !? counter è ZP ma a noi serve waitare 4 per avere un nop dopo
 // Vai!
         lda #$d0			// ah ok, scusa, errore di battitura ok ora torna :D. Vai, compila
         sta $d016
@@ -135,5 +90,9 @@ exit:
 !:
         lda #border_colour
         sta $d020
+		//Prima linea di sprites sotto le facce
 
-        jmp bitmap_split_irq
+		lda #screen_0_d018
+		sta $d018
+
+		jmp position_first_sprites_line
