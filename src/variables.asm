@@ -37,3 +37,4 @@
 .const text_delay = $25
 .const newline_delay = $26
 .const startlogo	=	$27
+.const caretblk = $89

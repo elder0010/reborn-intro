@@ -1,4 +1,4 @@
-.align 4
+.align $4
 bottom_sprites_y:
 .const base_y =  $bb
 .for(var y=0;y<3;y++){
@@ -72,6 +72,26 @@ next_bottom_sprites:
         sta $d00f		
         rts
 
+// Copy FPP code high memory (F700)
+copyfppcode:
+		ldy #$00
+		sty cptr
+		sty cptr+2
+		lda #$3a
+		sta	cptr+1
+		lda #>freshcode
+		sta cptr+3
+!:
+		lda (cptr),y
+		sta (cptr+2),y
+		lda #$00
+		sta (cptr),y
+		dey
+		bne !-
+		inc cptr+1
+		inc cptr+3
+		bne !-
+		rts		
 		
 
 

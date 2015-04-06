@@ -7,6 +7,10 @@
 .const	colour_ram 	= 	$0240
 .const	colorbase 	= 	$0240
 
+.pc = $0200  "Functions 1"
+.import source "functions_1.asm"
+// *SPAZIO* Qua abbiamo 12 bytes
+
 .pc = $02C0 "D800 table"			// Fresh+Elder
 .import binary "data/d800_comp.raw"
 
@@ -50,7 +54,7 @@ code:
 .pc = * "Functions 2"
 .import source "functions_2.asm"
 
-// *SPAZIO* Qua abbiamo ancora 41 byte
+// *SPAZIO* Qua abbiamo ancora 63 bytes
 
 .pc=$540 "Screen LUT"
 .import binary "data/screen.raw"
@@ -104,12 +108,13 @@ bottom_sprites:
 
 // *SPAZIO* Qua abbiamo ancora 7 bytes
 
-.pc = $3a00  "Elder's functions"
+.pc = $3a00  "End functions"
 .pseudopc freshcode
 {
 .fill $40,0						// <-- Mandatory!!
-.import source "functions_1.asm"	// Max size $C0
-// *SPAZIO* Qua abbiamo 44 byte
+// C0
+
+
 }
 
 .pc = $3b00 "logo swinger"

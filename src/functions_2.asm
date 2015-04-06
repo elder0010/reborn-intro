@@ -1,30 +1,9 @@
-// Copy FPP code high memory (F700)
-copyfppcode:
-		ldy #$00
-		sty cptr
-		sty cptr+2
-		lda #$3a
-		sta	cptr+1
-		lda #>freshcode
-		sta cptr+3
-!:
-		lda (cptr),y
-		sta (cptr+2),y
-		lda #$00
-		sta (cptr),y
-		dey
-		bne !-
-		inc cptr+1
-		inc cptr+3
-		bne !-
-		rts
-
 // Copy LUT 1 on LUT 0 (only pages 2 and 3)
 copylut:
 		ldy #$00
 	!:
-		lda $0600,y
-		sta $0200,y
+		lda $06c0,y
+		sta $02c0,y
 		lda $0700,y
 		sta $0300,y
 		dey

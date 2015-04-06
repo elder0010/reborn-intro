@@ -109,26 +109,18 @@ endx:
 caret_blink:
         lda cur_char
         cmp #$ff
-        bne caretsw
+        beq caretoff
+        inc caretblk
+		lda caretblk
+		anc #$1f
+		adc #$f0
+		lda #caret_on
+        bcs storcaret
+caretoff:        
         lda #caret_off
-        jmp storcaret
-//-------------------
-//Caret blink
-caretsw:
-        lda #0
-        clc
-        adc #1
-        and #$1f
-        sta caretsw+1
-        cmp #$f
-        bpl !+
-        lda #caret_on
-        jmp storcaret
-!:
-        lda #caret_off
-storcaret:
-        nop //inx
-        cpx #16
+storcaret:        
+        nop	// INX
+		cpx #16
         beq !+
 curchrow:
         sta $ffff,x
@@ -160,6 +152,16 @@ reset_writer_pointers:
 
         rts
 
+rows_lo:
+.byte <row_0+1,<row_1+1,<row_2+1,<row_3+1,<row_4+1,<row_5+1
+rows_hi:
+.byte >row_0+1,>row_1+1,>row_2+1,>row_3+1,>row_4+1,>row_5+1
+
+text_lo:
+.byte <page_0,<page_1,<page_2
+text_hi:
+.byte >page_0,>page_1,>page_2		
+		
 .pc=$39a8
 clear_text_screen:
         lda #$0
@@ -181,22 +183,20 @@ check_fire_space:
         and $dc00
         and #$10
         bne !+
+		sei
         lda #$37
         sta $01
 .pc = * "press space jsr target"
-        jsr $fce2
+		jsr $FDA3
+		jsr $FD50
+		jsr $FD15
+		jsr $FF5B
+		//REM A000
+		jsr $E453	// Init vectors
+		jsr $E3BF	
+		jsr $E422
+		jmp *
 !:
         rts
 
-//.align 12
-rows_lo:
-.byte <row_0+1,<row_1+1,<row_2+1,<row_3+1,<row_4+1,<row_5+1
-rows_hi:
-.byte >row_0+1,>row_1+1,>row_2+1,>row_3+1,>row_4+1,>row_5+1
 
-//.align page_no*2
-text_lo:
-.byte <page_0,<page_1,<page_2
-
-text_hi:
-.byte >page_0,>page_1,>page_2
