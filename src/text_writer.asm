@@ -7,7 +7,7 @@
 
 .const caret_on = $36 //[caret-mini_charset]/$8
 .const caret_off = 0
-
+.pc=$3900-86
 write_char:
         ldx row_pt
         lda rows_lo,x
@@ -140,8 +140,7 @@ printsw:
         inc char_pt
         inc text_pt
 !:
-        jsr check_fire_space    //dopo che il testo inizia ad essere printato si può quittare l'intro
-        rts
+        jmp check_fire_space    //dopo che il testo inizia ad essere printato si può quittare l'intro        
 
 reset_writer_pointers:
         lda #0
@@ -176,27 +175,34 @@ clear_text_screen:
 
         dex
         bpl !-
+!:
         rts
 
 check_fire_space:
         lda $dc01
         and $dc00
         and #$10
-        bne !+
+        bne !-
 		sei
-        lda #$37
-        sta $01
+		
 .pc = * "press space jsr target"
+		sta $d011
+	    lda $a000
+		sta $0102		// $102 doesn't get overwritten by reset routines
+		jsr restorefppmem		
+        lda #$37
+        sta $01		
+		jsr resetvic	// Valutare se mettere $ff5b
 		jsr $FDA3
 		jsr $FD50
-		jsr $FD15
-		jsr $FF5B
-		//REM A000
-		jsr $E453	// Init vectors
+		jsr $FD15		
+		jsr $e51b		// al posto di queste due jsr
+		jsr $ff5e
+		jsr $E453
 		jsr $E3BF	
-		jsr $E422
-		jmp *
-!:
-        rts
+		jsr $a644
+		lda $0102   
+		jmp movegame
+
 
 

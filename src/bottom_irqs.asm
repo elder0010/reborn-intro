@@ -72,9 +72,9 @@ plex_0_irq:
 
 plex_1_irq:
 		:open_irq()
-
-		bit $ea
-
+		
+		cmp ($0,x)
+	
 		//:point_next_sprites([bottom_sprites/$40]+14,screen_0)
 		//fatto senza macro
 		ldx #0

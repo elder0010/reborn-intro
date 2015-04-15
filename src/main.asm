@@ -1,3 +1,10 @@
+// <TEST>
+// **********
+.const	gotogame = 2061
+.pc=$4001
+.import c64 "resources\spires.prg"
+// </TEST>
+
 .import source "variables.asm"
 .import source "macros.asm"
 .pc=music.location "Music" .fill music.size, music.getData(i)
@@ -100,7 +107,8 @@ bottom_sprites:
 .import binary "data/pixels.raw"
 
 .pc = $3680 "Elder's code"
-.import source "sideborder_pal.asm"
+.import source "functions_4.asm"
+
 .pc = * "Bottom IRQs"
 .import source "bottom_irqs.asm"
 .pc = * "Text writer"
@@ -112,8 +120,7 @@ bottom_sprites:
 .pseudopc freshcode
 {
 .fill $40,0						// <-- Mandatory!!
-// C0
-
+.import source "sideborder_pal.asm"
 
 }
 

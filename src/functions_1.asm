@@ -1,77 +1,3 @@
-.align $4
-bottom_sprites_y:
-.const base_y =  $bb
-.for(var y=0;y<3;y++){
-    .byte base_y+[y*21]
-}
-
-
-position_sideborder_sprites:
-		.const base_sideborder = $0
-		.const base_y_sideborder = $76
-
-		.for(var i=0;i<7;i++) {
-			lda #[sideborder_sprites/$40]+i
-			sta screen_0+$03f9+i
-		}
-
-        lda #$ba
-        sta $d010
-
-        lda #base_sideborder-32
-        sta $d002
-        sta $d00a
-
-        lda #base_sideborder
-        sta $d004
-        sta $d00c
-		sta $d01d
-		sta $d017
-
-        lda #$58
-        sta $d006
-        sta $d00e
-
-        lda #$58+24
-        sta $d008
-
-        lda #BLACK
-        sta $d025
-
-        lda #LIGHT_GRAY
-        sta $d026
-
-        lda #LIGHT_BLUE
-        sta $d028
-        sta $d02d
-
-        lda #LIGHT_RED
-        sta $d02a
-        sta $d02b
-        sta $d02e
-
-        lda #base_y_sideborder
-        sta $d003
-
-		lda #$ff
-		sta $d01c
-		rts
-		
-		
-next_bottom_sprites:
-        //Sprites Y & PT
-		stx $d018
-        ldy plex_ct
-        lda bottom_sprites_y,y
-        sta $d003
-        sta $d005
-        sta $d007
-        sta $d009
-        sta $d00b
-        sta $d00d
-        sta $d00f		
-        rts
-
 // Copy FPP code high memory (F700)
 copyfppcode:
 		ldy #$00
@@ -93,5 +19,94 @@ copyfppcode:
 		bne !-
 		rts		
 		
+next_bottom_sprites:
+        //Sprites Y & PT
+		stx $d018
+        ldy plex_ct
+        lda bottom_sprites_y,y
+        sta $d003
+        sta $d005
+        sta $d007
+        sta $d009
+        sta $d00b
+        sta $d00d
+        sta $d00f		
+        rts
+		
+resetvic:		
+		lda #$03
+		sta $9a
+		lda #$00
+		sta $99
+		ldx #$2f
+cfloop:
+		lda $ecb8,x
+		cpx #$21
+		beq cfskip
+		cpx #$12
+		beq cfskip
+		sta $cfff,x
+cfskip:
+		dex
+		bne cfloop
+		rts
 
+// Copy LUT 1 on LUT 0 (only pages 2 and 3)
+copylut:
+		ldy #$00
+	!:
+		lda $06c0,y
+		sta $02c0,y
+		lda $0700,y
+		sta $0300,y
+		dey
+		bne !-
+		lda #$80
+		ldy #$3f
+	!:
+		sta $400,y
+		dey
+		bpl !-
+		rts		
+		
+
+position_first_sprites_line:
+		lda #0
+        sta plex_ct
+
+        lda #ORANGE
+        sta $d026
+
+        jsr next_bottom_sprites+3
+        jsr recolour_sprites
+
+		ldx #$0
+		lda #[bottom_sprites/$40]
+!:
+		clc
+		sta screen_0+$03f9,x //sta screen_1+$03f9,x
+		adc #7
+		sta screen_1+$03f9,x //sta screen_1+$03f9,x
+		adc #<[1-7]
+		inx
+		cpx #7
+		bne !-
+
+        inc plex_ct
+
+        lda #<[$b0+6*24]
+        ldx #14
+!:
+        sta $d000,x
+        sec
+        sbc #24
+        dex
+        dex
+        bne !-
+		stx $d01b
+
+        lda #$e0
+        sta $d010
+
+        rts		
 
