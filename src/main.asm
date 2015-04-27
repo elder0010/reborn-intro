@@ -16,7 +16,11 @@
 
 .pc = $0200  "Functions 1"
 .import source "functions_1.asm"
-// *SPAZIO* Qua abbiamo 12 bytes
+
+ntsctext:
+.text "this intro is pal only. press a key!"
+.byte 0
+
 
 .pc = $02C0 "D800 table"			// Fresh+Elder
 .import binary "data/d800_comp.raw"
@@ -27,7 +31,7 @@ code:
 		lda #$da
 		sta startlogo+1
 		lda #$60
-		sta startlogo
+		sta startlogo		
 		.if(PLAY_MUSIC){
 			lda #0
 			sta $d015
@@ -41,10 +45,10 @@ code:
 
 		:kernal_off()
 		:turn_off_cia_turn_on_raster_irq()
-		//:kill_nmi()
-
+		//:kill_nmi()		
 		jsr copyfppcode		// Freshness
 		jsr initscroll		// Freshness
+		jsr ntsccheck		// Freshness		
 		jsr copylut			// Freshness
 		jsr clear_text_screen
 		:wait_frame()		// Needed by next part
@@ -111,6 +115,8 @@ bottom_sprites:
 
 .pc = * "Bottom IRQs"
 .import source "bottom_irqs.asm"
+.pc=* "NTSC Check"
+.import source "ntsc.asm"
 .pc = * "Text writer"
 .import source "text_writer.asm"
 

@@ -7,7 +7,7 @@
 
 .const caret_on = $36 //[caret-mini_charset]/$8
 .const caret_off = 0
-.pc=$3900-86
+.pc=$3900-86 "Text Writer"
 write_char:
         ldx row_pt
         lda rows_lo,x

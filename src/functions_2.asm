@@ -57,3 +57,20 @@ position_sideborder_sprites:
 		rts
 		
 		
+// Copy LUT 1 on LUT 0 (only pages 2 and 3)
+copylut:
+		ldy #$00
+	!:
+		lda $06c0,y
+		sta $02c0,y
+		lda $0700,y
+		sta $0300,y
+		dey
+		bne !-
+		lda #$80
+		ldy #$3f
+	!:
+		sta $400,y
+		dey
+		bpl !-
+		rts		
