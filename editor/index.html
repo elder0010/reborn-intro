@@ -1,0 +1,112 @@
+<!doctype html>
+<html class="no-js" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Legend Intro Text Editor</title>
+    <link rel="stylesheet" href="css/foundation.css" />
+    <script src="js/vendor/modernizr.js"></script>
+	<style type="text/css">
+	.textpage {
+		
+		width:160px;
+		font-size:14px;
+		overflow-y:hidden;
+	}
+	textarea {
+		font-family:Courier;
+		
+		width:260px;
+		height:400px;
+		font-size:14px;
+	}
+	</style>
+		
+	
+  </head>
+  <body>
+
+    <div class="row">
+      <div class="large-12 columns">
+        <h1>Legend Intro Text Editor</h1>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="large-12 columns">
+      	<div class="panel">
+	        <h5>Page 0</h5>
+			<textarea class="textpage" name="page_0" cols="16" rows="6" id="page_0"></textarea>
+	        Chars: <span id="page_0_count">0</span>/94
+			<hr/>
+	        <h5>Page 1</h5>
+			<textarea class="textpage" name="page_1" cols="16" rows="6" id="page_1"></textarea>
+	        Chars: <span id="page_2_count">0</span>/94
+			<hr/>
+	        <h5>Page 2</h5>
+			<textarea class="textpage" name="page_2" cols="16" rows="6" id="page_2"></textarea>
+	        Chars: <span id="page_3_count">0</span>/94
+			<hr/>
+	        <h5>Page 3</h5>
+			<textarea class="textpage" name="page_3" cols="16" rows="6" id="page_3"></textarea>
+	        Chars: <span id="page_4">0</span>/94
+			
+			<br />
+			<a class="button generator">Generate text</a>
+			
+			<textarea name="result" style="width" id="result"></textarea>
+      	</div>
+      </div>
+    </div>
+
+    <script src="js/vendor/jquery.js"></script>
+    <script src="js/foundation.min.js"></script>
+    <script>
+      $(document).foundation();
+    </script>
+	  
+  	<script type="text/javascript">
+ 	 $(document).ready(function() {
+ 	     var pages_no = 4;
+
+ 	     $('.textpage').bind('input propertychange', function(element) {
+ 	         var id_textarea = "#" + $(this).attr('id');
+
+ 	         var text = $(id_textarea).val();
+ 	         var lines = text.split("\n");
+ 	         var lines_count = lines.length;
+
+ 	         //console.log(lines);
+ 	         if (lines_count > 6) {
+ 	             var newtext = '';
+ 	             for (var x = 0; x < 6; x++) {
+ 	                 newtext += lines[x] + '\n';
+ 	             }
+ 	             $(id_textarea).val(newtext);
+ 	         }
+ 	         var l = $(id_textarea).val().length;
+ 	         $(id_textarea + "_count").html(l);
+ 	     });
+
+
+ 	     $('.generator').bind('click', function(element) {
+ 	         var txt = '';
+ 	         var page_text, lines;
+ 	         for (var x = 0; x < pages_no; x++) {
+				 txt += 'page_'+x+':\n';
+ 	             page_text = $("#page_" + x).val();
+ 	             lines = page_text.split("\n");
+
+ 	             $(lines).each(function(index, val) {
+					 if(val.length!=0){
+ 	               	  txt += '.text "' + val + '"\n';
+					 }
+ 	             });
+ 	         }
+ 	         $("#result").val(txt);
+ 	     });
+
+ 	 });
+  	</script>
+  </body>
+</html>
