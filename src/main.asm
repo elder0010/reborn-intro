@@ -19,7 +19,7 @@
 .import source "functions_1.asm"
 
 ntsctext:
-.text "this intro is pal only. press a key!"
+.text "this intro is pal only. press space!"
 .byte 0
 
 
@@ -32,7 +32,7 @@ code:
 		lda #$da
 		sta startlogo+1
 		lda #$60
-		sta startlogo		
+		sta startlogo
 		.if(PLAY_MUSIC){
 			lda #0
 			sta $d015
@@ -46,10 +46,10 @@ code:
 
 		:kernal_off()
 		:turn_off_cia_turn_on_raster_irq()
-		//:kill_nmi()		
+		//:kill_nmi()
 		jsr copyfppcode		// Freshness
 		jsr initscroll		// Freshness
-		jsr ntsccheck		// Freshness		
+		jsr ntsccheck		// Freshness
 		jsr copylut			// Freshness
 		jsr clear_text_screen
 		:wait_frame()		// Needed by next part
