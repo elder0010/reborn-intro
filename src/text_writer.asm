@@ -202,7 +202,7 @@ check_fire_space:
 		jsr $E3BF
 		jsr $a644
 		lda $0102
-.if(cmdLineVars.get("gamestart").asNumber()==0){
+.if(cmdLineVars.get("linkgame").asNumber()==0){
         jmp testloop
 }else{
 		jmp movegame

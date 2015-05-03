@@ -33,7 +33,7 @@ relocmovegame:
 		stx $01
 		plp
 testloop:
-		.if(cmdLineVars.get("gamestart").asNumber()==0){
+		.if(cmdLineVars.get("linkgame").asNumber()==0){
 			jsr $fce2
 		}else{
 			jmp cmdLineVars.get("gamestart").asNumber()	// Here we need to put the jmp to the game decompressor
