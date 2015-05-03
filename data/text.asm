@@ -1,4 +1,4 @@
-.const page_no = 3
+.const page_no = 4
 
 //.align 108
 page_0:
@@ -12,18 +12,31 @@ page_0:
 
 //.align 108
 page_1:
-.text "howdy spicecake".byte $ff
-.text "or droopface or".byte $ff
-.text "whatever the".byte $ff
-.text "name is[[["
+.text "page two is".byte $ff
+.text "proud to present"
+.text "another intro[".byte $ff
+.text "we did a remake".byte $1d
+.text "of the almighty".byte $ff
+.text "legend intro"
 .byte 0
 
 //.align 108
 page_2:
-.text "elder is a".byte $ff
-.text "mighty pirate".byte $1d.byte$ff
-.text "and the intro".byte $ff
-.text "looks finished".byte $1d
+.text "page three is".byte $ff
+.text "proud to present"
+.text "another intro[".byte $ff
+.text "we did a remake".byte $1d
+.text "of the almighty".byte $ff
+.text "legend intro"
+.byte 0
+
+page_3:
+.text "page four is".byte $ff
+.text "proud to present"
+.text "another intro[".byte $ff
+.text "we did a remake".byte $1d
+.text "of the almighty".byte $ff
+.text "legend intro"
 .byte 0
 
 

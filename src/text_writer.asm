@@ -116,9 +116,9 @@ caret_blink:
 		adc #$f0
 		lda #caret_on
         bcs storcaret
-caretoff:        
+caretoff:
         lda #caret_off
-storcaret:        
+storcaret:
         nop	// INX
 		cpx #16
         beq !+
@@ -140,7 +140,7 @@ printsw:
         inc char_pt
         inc text_pt
 !:
-        jmp check_fire_space    //dopo che il testo inizia ad essere printato si può quittare l'intro        
+        jmp check_fire_space    //dopo che il testo inizia ad essere printato si può quittare l'intro
 
 reset_writer_pointers:
         lda #0
@@ -157,10 +157,10 @@ rows_hi:
 .byte >row_0+1,>row_1+1,>row_2+1,>row_3+1,>row_4+1,>row_5+1
 
 text_lo:
-.byte <page_0,<page_1,<page_2
+.byte <page_0,<page_1,<page_2,<page_3
 text_hi:
-.byte >page_0,>page_1,>page_2		
-		
+.byte >page_0,>page_1,>page_2,>page_3
+
 .pc=$39a8
 clear_text_screen:
         lda #$0
@@ -184,25 +184,22 @@ check_fire_space:
         and #$10
         bne !-
 		sei
-		
+
 .pc = * "press space jsr target"
 		sta $d011
 	    lda $a000
 		sta $0102		// $102 doesn't get overwritten by reset routines
-		jsr restorefppmem		
+		jsr restorefppmem
         lda #$37
-        sta $01		
+        sta $01
 		jsr resetvic	// Valutare se mettere $ff5b
 		jsr $FDA3
 		jsr $FD50
-		jsr $FD15		
+		jsr $FD15
 		jsr $e51b		// al posto di queste due jsr
 		jsr $ff5e
 		jsr $E453
-		jsr $E3BF	
+		jsr $E3BF
 		jsr $a644
-		lda $0102   
+		lda $0102
 		jmp movegame
-
-
-
