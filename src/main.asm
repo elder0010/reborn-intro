@@ -1,9 +1,10 @@
-// <TEST>
-// **********
-.const	gotogame = 2061
-.pc=$4001
-.import c64 "resources\spires.prg"
-// </TEST>
+// Command line parameters:
+// ************************
+// :gamestart = <address>	; Game decompressor start address
+// :filename = <filename>	; Game filename
+
+.pc=$4001 "Game data"
+.import c64 cmdLineVars.get("filename")
 
 .import source "variables.asm"
 .import source "macros.asm"

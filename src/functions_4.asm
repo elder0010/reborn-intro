@@ -33,6 +33,6 @@ relocmovegame:
 		stx $01
 		plp
 testloop:
-		jmp gotogame		// Here we need to put the jmp to the game decompressor
+		jmp cmdLineVars.get("gamestart").asNumber()	// Here we need to put the jmp to the game decompressor
 relocendmovegame:				
 
