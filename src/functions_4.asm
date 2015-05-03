@@ -1,4 +1,4 @@
-movegame:		
+movegame:
 		sta $a000
 		ldx #[relocendmovegame-relocmovegame-1]
 	!:
@@ -33,6 +33,10 @@ relocmovegame:
 		stx $01
 		plp
 testloop:
-		jmp cmdLineVars.get("gamestart").asNumber()	// Here we need to put the jmp to the game decompressor
-relocendmovegame:				
+		.if(cmdLineVars.get("gamestart").asNumber()==0){
+			jsr $fce2
+		}else{
+			jmp cmdLineVars.get("gamestart").asNumber()	// Here we need to put the jmp to the game decompressor
+		}
 
+relocendmovegame:
