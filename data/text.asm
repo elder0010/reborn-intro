@@ -1,4 +1,6 @@
-.const page_no = 5
+.const page_no = 5  //la tabella degli indirizzi sta su text_writer.asm linea 159
+
+//La regola è: se ci sono 16 caratteri in una riga non va messo halt.
 
 //.align 108
 page_0:
@@ -39,10 +41,8 @@ page_3:
 .byte 0
 
 page_4:
-//:blank_line()
-//:blank_line()
-.text "one player is":halt()
-.text "not the other":ch('.'):halt()
+.text "one player is" :halt()
+.text "not the other" :ch('.') :halt()
 .byte 0
 
 
@@ -117,7 +117,6 @@ page_4:
     .if(char=='-'){
         .byte 31
     }
-
 }
 
 .macro halt(){
