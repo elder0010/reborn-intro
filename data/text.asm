@@ -1,4 +1,4 @@
-.const page_no = 4
+.const page_no = 5
 
 //.align 108
 page_0:
@@ -36,6 +36,13 @@ page_3:
 .text "you are not" :halt()
 .text "willing to pay":halt()
 .text "the price":ch('.')
+.byte 0
+
+page_4:
+//:blank_line()
+//:blank_line()
+.text "one player is":halt()
+.text "not the other":ch('.'):halt()
 .byte 0
 
 

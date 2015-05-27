@@ -157,9 +157,9 @@ rows_hi:
 .byte >row_0+1,>row_1+1,>row_2+1,>row_3+1,>row_4+1,>row_5+1
 
 text_lo:
-.byte <page_0,<page_1,<page_2,<page_3
+.byte <page_0,<page_1,<page_2,<page_3,<page_4
 text_hi:
-.byte >page_0,>page_1,>page_2,>page_3
+.byte >page_0,>page_1,>page_2,>page_3,>page_4
 
 .pc=$39a8
 clear_text_screen:
