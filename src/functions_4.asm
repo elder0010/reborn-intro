@@ -34,9 +34,9 @@ relocmovegame:
 		plp
 testloop:
 		//.if(cmdLineVars.get("linkgame").asNumber()==0){
-		//	jsr $fce2
+			jsr $fce2
 		//}else{
-			jmp cmdLineVars.get("gamestart").asNumber()	// Here we need to put the jmp to the game decompressor
+			//jmp cmdLineVars.get("gamestart").asNumber()	// Here we need to put the jmp to the game decompressor
 		//}
 
 relocendmovegame:

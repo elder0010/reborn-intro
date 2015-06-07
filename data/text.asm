@@ -1,35 +1,34 @@
-.const page_no = 5  //la tabella degli indirizzi sta su text_writer.asm linea 159
+.const page_no = 4  //la tabella degli indirizzi sta su text_writer.asm linea 159
 
 //La regola è: se ci sono 16 caratteri in una riga non va messo halt.
 
 //.align 108
 page_0:
-.text "onslaught" :halt()
-.text "proudly presents"
-:blank_line()
-.text "outrage prv " :ch('+') :ch('3') :halt()
- :ch('(') .text "c" :ch(')') .text " cosmos" :halt()
-.text "designs" :ch('.')
+.text "onslaught is" :halt()
+.text "proud to present"
+.text "an intro which":halt()
+.text "resembles some":ch('-') :halt()
+.text "thing legend did"
+.text "a while back" :ch('.') :ch('.') :ch('.')
 .byte 0
 
 //.align 108
 page_1:
-.text "call" :ch(':') :halt()
+.text "credits":halt()
 :filled_line()
-.text "antidote":halt()
-.text "via telnet bbs":halt()
-.text "antidote" :ch('.') .text "triad":halt()
-:ch('.') .text "se port" :ch(':') :ch('2') :ch('3')
+.text "msx":ch(':') .text " conrad":halt()
+:blank_line()
+.text "gfx":ch(':') .text " mirage"
 .byte 0
 
 //.align 108
 page_2:
-.text "we welcome n":ch('3') .text"xu":ch('5')
-.text "our new member" :halt()
+.text "credits":halt()
+:filled_line()
+.text "code":ch(':'):halt()
 :blank_line()
-.text "some old faces" :halt()
-.text "will soon be" :halt()
-.text "back as well" :ch('!')
+.text "elder":ch('0'):ch('0'):ch('1'):ch('0'):halt()
+.text "freshness"
 .byte 0
 
 page_3:
@@ -41,8 +40,6 @@ page_3:
 .byte 0
 
 page_4:
-.text "one player is" :halt()
-.text "not the other" :ch('.') :halt()
 .byte 0
 
 
@@ -111,7 +108,7 @@ page_4:
     }
 
     .if(char=='0'){
-        .byte 49
+        .byte 39
     }
 
     .if(char=='-'){

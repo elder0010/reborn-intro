@@ -4,8 +4,8 @@
 // :filename = <filename>	; Game filename
 
 //.if(cmdLineVars.get("linkgame").asNumber()==1){
-	.pc=$4001 "Game data"
-	.import c64 cmdLineVars.get("filename")
+//	.pc=$4001 "Game data"
+//	.import c64 cmdLineVars.get("filename")
 //}
 
 .import source "variables.asm"
