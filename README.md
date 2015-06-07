@@ -1,4 +1,4 @@
-# Reborn Inntro
+# Reborn Intro
 
 ![Reborn Intro](http://www.elder0010.com/uploads/screenshots/reborn-intro.png "Reborn Intro")
 
